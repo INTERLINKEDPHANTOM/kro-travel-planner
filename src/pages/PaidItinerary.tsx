@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import {
   MapPin, Clock, Wallet, Star, Hotel, Utensils, Bus, Calendar,
   Lightbulb, ArrowRight, ExternalLink, Loader2, Package, Users,
-  CheckCircle2, AlertCircle, Download, RotateCcw, Train, Car, Plane
+  CheckCircle2, AlertCircle, Download, RotateCcw, Train, Car, Plane,
+  ChevronDown, IndianRupee
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +24,95 @@ const AFFILIATE_LINKS = {
   bus: "https://www.redbus.in",
   flight: "https://www.makemytrip.com/flights",
   cab: "https://www.uber.com",
+};
+
+const DayCard = ({ day, dayIndex, dayCost }: { day: any; dayIndex: number; dayCost: number }) => {
+  const [open, setOpen] = useState(dayIndex === 0);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: dayIndex * 0.05 }}
+      className="warm-card rounded-2xl overflow-hidden"
+    >
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between gap-3 p-4 sm:p-5 text-left hover:bg-muted/30 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-xl flex-shrink-0">{day.emoji || "📍"}</span>
+          <div className="min-w-0">
+            <h3 className="font-heading text-base sm:text-lg truncate">{day.day_label}</h3>
+            <p className="text-xs text-muted-foreground">{day.activities?.length || 0} activities</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {dayCost > 0 && (
+            <span className="text-xs sm:text-sm px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold">
+              ₹{dayCost.toLocaleString("en-IN")}
+            </span>
+          )}
+          <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+
+      {open && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          transition={{ duration: 0.25 }}
+          className="border-t border-border"
+        >
+          <div className="p-4 sm:p-5 space-y-2.5">
+            {day.activities?.map((act: any, ai: number) => (
+              <div
+                key={ai}
+                className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 p-3 rounded-xl bg-background/60"
+              >
+                <div className="flex items-center gap-2 sm:w-24 flex-shrink-0">
+                  <Clock className="w-3.5 h-3.5 text-primary" />
+                  <span className="font-mono text-xs font-semibold text-primary">{act.time}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm text-foreground">{act.activity}</p>
+                      {act.note && <p className="text-xs text-muted-foreground mt-0.5">{act.note}</p>}
+                    </div>
+                    {act.maps_url && (
+                      <a href={act.maps_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex-shrink-0">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {act.duration && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{act.duration}</span>
+                    )}
+                    {act.cost && act.cost !== "₹0" && act.cost !== "Free" && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{act.cost}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Day cost summary */}
+            {dayCost > 0 && (
+              <div className="flex items-center justify-between pt-2 mt-2 border-t border-border/50 px-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <IndianRupee className="w-3 h-3" /> Day {dayIndex + 1} estimated spend
+                </span>
+                <span className="text-sm font-heading text-primary">₹{dayCost.toLocaleString("en-IN")}</span>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </motion.div>
+  );
 };
 
 const PaidItinerary = () => {
@@ -395,52 +485,27 @@ const PaidItinerary = () => {
             </div>
           </motion.section>
 
-          {/* Day-wise Itinerary */}
-          {it.days?.map((day: any, di: number) => (
-            <motion.section key={di} {...fadeUp} className="mb-12">
+          {/* Day-wise Itinerary - Collapsible */}
+          {it.days?.length > 0 && (
+            <motion.section {...fadeUp} className="mb-12">
               <h2 className="text-2xl sm:text-3xl font-heading mb-6 flex items-center gap-3">
-                <span className="text-2xl">{day.emoji || "📍"}</span> {day.day_label}
+                <Calendar className="w-7 h-7 text-primary" /> Day-by-Day Plan
               </h2>
               <div className="space-y-3">
-                {day.activities?.map((act: any, ai: number) => (
-                  <motion.div
-                    key={ai}
-                    initial={{ opacity: 0, x: -15 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: ai * 0.05 }}
-                    className="warm-card rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start gap-3"
-                  >
-                    <div className="flex items-center gap-2 sm:w-24 flex-shrink-0">
-                      <Clock className="w-4 h-4 text-primary" />
-                      <span className="font-mono text-sm font-semibold text-primary">{act.time}</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-medium text-foreground">{act.activity}</p>
-                          {act.note && <p className="text-sm text-muted-foreground mt-1">{act.note}</p>}
-                        </div>
-                        {act.maps_url && (
-                          <a href={act.maps_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex-shrink-0">
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {act.duration && (
-                          <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">{act.duration}</span>
-                        )}
-                        {act.cost && act.cost !== "₹0" && (
-                          <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">{act.cost}</span>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                {it.days.map((day: any, di: number) => {
+                  // Calculate day cost
+                  const dayCost = day.activities?.reduce((sum: number, act: any) => {
+                    const cost = parseInt(String(act.cost || "0").replace(/[^\d]/g, "")) || 0;
+                    return sum + cost;
+                  }, 0) || 0;
+
+                  return (
+                    <DayCard key={di} day={day} dayIndex={di} dayCost={dayCost} />
+                  );
+                })}
               </div>
             </motion.section>
-          ))}
+          )}
 
           {/* Hotels */}
           {it.hotels?.length > 0 && (
