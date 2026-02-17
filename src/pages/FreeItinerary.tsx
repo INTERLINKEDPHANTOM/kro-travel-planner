@@ -23,7 +23,7 @@ const FreeItinerary = () => {
       const { data } = await supabase
         .from("itineraries")
         .select("*")
-        .eq("destination", destination || "")
+        .ilike("destination", destination || "")
         .eq("is_published", true)
         .limit(1)
         .maybeSingle();

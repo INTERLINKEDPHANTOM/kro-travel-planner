@@ -5,44 +5,49 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const plans = [
-  {
-    name: "Explorer",
-    badge: "Free",
-    price: "₹0",
-    description: "Get a rough overview of your destination — enough to start dreaming.",
-    features: [
-      "General places to visit",
-      "High-level daily flow",
-      "Approximate budget estimate",
-      "Popular attractions & food spots",
-      "Local tips & hidden gems",
-    ],
-    cta: "View Free Itinerary",
-    link: "/itinerary/manali",
-    highlight: false,
-  },
-  {
-    name: "Voyager",
-    badge: "Premium",
-    price: "₹499",
-    description: "A fully personalized, hour-wise itinerary crafted for your exact trip.",
-    features: [
-      "Everything in Explorer",
-      "Hour-wise day-wise schedule",
-      "Transport logic & timing",
-      "Meal & rest break planning",
-      "Budget optimization",
-      "Downloadable & shareable",
-      "Saved to your account",
-    ],
-    cta: "Get Personalized Plan",
-    link: "/auth",
-    highlight: true,
-  },
-];
-
 const PlanSelection = () => {
+  // Get the destination from trip preferences stored in sessionStorage
+  const stored = sessionStorage.getItem("tripPreferences");
+  const tripPrefs = stored ? JSON.parse(stored) : null;
+  const destination = tripPrefs?.arrival?.trim().toLowerCase() || "";
+
+  const plans = [
+    {
+      name: "Explorer",
+      badge: "Free",
+      price: "₹0",
+      description: "Get a rough overview of your destination — enough to start dreaming.",
+      features: [
+        "General places to visit",
+        "High-level daily flow",
+        "Approximate budget estimate",
+        "Popular attractions & food spots",
+        "Local tips & hidden gems",
+      ],
+      cta: "View Free Itinerary",
+      link: destination ? `/itinerary/${destination}` : "/destinations",
+      highlight: false,
+    },
+    {
+      name: "Voyager",
+      badge: "Premium",
+      price: "₹499",
+      description: "A fully personalized, hour-wise itinerary crafted for your exact trip.",
+      features: [
+        "Everything in Explorer",
+        "Hour-wise day-wise schedule",
+        "Transport logic & timing",
+        "Meal & rest break planning",
+        "Budget optimization",
+        "Downloadable & shareable",
+        "Saved to your account",
+      ],
+      cta: "Get Personalized Plan",
+      link: "/auth",
+      highlight: true,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -56,7 +61,9 @@ const PlanSelection = () => {
           >
             <h1 className="text-3xl sm:text-4xl font-heading font-bold mb-3">Choose Your Plan</h1>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Start free with a rough overview, or go premium for a complete, personalized travel plan.
+              {destination
+                ? `Pick how you want to explore ${destination.charAt(0).toUpperCase() + destination.slice(1)}`
+                : "Start free with a rough overview, or go premium for a complete, personalized travel plan."}
             </p>
           </motion.div>
 
