@@ -8,6 +8,7 @@ const navItems = [
   { label: "Home", path: "/" },
   { label: "Plan Trip", path: "/plan" },
   { label: "Destinations", path: "/destinations" },
+  { label: "My Trips", path: "/my-trips" },
 ];
 
 const Navbar = () => {

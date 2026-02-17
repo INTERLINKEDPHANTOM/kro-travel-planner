@@ -8,6 +8,7 @@ import PlanTrip from "./pages/PlanTrip";
 import PlanSelection from "./pages/PlanSelection";
 import FreeItinerary from "./pages/FreeItinerary";
 import PaidItinerary from "./pages/PaidItinerary";
+import MyTrips from "./pages/MyTrips";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Destinations from "./pages/Destinations";
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/plans" element={<PlanSelection />} />
           <Route path="/itinerary/:destination" element={<FreeItinerary />} />
           <Route path="/paid-itinerary" element={<PaidItinerary />} />
+          <Route path="/my-trips" element={<MyTrips />} />
           <Route path="/destinations" element={<Destinations />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
