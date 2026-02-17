@@ -1,1 +1,7 @@
 project_id = "twfvlbianbqkrmyjyxnp"
+
+[functions.generate-paid-itinerary]
+verify_jwt = false
+
+[functions.parse-itinerary]
+verify_jwt = false

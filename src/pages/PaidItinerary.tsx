@@ -66,17 +66,83 @@ const PaidItinerary = () => {
     }
   }, []);
 
+  const [progressStep, setProgressStep] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("Starting...");
+
+  const PIPELINE_STEPS = [
+    { step: 1, label: "Validating preferences...", icon: "✅" },
+    { step: 2, label: "Analyzing travel context...", icon: "🧠" },
+    { step: 3, label: "Finding best transport options...", icon: "🚆" },
+    { step: 4, label: "Recalculating budget...", icon: "💰" },
+    { step: 5, label: "Searching for best hotels...", icon: "🏨" },
+    { step: 6, label: "Building day-by-day itinerary...", icon: "📋" },
+    { step: 7, label: "Adding restaurants & tips...", icon: "🍽️" },
+    { step: 8, label: "Assembling final itinerary...", icon: "✨" },
+  ];
+
   const generateItinerary = async (prefs: any) => {
+    setProgressStep(0);
+    setProgressLabel("Starting...");
+
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("generate-paid-itinerary", {
-        body: { preferences: prefs },
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-paid-itinerary`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ preferences: prefs }),
       });
 
-      if (fnError) throw fnError;
-      if (!data?.success) throw new Error(data?.error || "Failed to generate itinerary");
+      if (!resp.ok || !resp.body) throw new Error("Failed to start generation");
 
-      setItinerary(data.data);
-      await saveItinerary(data.data, prefs);
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf("\n\n")) !== -1) {
+          const chunk = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 2);
+
+          let eventType = "message";
+          let eventData = "";
+          for (const line of chunk.split("\n")) {
+            if (line.startsWith("event: ")) eventType = line.slice(7).trim();
+            if (line.startsWith("data: ")) eventData = line.slice(6).trim();
+          }
+
+          if (!eventData) continue;
+
+          try {
+            const parsed = JSON.parse(eventData);
+
+            if (eventType === "progress") {
+              setProgressStep(parsed.step);
+              setProgressLabel(parsed.label);
+            } else if (eventType === "complete") {
+              if (parsed.success && parsed.data) {
+                setItinerary(parsed.data);
+                await saveItinerary(parsed.data, prefs);
+              } else {
+                throw new Error(parsed.error || "Generation failed");
+              }
+            } else if (eventType === "error") {
+              throw new Error(parsed.message || "Generation failed");
+            }
+          } catch (parseErr: any) {
+            if (parseErr.message && !parseErr.message.includes("JSON")) {
+              throw parseErr;
+            }
+          }
+        }
+      }
     } catch (err: any) {
       console.error("Generation error:", err);
       setError(err.message || "Something went wrong. Please try again.");
@@ -183,25 +249,42 @@ const PaidItinerary = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-32 flex flex-col items-center justify-center gap-6 px-4">
+        <div className="pt-32 flex flex-col items-center justify-center gap-6 px-4 pb-20">
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
           <div className="text-center max-w-md">
             <h2 className="text-2xl font-heading mb-2">
               {regenerating ? "Regenerating Your Trip" : "Crafting Your Perfect Trip"}
             </h2>
-            <p className="text-muted-foreground">Our AI is building a minute-by-minute itinerary tailored to your preferences...</p>
+            <p className="text-muted-foreground mb-1">{progressLabel}</p>
+            <p className="text-xs text-muted-foreground">Step {progressStep || 1} of 8 — This takes about 30-60 seconds</p>
           </div>
-          <div className="flex flex-wrap gap-3 justify-center mt-4">
-            {["Analyzing routes", "Finding hotels", "Optimizing budget", "Planning meals"].map((step, i) => (
-              <motion.span
-                key={step}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 1.5, duration: 0.5 }}
-                className="px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium"
+          {/* Pipeline Steps */}
+          <div className="w-full max-w-md space-y-2 mt-4">
+            {PIPELINE_STEPS.map((s) => (
+              <motion.div
+                key={s.step}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{
+                  opacity: s.step <= progressStep ? 1 : 0.3,
+                  x: 0,
+                }}
+                transition={{ duration: 0.3, delay: s.step <= progressStep ? 0 : 0.1 }}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all ${
+                  s.step < progressStep
+                    ? "bg-primary/10 text-primary"
+                    : s.step === progressStep
+                    ? "bg-primary/20 text-primary font-medium border border-primary/30"
+                    : "bg-muted/50 text-muted-foreground"
+                }`}
               >
-                {step}...
-              </motion.span>
+                <span className="text-lg w-6 text-center">
+                  {s.step < progressStep ? "✅" : s.step === progressStep ? s.icon : "⏳"}
+                </span>
+                <span className="flex-1">{s.label}</span>
+                {s.step === progressStep && (
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                )}
+              </motion.div>
             ))}
           </div>
         </div>
