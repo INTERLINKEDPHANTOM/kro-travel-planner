@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -8,6 +8,7 @@ import {
   ChevronDown, IndianRupee
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { generateItineraryPDF } from "@/lib/generatePDF";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -125,7 +126,6 @@ const PaidItinerary = () => {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("tripPreferences");
@@ -297,35 +297,10 @@ const PaidItinerary = () => {
   };
 
   const handleDownloadPDF = async () => {
-    if (!contentRef.current) return;
+    if (!itinerary) return;
     setDownloading(true);
-    
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const { jsPDF } = await import("jspdf");
-
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#F8F6F3",
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.9);
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      let position = 0;
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      while (position < pdfHeight) {
-        if (position > 0) pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, -position, pdfWidth, pdfHeight);
-        position += pageHeight;
-      }
-
-      pdf.save(`KroTravel_${preferences?.arrival || "Itinerary"}.pdf`);
+      generateItineraryPDF(itinerary, preferences);
       toast({ title: "PDF downloaded!" });
     } catch (err) {
       console.error("PDF error:", err);
@@ -425,18 +400,30 @@ const PaidItinerary = () => {
         </button>
       </div>
 
-      <div ref={contentRef}>
-        {/* Cover */}
-        <section className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp} className="max-w-4xl mx-auto">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-4">
-              <Star className="w-3 h-3" /> Personalized Itinerary
-            </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading leading-tight mb-4">
-              {it.cover_title || `Your Trip to ${preferences?.arrival}`}
-            </h1>
-            {it.intro && <p className="text-muted-foreground max-w-xl text-lg">{it.intro}</p>}
-          </motion.div>
+      <div>
+        {/* Cover with destination image */}
+        <section className="relative pt-0 pb-12">
+          <div className="relative h-64 sm:h-80 overflow-hidden">
+            <img
+              src={`https://source.unsplash.com/1600x900/?${encodeURIComponent(preferences?.arrival || "travel")},india,landscape`}
+              alt={`${preferences?.arrival} landscape`}
+              className="w-full h-full object-cover"
+              loading="eager"
+              onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-8">
+              <motion.div {...fadeUp} className="max-w-4xl mx-auto">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 backdrop-blur-sm text-primary text-xs font-bold uppercase tracking-wider mb-4">
+                  <Star className="w-3 h-3" /> Personalized Itinerary
+                </span>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading leading-tight mb-4 text-foreground">
+                  {it.cover_title || `Your Trip to ${preferences?.arrival}`}
+                </h1>
+                {it.intro && <p className="text-muted-foreground max-w-xl text-lg">{it.intro}</p>}
+              </motion.div>
+            </div>
+          </div>
         </section>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
