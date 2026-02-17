@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Users, Wallet, Plane, Utensils, FileText, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,11 +52,18 @@ const PlanTrip = () => {
 
   const update = (key: string, value: string) => setForm((p) => ({ ...p, [key]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Store preferences in sessionStorage for now, then redirect to plan selection
     sessionStorage.setItem("tripPreferences", JSON.stringify(form));
-    navigate("/plans");
+    
+    // Check if user is logged in
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      navigate("/plans");
+    } else {
+      // Redirect to auth with a return URL
+      navigate("/auth?redirect=/plans");
+    }
   };
 
   return (
