@@ -55,6 +55,8 @@ const Admin = () => {
     fetchItineraries();
   };
 
+  const [paidTrips, setPaidTrips] = useState<any[]>([]);
+
   const fetchItineraries = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -62,6 +64,15 @@ const Admin = () => {
       .select("*")
       .order("created_at", { ascending: false });
     setItineraries(data || []);
+
+    // Fetch paid itineraries for admin review
+    const { data: paid } = await supabase
+      .from("saved_itineraries")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setPaidTrips(paid || []);
+
     setLoading(false);
   };
 
@@ -276,7 +287,61 @@ const Admin = () => {
             </motion.div>
           )}
 
-          {/* Itinerary List */}
+          {/* Paid Itineraries (Admin Review) */}
+          {paidTrips.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-heading font-semibold mb-4 text-foreground flex items-center gap-2">
+                💰 Paid Itineraries (User Generated)
+              </h2>
+              <div className="space-y-3">
+                {paidTrips.map((trip) => (
+                  <motion.div
+                    key={trip.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="warm-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-heading font-semibold text-foreground">{trip.destination}</h3>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
+                          {trip.status}
+                        </span>
+                        {trip.regenerate_count > 0 && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                            Regen x{trip.regenerate_count}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Created: {new Date(trip.created_at).toLocaleDateString()} · 
+                        {trip.preferences?.numPeople} people · 
+                        Budget: ₹{trip.preferences?.budgetMin || 0} – ₹{trip.preferences?.budgetMax || "flexible"}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const itData = trip.itinerary_data;
+                        setForm({
+                          destination: trip.destination,
+                          title: itData?.cover_title || `Paid: ${trip.destination}`,
+                          rawText: JSON.stringify(itData, null, 2),
+                        });
+                        setParsedPreview(itData);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-1" /> Review & Edit
+                    </Button>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Free Itinerary List */}
+          <h2 className="text-xl font-heading font-semibold mb-4 text-foreground">📋 Free Itineraries</h2>
           <div className="space-y-4">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground">Loading...</div>
@@ -288,7 +353,7 @@ const Admin = () => {
                   key={item.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="glass-card rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between"
+                  className="warm-card rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
@@ -310,7 +375,6 @@ const Admin = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-white/10"
                       onClick={() => {
                         setEditing(item);
                         const content = item.content;
@@ -330,7 +394,7 @@ const Admin = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => deleteItinerary(item.id)}
-                      className="text-destructive hover:text-destructive border-white/10"
+                      className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
