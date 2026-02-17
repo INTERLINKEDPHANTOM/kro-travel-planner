@@ -65,21 +65,33 @@ const FreeItinerary = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero */}
-      <section className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-        <motion.div {...fadeUp} className="max-w-4xl mx-auto">
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-4">
-            <MapPin className="w-3 h-3" /> Free Explorer Itinerary
-          </span>
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-heading leading-tight capitalize mb-4">
-            Vibes of {destination}
-          </h1>
-          {c.emotional_hook && (
-            <p className="text-muted-foreground max-w-xl text-lg italic">
-              {c.emotional_hook.substring(0, 120)}...
-            </p>
-          )}
-        </motion.div>
+      {/* Hero with destination image */}
+      <section className="relative pt-0 pb-12">
+        <div className="relative h-64 sm:h-80 overflow-hidden">
+          <img
+            src={`https://source.unsplash.com/1600x900/?${encodeURIComponent(destination || "travel")},india,landscape`}
+            alt={`${destination} landscape`}
+            className="w-full h-full object-cover"
+            loading="eager"
+            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-8">
+            <motion.div {...fadeUp} className="max-w-4xl mx-auto">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 backdrop-blur-sm text-primary text-xs font-bold uppercase tracking-wider mb-4">
+                <MapPin className="w-3 h-3" /> Free Explorer Itinerary
+              </span>
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-heading leading-tight capitalize mb-4 text-foreground">
+                Vibes of {destination}
+              </h1>
+              {c.emotional_hook && (
+                <p className="text-muted-foreground max-w-xl text-lg italic">
+                  {c.emotional_hook.substring(0, 120)}...
+                </p>
+              )}
+            </motion.div>
+          </div>
+        </div>
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -156,37 +168,49 @@ const FreeItinerary = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="warm-card-hover rounded-2xl p-6 sm:p-8"
+                  className="warm-card-hover rounded-2xl overflow-hidden"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-heading mb-2">{place.name}</h3>
-                      {place.vibe && <p className="text-muted-foreground italic mb-4">{place.vibe}</p>}
-                      <div className="flex flex-wrap gap-3 text-sm">
-                        {place.best_time && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary">
-                            <Clock className="w-3 h-3" /> {place.best_time}
-                          </span>
-                        )}
-                        {place.cost && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/10 text-accent">
-                            <Wallet className="w-3 h-3" /> {place.cost}
-                          </span>
-                        )}
+                  {/* Place image */}
+                  <div className="h-36 sm:h-44 overflow-hidden">
+                    <img
+                      src={`https://source.unsplash.com/800x400/?${encodeURIComponent(place.name + " " + (destination || "india"))}`}
+                      alt={place.name}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+                    />
+                  </div>
+                  <div className="p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-heading mb-2">{place.name}</h3>
+                        {place.vibe && <p className="text-muted-foreground italic mb-4">{place.vibe}</p>}
+                        <div className="flex flex-wrap gap-3 text-sm">
+                          {place.best_time && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary">
+                              <Clock className="w-3 h-3" /> {place.best_time}
+                            </span>
+                          )}
+                          {place.cost && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/10 text-accent">
+                              <Wallet className="w-3 h-3" /> {place.cost}
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      {place.maps_url && (
+                        <a href={place.maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline flex-shrink-0">
+                          <ExternalLink className="w-4 h-4" /> Maps
+                        </a>
+                      )}
                     </div>
-                    {place.maps_url && (
-                      <a href={place.maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline flex-shrink-0">
-                        <ExternalLink className="w-4 h-4" /> Maps
-                      </a>
+                    {place.local_tip && (
+                      <div className="mt-4 flex items-start gap-2 text-sm bg-primary/5 border border-primary/10 rounded-xl p-3">
+                        <Lightbulb className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-foreground/70"><strong className="text-foreground">Local tip:</strong> {place.local_tip}</span>
+                      </div>
                     )}
                   </div>
-                  {place.local_tip && (
-                    <div className="mt-4 flex items-start gap-2 text-sm bg-primary/5 border border-primary/10 rounded-xl p-3">
-                      <Lightbulb className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-foreground/70"><strong className="text-foreground">Local tip:</strong> {place.local_tip}</span>
-                    </div>
-                  )}
                 </motion.div>
               ))}
             </div>
