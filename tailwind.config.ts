@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['"Playfair Display"', 'Georgia', 'serif'],
-        body: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        heading: ['"Sora"', 'system-ui', 'sans-serif'],
+        body: ['"Inter"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -78,18 +78,28 @@ export default {
         },
         "float": {
           "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-10px)" },
+          "50%": { transform: "translateY(-12px)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(38, 90%, 55%, 0.2)" },
-          "50%": { boxShadow: "0 0 40px hsl(38, 90%, 55%, 0.4)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(252, 70%, 65%, 0.2)" },
+          "50%": { boxShadow: "0 0 50px hsl(252, 70%, 65%, 0.4)" },
+        },
+        "orbit": {
+          "0%": { transform: "rotate(0deg) translateX(80px) rotate(0deg)" },
+          "100%": { transform: "rotate(360deg) translateX(80px) rotate(-360deg)" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "float": "float 3s ease-in-out infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "float": "float 4s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
+        "orbit": "orbit 20s linear infinite",
+        "shimmer": "shimmer 3s linear infinite",
       },
     },
   },

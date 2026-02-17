@@ -18,13 +18,13 @@ const Navbar = () => {
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/30"
+      className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-2xl border-b border-white/[0.06]"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-primary-foreground" />
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center glow-primary">
+              <MapPin className="w-5 h-5 text-primary" />
             </div>
             <span className="text-xl font-heading font-bold text-foreground">
               Kro<span className="gradient-text">Travel</span>
@@ -36,10 +36,10 @@ const Navbar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                   location.pathname === item.path
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-primary/15 text-primary border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
                 }`}
               >
                 {item.label}
@@ -49,18 +49,20 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-3">
             <Link to="/auth">
-              <Button variant="ghost" size="sm">Log in</Button>
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-white/[0.04] rounded-xl">
+                Log in
+              </Button>
             </Link>
             <Link to="/plan">
-              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <button className="btn-primary text-sm px-6 py-2.5">
                 Plan My Trip
-              </Button>
+              </button>
             </Link>
           </div>
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-muted"
+            className="md:hidden p-2 rounded-xl hover:bg-white/[0.04]"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -71,7 +73,7 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="md:hidden border-t border-border/30 bg-background/95 backdrop-blur-lg"
+          className="md:hidden border-t border-white/[0.06] bg-background/95 backdrop-blur-2xl"
         >
           <div className="px-4 py-4 space-y-2">
             {navItems.map((item) => (
@@ -79,17 +81,17 @@ const Navbar = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-muted"
+                className="block px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-white/[0.04]"
               >
                 {item.label}
               </Link>
             ))}
             <div className="pt-2 space-y-2">
               <Link to="/auth" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full">Log in</Button>
+                <Button variant="outline" className="w-full rounded-xl border-white/10">Log in</Button>
               </Link>
               <Link to="/plan" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full bg-primary text-primary-foreground">Plan My Trip</Button>
+                <button className="btn-primary w-full text-sm py-3">Plan My Trip</button>
               </Link>
             </div>
           </div>
