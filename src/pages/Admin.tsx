@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Edit, Trash2, Eye, EyeOff, LogOut } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff, LogOut, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,9 @@ const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Itinerary | null>(null);
-  const [form, setForm] = useState({ destination: "", title: "", content: "" });
+  const [form, setForm] = useState({ destination: "", title: "", rawText: "" });
+  const [parsing, setParsing] = useState(false);
+  const [parsedPreview, setParsedPreview] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -63,36 +65,58 @@ const Admin = () => {
     setLoading(false);
   };
 
+  const handleParseText = async () => {
+    if (!form.rawText.trim()) {
+      toast({ title: "Please paste itinerary text first", variant: "destructive" });
+      return;
+    }
+
+    setParsing(true);
+    setParsedPreview(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("parse-itinerary", {
+        body: { rawText: form.rawText },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      setParsedPreview(data.data);
+      toast({ title: "✨ Text parsed successfully!", description: "Review the classified sections below." });
+    } catch (err: any) {
+      toast({ title: "Parsing failed", description: err.message, variant: "destructive" });
+    } finally {
+      setParsing(false);
+    }
+  };
+
   const handleSave = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    let contentJson: any;
-    try {
-      contentJson = JSON.parse(form.content);
-    } catch {
-      contentJson = { raw: form.content };
-    }
+    const contentToSave = parsedPreview || { raw: form.rawText };
 
     if (editing) {
       await supabase.from("itineraries").update({
         destination: form.destination,
         title: form.title,
-        content: contentJson,
+        content: contentToSave,
       }).eq("id", editing.id);
       toast({ title: "Updated!" });
     } else {
       await supabase.from("itineraries").insert({
         destination: form.destination,
         title: form.title,
-        content: contentJson,
+        content: contentToSave,
         created_by: user.id,
       });
       toast({ title: "Created!" });
     }
 
     setEditing(null);
-    setForm({ destination: "", title: "", content: "" });
+    setForm({ destination: "", title: "", rawText: "" });
+    setParsedPreview(null);
     fetchItineraries();
   };
 
@@ -114,15 +138,35 @@ const Admin = () => {
 
   if (!isAdmin) return null;
 
+  const sectionLabels: Record<string, string> = {
+    emotional_hook: "🎭 Emotional Hook",
+    local_resident: "🏠 Local Resident",
+    vibe: "🌄 Vibe & Atmosphere",
+    why_special: "⭐ Why Special",
+    must_visit_places: "📍 Must-Visit Places",
+    hidden_gems: "💎 Hidden Gems",
+    food_spots: "🍜 Food Spots",
+    food_timing_tip: "⏰ Food Timing Tip",
+    daily_cost_breakdown: "💰 Daily Cost Breakdown",
+    transport_guide: "🚌 Transport Guide",
+    transport_warning: "⚠️ Transport Warning",
+    best_time_to_visit: "📅 Best Time to Visit",
+    ideal_duration: "⏱️ Ideal Duration",
+    local_tips: "💡 Local Tips",
+    resident_moments: "🌅 Resident Moments",
+    sample_itinerary: "📋 Sample Itinerary",
+    ending_note: "💭 Ending Note",
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background noise-overlay">
       <Navbar />
 
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-heading font-bold">Admin Dashboard</h1>
-            <Button variant="outline" onClick={handleLogout} size="sm">
+            <h1 className="text-3xl font-heading font-bold text-foreground">Admin Dashboard</h1>
+            <Button variant="outline" onClick={handleLogout} size="sm" className="border-white/10 hover:bg-white/[0.04]">
               <LogOut className="w-4 h-4 mr-2" /> Logout
             </Button>
           </div>
@@ -131,51 +175,106 @@ const Admin = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card rounded-2xl p-6 sm:p-8 mb-8"
+            className="glass-card rounded-3xl p-6 sm:p-8 mb-8"
           >
-            <h2 className="text-xl font-heading font-semibold mb-6">
+            <h2 className="text-xl font-heading font-semibold mb-6 text-foreground">
               {editing ? "Edit Itinerary" : "Create New Itinerary"}
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Destination</Label>
+                  <Label className="text-foreground">Destination</Label>
                   <Input
                     placeholder="e.g., Manali"
                     value={form.destination}
                     onChange={(e) => setForm({ ...form, destination: e.target.value })}
+                    className="bg-secondary/50 border-white/10 focus:border-primary/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Title</Label>
+                  <Label className="text-foreground">Title</Label>
                   <Input
                     placeholder="e.g., Manali — A Local's Guide"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="bg-secondary/50 border-white/10 focus:border-primary/50"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Content (JSON or raw text)</Label>
+                <Label className="text-foreground">Paste Raw Itinerary Text</Label>
                 <Textarea
-                  placeholder="Paste your itinerary content here (JSON or plain text)..."
-                  value={form.content}
-                  onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  className="min-h-[200px] font-mono text-sm"
+                  placeholder="Paste your full itinerary content here — the AI will auto-classify it into sections like emotional hook, places, food, costs, tips, etc."
+                  value={form.rawText}
+                  onChange={(e) => setForm({ ...form, rawText: e.target.value })}
+                  className="min-h-[250px] text-sm bg-secondary/50 border-white/10 focus:border-primary/50"
                 />
               </div>
-              <div className="flex gap-3">
-                <Button onClick={handleSave} className="bg-primary text-primary-foreground">
-                  <Plus className="w-4 h-4 mr-2" /> {editing ? "Update" : "Create"}
-                </Button>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleParseText}
+                  disabled={parsing}
+                  className="btn-primary text-sm px-6 py-3 flex items-center gap-2 disabled:opacity-50"
+                >
+                  {parsing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {parsing ? "AI Parsing..." : "Auto-Classify with AI"}
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={!form.destination || !form.title}
+                  className="btn-outline-glass text-sm px-6 py-3 flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4" /> {editing ? "Update" : "Save Itinerary"}
+                </button>
                 {editing && (
-                  <Button variant="outline" onClick={() => { setEditing(null); setForm({ destination: "", title: "", content: "" }); }}>
+                  <Button variant="outline" className="border-white/10" onClick={() => { setEditing(null); setForm({ destination: "", title: "", rawText: "" }); setParsedPreview(null); }}>
                     Cancel
                   </Button>
                 )}
               </div>
             </div>
           </motion.div>
+
+          {/* Parsed Preview */}
+          {parsedPreview && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-card rounded-3xl p-6 sm:p-8 mb-8 glow-primary"
+            >
+              <h2 className="text-xl font-heading font-semibold mb-6 text-foreground flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" /> AI-Classified Preview
+              </h2>
+              <div className="space-y-4">
+                {Object.entries(parsedPreview).map(([key, value]) => {
+                  if (!value || (Array.isArray(value) && value.length === 0) || value === "") return null;
+                  return (
+                    <div key={key} className="rounded-2xl bg-secondary/30 border border-white/[0.06] p-4">
+                      <h3 className="text-sm font-semibold text-primary mb-2">
+                        {sectionLabels[key] || key}
+                      </h3>
+                      <div className="text-sm text-foreground/80">
+                        {typeof value === "string" ? (
+                          <p className="leading-relaxed">{value}</p>
+                        ) : Array.isArray(value) ? (
+                          <ul className="space-y-1">
+                            {value.map((item: any, i: number) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <span className="text-primary/60">•</span>
+                                <span>{typeof item === "string" ? item : JSON.stringify(item)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : typeof value === "object" ? (
+                          <pre className="text-xs overflow-x-auto">{JSON.stringify(value, null, 2)}</pre>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
 
           {/* Itinerary List */}
           <div className="space-y-4">
@@ -189,12 +288,12 @@ const Admin = () => {
                   key={item.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="glass-card rounded-xl p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between"
+                  className="glass-card rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="font-heading font-semibold text-foreground">{item.title}</h3>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${item.is_published ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${item.is_published ? "bg-primary/15 text-primary border border-primary/20" : "bg-secondary text-muted-foreground"}`}>
                         {item.is_published ? "Published" : "Draft"}
                       </span>
                     </div>
@@ -211,13 +310,18 @@ const Admin = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="border-white/10"
                       onClick={() => {
                         setEditing(item);
+                        const content = item.content;
                         setForm({
                           destination: item.destination,
                           title: item.title,
-                          content: typeof item.content === "string" ? item.content : JSON.stringify(item.content, null, 2),
+                          rawText: content?.raw || "",
                         });
+                        if (content && !content.raw) {
+                          setParsedPreview(content);
+                        }
                       }}
                     >
                       <Edit className="w-4 h-4" />
@@ -226,7 +330,7 @@ const Admin = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => deleteItinerary(item.id)}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive border-white/10"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
