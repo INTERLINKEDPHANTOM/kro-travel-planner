@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MapPin, Clock, Wallet, Star, Hotel, Utensils, Bus, Calendar,
   Lightbulb, ArrowRight, ExternalLink, Loader2, Package, Users,
   CheckCircle2, AlertCircle, Download, RotateCcw, Train, Car, Plane,
-  ChevronDown, IndianRupee
+  ChevronDown, IndianRupee, Camera, X
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateItineraryPDF } from "@/lib/generatePDF";
@@ -34,8 +34,46 @@ const buildAffiliateLinks = (destination: string, departure: string, departureDa
   };
 };
 
-const DayCard = ({ day, dayIndex, dayCost }: { day: any; dayIndex: number; dayCost: number }) => {
+type ActivityPhoto = { id: string; storage_path: string; place_name: string };
+
+const DayCard = ({
+  day, dayIndex, dayCost, tripId, userId, photos, onPhotoAdded
+}: {
+  day: any; dayIndex: number; dayCost: number;
+  tripId: string | null; userId: string | null;
+  photos: ActivityPhoto[];
+  onPhotoAdded: () => void;
+}) => {
   const [open, setOpen] = useState(dayIndex === 0);
+  const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const [uploading, setUploading] = useState<number | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, activityName: string, actIdx: number) => {
+    const files = e.target.files;
+    if (!files || !userId || !tripId) return;
+    setUploading(actIdx);
+    for (const file of Array.from(files)) {
+      const ext = file.name.split('.').pop();
+      const path = `${userId}/${tripId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("trip-photos").upload(path, file);
+      if (!error) {
+        await supabase.from("trip_photos").insert({
+          user_id: userId,
+          trip_id: tripId,
+          storage_path: path,
+          caption: file.name,
+          place_name: activityName,
+        });
+      }
+    }
+    setUploading(null);
+    onPhotoAdded();
+  };
+
+  const getPhotoUrl = (path: string) => {
+    const { data } = supabase.storage.from("trip-photos").getPublicUrl(path);
+    return data.publicUrl;
+  };
 
   return (
     <motion.div
@@ -74,38 +112,80 @@ const DayCard = ({ day, dayIndex, dayCost }: { day: any; dayIndex: number; dayCo
           className="border-t border-border"
         >
           <div className="p-4 sm:p-5 space-y-2.5">
-            {day.activities?.map((act: any, ai: number) => (
-              <div
-                key={ai}
-                className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 p-3 rounded-xl bg-background/60"
-              >
-                <div className="flex items-center gap-2 sm:w-24 flex-shrink-0">
-                  <Clock className="w-3.5 h-3.5 text-primary" />
-                  <span className="font-mono text-xs font-semibold text-primary">{act.time}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm text-foreground">{act.activity}</p>
-                      {act.note && <p className="text-xs text-muted-foreground mt-0.5">{act.note}</p>}
+            {day.activities?.map((act: any, ai: number) => {
+              const actPhotos = photos.filter(p => p.place_name === act.activity);
+              return (
+                <div key={ai} className="rounded-xl bg-background/60 overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 p-3">
+                    <div className="flex items-center gap-2 sm:w-24 flex-shrink-0">
+                      <Clock className="w-3.5 h-3.5 text-primary" />
+                      <span className="font-mono text-xs font-semibold text-primary">{act.time}</span>
                     </div>
-                    {act.maps_url && (
-                      <a href={act.maps_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex-shrink-0">
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm text-foreground">{act.activity}</p>
+                          {act.note && <p className="text-xs text-muted-foreground mt-0.5">{act.note}</p>}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {/* Photo upload icon */}
+                          {tripId && userId && (
+                            <>
+                              <input
+                                ref={el => { fileRefs.current[ai] = el; }}
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleUpload(e, act.activity, ai)}
+                              />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); fileRefs.current[ai]?.click(); }}
+                                className="p-1 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                                title="Add photo for this activity"
+                              >
+                                {uploading === ai ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <Camera className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </>
+                          )}
+                          {act.maps_url && (
+                            <a href={act.maps_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {act.duration && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{act.duration}</span>
+                        )}
+                        {act.cost && act.cost !== "₹0" && act.cost !== "Free" && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{act.cost}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {act.duration && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{act.duration}</span>
-                    )}
-                    {act.cost && act.cost !== "₹0" && act.cost !== "Free" && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{act.cost}</span>
-                    )}
-                  </div>
+                  {/* Inline photo strip */}
+                  {actPhotos.length > 0 && (
+                    <div className="flex gap-2 px-3 pb-3 overflow-x-auto">
+                      {actPhotos.map(p => (
+                        <img
+                          key={p.id}
+                          src={getPhotoUrl(p.storage_path)}
+                          alt=""
+                          className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-border"
+                          loading="lazy"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {/* Day cost summary */}
             {dayCost > 0 && (
@@ -133,6 +213,8 @@ const PaidItinerary = () => {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [activityPhotos, setActivityPhotos] = useState<ActivityPhoto[]>([]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("tripPreferences");
@@ -142,6 +224,11 @@ const PaidItinerary = () => {
     }
     const prefs = JSON.parse(stored);
     setPreferences(prefs);
+
+    // Get current user for photo uploads
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
 
     // Check for saved itinerary (viewing from My Trips)
     const savedData = sessionStorage.getItem("savedItinerary");
@@ -162,6 +249,21 @@ const PaidItinerary = () => {
       generateItinerary(prefs);
     }
   }, []);
+
+  // Fetch photos for this trip's activities
+  const fetchActivityPhotos = async () => {
+    if (!savedId) return;
+    const { data } = await supabase
+      .from("trip_photos")
+      .select("id, storage_path, place_name")
+      .eq("trip_id", savedId)
+      .order("created_at", { ascending: false });
+    setActivityPhotos((data as ActivityPhoto[]) || []);
+  };
+
+  useEffect(() => {
+    if (savedId) fetchActivityPhotos();
+  }, [savedId]);
 
   const [progressStep, setProgressStep] = useState(0);
   const [progressLabel, setProgressLabel] = useState("Starting...");
@@ -496,7 +598,7 @@ const PaidItinerary = () => {
                   }, 0) || 0;
 
                   return (
-                    <DayCard key={di} day={day} dayIndex={di} dayCost={dayCost} />
+                    <DayCard key={di} day={day} dayIndex={di} dayCost={dayCost} tripId={savedId || ""} userId={userId || ""} photos={activityPhotos} onPhotoAdded={fetchActivityPhotos} />
                   );
                 })}
               </div>
