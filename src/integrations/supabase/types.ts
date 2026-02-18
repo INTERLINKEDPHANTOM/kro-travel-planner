@@ -44,6 +44,42 @@ export type Database = {
         }
         Relationships: []
       }
+      broadcast_notifications: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          message: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          message: string
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          message?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       itineraries: {
         Row: {
           content: Json
@@ -79,6 +115,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      notification_dismissals: {
+        Row: {
+          dismissed_at: string
+          id: string
+          notification_id: string
+          user_id: string
+        }
+        Insert: {
+          dismissed_at?: string
+          id?: string
+          notification_id: string
+          user_id: string
+        }
+        Update: {
+          dismissed_at?: string
+          id?: string
+          notification_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_dismissals_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "broadcast_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -561,6 +626,42 @@ export type Database = {
           started_at?: string
           storage_limit_mb?: number
           storage_used_mb?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_titles: {
+        Row: {
+          badge_emoji: string
+          dominant_persona: string | null
+          id: string
+          title: string
+          total_distance_km: number
+          trips_count: number
+          unlocked_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_emoji?: string
+          dominant_persona?: string | null
+          id?: string
+          title?: string
+          total_distance_km?: number
+          trips_count?: number
+          unlocked_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_emoji?: string
+          dominant_persona?: string | null
+          id?: string
+          title?: string
+          total_distance_km?: number
+          trips_count?: number
+          unlocked_at?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

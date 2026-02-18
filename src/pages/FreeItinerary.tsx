@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin, Clock, Wallet, Star, Mountain, Utensils, Bus, Calendar,
-  Lightbulb, Heart, ArrowRight, ExternalLink, Loader2, CheckCircle2, AlertCircle
+  Lightbulb, Heart, ArrowRight, ExternalLink, Loader2, CheckCircle2, AlertCircle,
+  Lock, Zap, Shield, Camera, Download
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,11 +43,128 @@ const SectionHeader = ({ icon: Icon, title }: { icon: any; title: string }) => (
   </h2>
 );
 
+// ── Paid Plan CTA Banner ─────────────────────────────────────────────────────
+const PaidPlanCTA = ({ destination }: { destination: string }) => (
+  <motion.section {...fadeUp} className="mt-4">
+    <div className="prism-card p-6 sm:p-10 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10 -translate-y-12 translate-x-12"
+        style={{ background: "radial-gradient(circle, hsl(158, 42%, 38%), transparent)" }} />
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))" }}>
+            <Zap className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "hsl(158, 42%, 38%)" }}>Upgrade to Full Plan</span>
+        </div>
+        <h3 className="text-xl sm:text-2xl font-heading mb-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+          Want the complete {destination} experience?
+        </h3>
+        <p className="text-muted-foreground text-sm mb-6 max-w-sm">
+          Get an hour-by-hour AI itinerary with hotel picks, exact budget breakdown & PDF download.
+        </p>
+        {/* Benefits row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {[
+            { icon: Clock, label: "Hour-by-hour plan" },
+            { icon: Shield, label: "Hotel picks" },
+            { icon: Wallet, label: "Exact budget" },
+            { icon: Download, label: "PDF download" },
+          ].map(({ icon: Icon, label }) => (
+            <div key={label} className="glass-panel p-3 text-center">
+              <Icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
+              <p className="text-[11px] font-medium" style={{ color: "hsl(158, 38%, 22%)" }}>{label}</p>
+            </div>
+          ))}
+        </div>
+        <Link to="/plan">
+          <button className="btn-primary px-8 py-3.5 flex items-center gap-2 mx-auto sm:mx-0">
+            Plan My Full Trip <ArrowRight className="w-4 h-4" />
+          </button>
+        </Link>
+      </div>
+    </div>
+  </motion.section>
+);
+
+// ── No Free Plan Page ────────────────────────────────────────────────────────
+const NoFreePlan = ({ destination }: { destination: string }) => (
+  <div className="min-h-screen relative overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-0">
+      <div className="ambient-orb-1" style={{ top: "8%", left: "10%", opacity: 0.35 }} />
+      <div className="ambient-orb-2" style={{ bottom: "20%", right: "8%", opacity: 0.3 }} />
+    </div>
+    <Navbar />
+    <div className="relative z-10 min-h-screen flex items-center justify-center px-4 pt-20 pb-16">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-lg w-full text-center"
+      >
+        {/* Icon */}
+        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 relative"
+          style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))", boxShadow: "0 8px 32px hsla(158, 42%, 36%, 0.35)" }}>
+          <Lock className="w-9 h-9 text-white" />
+        </div>
+
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4"
+          style={{ background: "hsla(158, 42%, 38%, 0.10)", color: "hsl(158, 42%, 35%)" }}>
+          <MapPin className="w-3 h-3" /> {destination}
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl font-heading mb-3" style={{ color: "hsl(158, 45%, 10%)" }}>
+          No Free Guide Available
+        </h1>
+        <p className="text-muted-foreground text-sm mb-2 max-w-xs mx-auto leading-relaxed">
+          We don't have a free itinerary for <strong className="font-semibold" style={{ color: "hsl(158, 38%, 22%)" }}>{destination}</strong> yet — but our AI can craft you a full personalised plan right now.
+        </p>
+        <p className="text-primary text-xs font-medium mb-8">✨ Paid plans include everything the free guide has + much more</p>
+
+        {/* Feature highlights */}
+        <div className="grid grid-cols-2 gap-3 mb-8">
+          {[
+            { icon: Clock, title: "Hour-by-hour schedule", desc: "Every minute planned" },
+            { icon: Shield, title: "Hotel recommendations", desc: "Vetted picks for your budget" },
+            { icon: Wallet, title: "Exact budget", desc: "No surprises" },
+            { icon: Camera, title: "Photo album", desc: "Auto trip memory vault" },
+          ].map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="glass-panel p-4 text-left">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2"
+                style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
+                <Icon className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-xs font-semibold mb-0.5" style={{ color: "hsl(158, 38%, 18%)" }}>{title}</p>
+              <p className="text-[11px] text-muted-foreground">{desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link to="/plan">
+            <button className="btn-primary px-8 py-3.5 flex items-center gap-2 mx-auto">
+              Plan My Full Trip <ArrowRight className="w-4 h-4" />
+            </button>
+          </Link>
+          <Link to="/destinations">
+            <button className="btn-ghost-glass px-6 py-3.5">
+              Browse Destinations
+            </button>
+          </Link>
+        </div>
+      </motion.div>
+    </div>
+    <Footer />
+  </div>
+);
+
+// ── Main Component ───────────────────────────────────────────────────────────
 const FreeItinerary = () => {
   const { destination } = useParams<{ destination: string }>();
   const [content, setContent] = useState<any>(null);
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     const fetchItinerary = async () => {
@@ -61,6 +179,8 @@ const FreeItinerary = () => {
       if (data) {
         setContent(data.content);
         setTitle(data.title);
+      } else {
+        setNotFound(true);
       }
       setLoading(false);
     };
@@ -75,34 +195,15 @@ const FreeItinerary = () => {
             <div className="absolute inset-0 rounded-full border-4 border-border/40" />
             <div className="absolute inset-0 rounded-full border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent animate-spin" />
           </div>
-          <p className="text-muted-foreground text-sm">Loading itinerary...</p>
+          <p className="text-muted-foreground text-sm">Loading free guide...</p>
         </div>
       </div>
     );
   }
 
-  if (!content) {
-    return (
-      <div className="min-h-screen">
-        <Navbar />
-        <div className="pt-32 text-center px-4">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-            <MapPin className="w-6 h-6 text-primary" />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-heading mb-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-            Itinerary Not Found
-          </h1>
-          <p className="text-muted-foreground mb-8 text-sm max-w-xs mx-auto">
-            No published itinerary found for "{destination}".
-          </p>
-          <Link to="/destinations">
-            <button className="btn-primary px-8 py-3">Browse Destinations</button>
-          </Link>
-        </div>
-        <Footer />
-      </div>
-    );
+  // No data → redirect-style page to paid plan
+  if (notFound || !content) {
+    return <NoFreePlan destination={destination || "this destination"} />;
   }
 
   const c = content;
@@ -436,23 +537,8 @@ const FreeItinerary = () => {
           </motion.section>
         )}
 
-        {/* CTA to paid */}
-        <motion.section {...fadeUp} className="mt-4">
-          <div className="prism-card p-6 sm:p-8 text-center">
-            <Star className="w-8 h-8 text-primary mx-auto mb-3" />
-            <h3 className="text-xl sm:text-2xl font-heading mb-2" style={{ color: "hsl(158, 45%, 12%)" }}>
-              Want the full experience?
-            </h3>
-            <p className="text-muted-foreground text-sm mb-5 max-w-sm mx-auto">
-              Unlock an hour-by-hour AI itinerary with hotel picks, exact budget & PDF download.
-            </p>
-            <Link to="/plan">
-              <button className="btn-primary px-8 py-3.5 flex items-center gap-2 mx-auto">
-                Plan My Full Trip <ArrowRight className="w-4 h-4" />
-              </button>
-            </Link>
-          </div>
-        </motion.section>
+        {/* CTA Banner at bottom */}
+        <PaidPlanCTA destination={destination || "this destination"} />
       </div>
 
       <Footer />
