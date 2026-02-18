@@ -339,9 +339,18 @@ const TravelMap = () => {
   };
 
   const isPremium = subscription?.plan === "voyager" || subscription?.is_super_premium;
-  const visibleTrips = isPremium ? trips : trips.slice(0, 3);
-  const lockedCount = trips.length - visibleTrips.length;
-  const mappedTrips = visibleTrips.filter(t => t.lat && t.lng);
+  // All trips always visible on map — premium unlocks export
+  const visibleTrips = trips;
+  const lockedCount = 0;
+  // Deduplicate by destination so multiple Manali trips don't stack on same pin
+  const seenDest = new Set<string>();
+  const mappedTrips = visibleTrips.filter(t => {
+    if (!t.lat || !t.lng) return false;
+    const key = t.destination.toLowerCase().trim();
+    if (seenDest.has(key)) return false;
+    seenDest.add(key);
+    return true;
+  });
 
   const byYear: Record<string, TripPin[]> = {};
   trips.forEach(t => {
