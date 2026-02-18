@@ -13,6 +13,8 @@ import { generateItineraryPDF } from "@/lib/generatePDF";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import TripChatPanel from "@/components/TripChatPanel";
+import SpotifyPlaylistSuggestion from "@/components/SpotifyPlaylistSuggestion";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -1159,6 +1161,26 @@ const PaidItinerary = () => {
               <Star className="w-6 h-6 text-primary mx-auto mb-3" />
               <p className="text-sm sm:text-base leading-relaxed italic" style={{ color: "hsl(158, 30%, 28%)" }}>{it.closing_note}</p>
             </div>
+          </motion.section>
+        )}
+
+        {/* 🎵 Spotify Playlist Suggestions */}
+        <motion.section {...fadeUp}>
+          <SpotifyPlaylistSuggestion
+            destination={preferences?.arrival || "India"}
+            travelPersona={preferences?.travel_persona || "explorer"}
+            travelType={preferences?.travel_type || "leisure"}
+            numDays={it.days?.length || 3}
+          />
+        </motion.section>
+
+        {/* 💬 Trip Chat Room */}
+        {savedId && (
+          <motion.section {...fadeUp}>
+            <TripChatPanel
+              tripId={savedId}
+              destination={preferences?.arrival || "Your Trip"}
+            />
           </motion.section>
         )}
       </div>

@@ -28,6 +28,7 @@ import TripChat from "./pages/TripChat";
 import TravelPage from "./pages/TravelPage";
 import TripWrapped from "./pages/TripWrapped";
 import CreatorStudio from "./pages/CreatorStudio";
+import TravelMap from "./pages/TravelMap";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const AnimatedRoutes = () => {
         <Route path="/travel/:slug" element={<PageTransition><TravelPage /></PageTransition>} />
         <Route path="/trip-wrapped/:tripId" element={<PageTransition><TripWrapped /></PageTransition>} />
         <Route path="/creator-studio" element={<PageTransition><CreatorStudio /></PageTransition>} />
+        <Route path="/travel-map" element={<PageTransition><TravelMap /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>

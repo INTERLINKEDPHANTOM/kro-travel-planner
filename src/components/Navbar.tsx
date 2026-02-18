@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, Menu, X, LayoutDashboard, Film } from "lucide-react";
+import { Compass, Menu, X, LayoutDashboard, Film, Map } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -70,16 +70,28 @@ const Navbar = () => {
               </Link>
             ))}
             {isLoggedIn && (
-              <Link to="/creator-studio"
-                className="relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-                style={{ color: location.pathname === "/creator-studio" ? "hsl(270, 60%, 50%)" : "hsl(158, 18%, 48%)" }}>
-                {location.pathname === "/creator-studio" && (
-                  <motion.div layoutId="navPill" className="absolute inset-0 rounded-full"
-                    style={{ background: "hsla(270, 60%, 50%, 0.10)" }}
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }} />
-                )}
-                <span className="relative z-10 flex items-center gap-1"><Film className="w-3.5 h-3.5" /> Studio</span>
-              </Link>
+              <>
+                <Link to="/creator-studio"
+                  className="relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+                  style={{ color: location.pathname === "/creator-studio" ? "hsl(270, 60%, 50%)" : "hsl(158, 18%, 48%)" }}>
+                  {location.pathname === "/creator-studio" && (
+                    <motion.div layoutId="navPill" className="absolute inset-0 rounded-full"
+                      style={{ background: "hsla(270, 60%, 50%, 0.10)" }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }} />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1"><Film className="w-3.5 h-3.5" /> Studio</span>
+                </Link>
+                <Link to="/travel-map"
+                  className="relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+                  style={{ color: location.pathname === "/travel-map" ? "hsl(200, 70%, 40%)" : "hsl(158, 18%, 48%)" }}>
+                  {location.pathname === "/travel-map" && (
+                    <motion.div layoutId="navPill" className="absolute inset-0 rounded-full"
+                      style={{ background: "hsla(200, 70%, 40%, 0.10)" }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }} />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1"><Map className="w-3.5 h-3.5" /> Life Map</span>
+                </Link>
+              </>
             )}
           </div>
 
@@ -167,11 +179,18 @@ const Navbar = () => {
                 </motion.div>
               ))}
               {isLoggedIn && (
-                <Link to="/creator-studio" onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200"
-                  style={{ color: "hsl(270, 55%, 45%)" }}>
-                  <Film className="w-4 h-4" /> Creator Studio
-                </Link>
+                <>
+                  <Link to="/creator-studio" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200"
+                    style={{ color: "hsl(270, 55%, 45%)" }}>
+                    <Film className="w-4 h-4" /> Creator Studio
+                  </Link>
+                  <Link to="/travel-map" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200"
+                    style={{ color: "hsl(200, 65%, 40%)" }}>
+                    <Map className="w-4 h-4" /> Life Map
+                  </Link>
+                </>
               )}
               <div className="pt-3 space-y-2.5 border-t border-border/30 mt-2">
                 {isLoggedIn ? (

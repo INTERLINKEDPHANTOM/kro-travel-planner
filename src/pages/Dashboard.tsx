@@ -316,7 +316,7 @@ const Dashboard = () => {
             { icon: Compass, label: "Plan Trip", link: "/plan", primary: true },
             { icon: MapPin, label: "My Trips", link: "/my-trips" },
             { icon: Film, label: "Studio", link: "/creator-studio" },
-            { icon: Globe, label: "My Page", link: travelPageSlug ? `/travel/${travelPageSlug}` : "/dashboard" },
+            { icon: Globe, label: "Travel Map", link: "/travel-map" },
             { icon: Image, label: "Gallery", link: trips[0] ? `/trip-gallery/${trips[0].id}` : "/my-trips" },
             { icon: Star, label: "Offers", link: "/offers" },
           ].map(({ icon: Icon, label, link, primary }) => (
