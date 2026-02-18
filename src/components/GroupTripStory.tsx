@@ -83,14 +83,14 @@ const GroupTripStory = ({ userId, onClose }: GroupTripStoryProps) => {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/80 backdrop-blur-lg"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.93, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
         transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-        className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: "hsl(var(--background))", maxHeight: "90vh", overflowY: "auto" }}
+        className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
+        style={{ background: "hsl(var(--background))", maxHeight: "88vh", overflowY: "auto" }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

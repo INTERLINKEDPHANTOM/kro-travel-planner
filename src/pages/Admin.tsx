@@ -122,6 +122,58 @@ const Admin = () => {
   const memberPhotoRef = useRef<HTMLInputElement>(null);
   const founderPhotoRef = useRef<HTMLInputElement>(null);
 
+  // destination photos (for free itineraries)
+  const [destPhotoFiles, setDestPhotoFiles] = useState<File[]>([]);
+  const [destPhotoPreviews, setDestPhotoPreviews] = useState<string[]>([]);
+  const [destPhotoUploading, setDestPhotoUploading] = useState(false);
+  const [existingDestPhotos, setExistingDestPhotos] = useState<string[]>([]);
+  const destPhotoRef = useRef<HTMLInputElement>(null);
+
+  const handleDestPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const allowed = 12 - destPhotoFiles.length - existingDestPhotos.length;
+    const toAdd = files.slice(0, Math.max(0, allowed));
+    setDestPhotoFiles(prev => [...prev, ...toAdd]);
+    toAdd.forEach(f => {
+      const reader = new FileReader();
+      reader.onload = ev => setDestPhotoPreviews(prev => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(f);
+    });
+  };
+
+  const removeDestPhoto = (idx: number) => {
+    setDestPhotoFiles(prev => prev.filter((_, i) => i !== idx));
+    setDestPhotoPreviews(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const removeExistingDestPhoto = (url: string) => {
+    setExistingDestPhotos(prev => prev.filter(u => u !== url));
+  };
+
+  const loadExistingDestPhotos = async (itineraryId: string) => {
+    const { data } = await supabase.from("itineraries").select("content").eq("id", itineraryId).single();
+    if (data?.content && typeof data.content === "object") {
+      const content = data.content as any;
+      setExistingDestPhotos(content.gallery_images || []);
+    } else {
+      setExistingDestPhotos([]);
+    }
+  };
+
+  const uploadDestPhotos = async (itineraryId: string): Promise<string[]> => {
+    const urls: string[] = [...existingDestPhotos];
+    for (const file of destPhotoFiles) {
+      const ext = file.name.split(".").pop();
+      const path = `destination-gallery/${itineraryId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("trip-photos").upload(path, file, { upsert: true });
+      if (!error) {
+        const { data } = supabase.storage.from("trip-photos").getPublicUrl(path);
+        urls.push(data.publicUrl);
+      }
+    }
+    return urls;
+  };
+
   // broadcast notifications
   type BroadcastNotif = { id: string; title: string; message: string; image_url: string | null; type: string; is_active: boolean; created_at: string; expires_at: string | null; };
   const [broadcasts, setBroadcasts] = useState<BroadcastNotif[]>([]);
@@ -250,16 +302,49 @@ const Admin = () => {
   const handleSave = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const contentToSave = parsedPreview || { raw: form.rawText };
-    if (editing) {
-      await supabase.from("itineraries").update({ destination: form.destination, title: form.title, content: contentToSave }).eq("id", editing.id);
-      toast({ title: "Updated!" });
-    } else {
-      await supabase.from("itineraries").insert({ destination: form.destination, title: form.title, content: contentToSave, created_by: user.id });
-      toast({ title: "Created!" });
+    setDestPhotoUploading(true);
+    try {
+      let galleryImages: string[] = [];
+      const contentToSave = parsedPreview || { raw: form.rawText };
+      
+      if (editing) {
+        // Upload new photos + keep existing
+        galleryImages = await uploadDestPhotos(editing.id);
+        await supabase.from("itineraries").update({
+          destination: form.destination,
+          title: form.title,
+          content: { ...contentToSave, gallery_images: galleryImages },
+        }).eq("id", editing.id);
+        toast({ title: "Updated!" });
+      } else {
+        // Insert first, then upload photos with the new id
+        const { data: newRow, error } = await supabase.from("itineraries").insert({
+          destination: form.destination,
+          title: form.title,
+          content: contentToSave,
+          created_by: user.id,
+        }).select("id").single();
+        if (error) throw error;
+        if (newRow) {
+          galleryImages = await uploadDestPhotos(newRow.id);
+          if (galleryImages.length > 0) {
+            await supabase.from("itineraries").update({ content: { ...contentToSave, gallery_images: galleryImages } }).eq("id", newRow.id);
+          }
+        }
+        toast({ title: "Created!" });
+      }
+      setEditing(null);
+      setForm({ destination: "", title: "", rawText: "" });
+      setParsedPreview(null);
+      setDestPhotoFiles([]);
+      setDestPhotoPreviews([]);
+      setExistingDestPhotos([]);
+      fetchItineraries();
+    } catch (err: any) {
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
+    } finally {
+      setDestPhotoUploading(false);
     }
-    setEditing(null); setForm({ destination: "", title: "", rawText: "" }); setParsedPreview(null);
-    fetchItineraries();
   };
 
   const togglePublish = async (id: string, current: boolean) => {
@@ -868,15 +953,74 @@ const Admin = () => {
                     </div>
                   </div>
                   <Textarea placeholder="Paste itinerary text — AI will auto-classify…" value={form.rawText} onChange={e => setForm({ ...form, rawText: e.target.value })} className="min-h-[180px] mb-4 text-sm" />
+                  
+                  {/* Destination Gallery Photos */}
+                  <div className="mb-4 p-4 rounded-2xl border border-dashed border-border/60 bg-muted/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <Label className="text-sm font-semibold">Destination Gallery</Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">Upload 10–12 photos for this destination's gallery (shown on free itinerary page)</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => destPhotoRef.current?.click()}
+                        disabled={(destPhotoFiles.length + existingDestPhotos.length) >= 12}
+                        className="text-xs btn-primary px-3 py-1.5 flex items-center gap-1.5 disabled:opacity-40"
+                      >
+                        <Upload className="w-3.5 h-3.5" /> Add Photos
+                      </button>
+                      <input ref={destPhotoRef} type="file" multiple accept="image/*" className="hidden" onChange={handleDestPhotoSelect} />
+                    </div>
+                    
+                    {(existingDestPhotos.length > 0 || destPhotoPreviews.length > 0) ? (
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                        {existingDestPhotos.map((url, i) => (
+                          <div key={`existing-${i}`} className="relative aspect-square rounded-xl overflow-hidden ring-1 ring-primary/30">
+                            <img src={url} alt="" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeExistingDestPhoto(url)}
+                              className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center hover:bg-destructive transition-colors"
+                            >
+                              <X className="w-2.5 h-2.5 text-white" />
+                            </button>
+                          </div>
+                        ))}
+                        {destPhotoPreviews.map((src, i) => (
+                          <div key={`new-${i}`} className="relative aspect-square rounded-xl overflow-hidden ring-2 ring-primary/60">
+                            <img src={src} alt="" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeDestPhoto(i)}
+                              className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center hover:bg-destructive transition-colors"
+                            >
+                              <X className="w-2.5 h-2.5 text-white" />
+                            </button>
+                            <div className="absolute bottom-0.5 left-0.5 bg-primary rounded-md px-1 py-0.5">
+                              <span className="text-white text-[8px] font-bold">NEW</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-muted-foreground">
+                        <Image className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        <p className="text-xs">No photos added yet. Upload up to 12 images.</p>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground mt-2 text-right">
+                      {destPhotoFiles.length + existingDestPhotos.length} / 12 photos
+                    </p>
+                  </div>
+
                   <div className="flex flex-wrap gap-3">
                     <button onClick={handleParseText} disabled={parsing} className="btn-primary text-sm px-5 py-2.5 flex items-center gap-2 disabled:opacity-50">
                       {parsing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                       {parsing ? "Parsing…" : "Auto-Classify with AI"}
                     </button>
-                    <button onClick={handleSave} disabled={!form.destination || !form.title} className="btn-outline-glass text-sm px-5 py-2.5 flex items-center gap-2 disabled:opacity-50">
-                      <Plus className="w-4 h-4" /> {editing ? "Update" : "Save"}
+                    <button onClick={handleSave} disabled={!form.destination || !form.title || destPhotoUploading} className="btn-outline-glass text-sm px-5 py-2.5 flex items-center gap-2 disabled:opacity-50">
+                      {destPhotoUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                      {destPhotoUploading ? "Uploading…" : (editing ? "Update" : "Save")}
                     </button>
-                    {editing && <Button variant="outline" onClick={() => { setEditing(null); setForm({ destination: "", title: "", rawText: "" }); setParsedPreview(null); }}>Cancel</Button>}
+                    {editing && <Button variant="outline" onClick={() => { setEditing(null); setForm({ destination: "", title: "", rawText: "" }); setParsedPreview(null); setDestPhotoFiles([]); setDestPhotoPreviews([]); setExistingDestPhotos([]); }}>Cancel</Button>}
                   </div>
                 </div>
 
@@ -944,7 +1088,7 @@ const Admin = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Switch checked={item.is_published} onCheckedChange={() => togglePublish(item.id, item.is_published)} />
-                            <Button variant="outline" size="sm" onClick={() => { setEditing(item); setForm({ destination: item.destination, title: item.title, rawText: (item.content as any)?.raw || "" }); if (item.content && !(item.content as any).raw) setParsedPreview(item.content); }}>
+                            <Button variant="outline" size="sm" onClick={() => { setEditing(item); setForm({ destination: item.destination, title: item.title, rawText: (item.content as any)?.raw || "" }); if (item.content && !(item.content as any).raw) setParsedPreview(item.content); setDestPhotoFiles([]); setDestPhotoPreviews([]); loadExistingDestPhotos(item.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
                               <Edit className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteItinerary(item.id)}>

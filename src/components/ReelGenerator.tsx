@@ -712,18 +712,18 @@ const ReelGenerator = ({ tripId, destination, onClose }: ReelGeneratorProps) => 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-2xl"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/90 backdrop-blur-2xl"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, y: 30 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 30 }}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
         transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-        className="w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl"
+        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
         style={{
           background: "hsl(var(--background))",
-          maxHeight: "94vh",
+          maxHeight: "92vh",
           overflowY: "auto",
           scrollbarWidth: "none",
         }}
