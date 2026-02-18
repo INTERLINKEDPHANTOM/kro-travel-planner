@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Calendar, Globe, Loader2, ArrowRight, Crown, Sparkles, X } from "lucide-react";
@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix default marker icons broken by webpack/vite
+// Fix default marker icons broken by vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -80,45 +80,132 @@ const getLatLng = (destination: string): [number, number] | null => {
   return null;
 };
 
-const PIN_COLORS_HEX = ["#2d9b6b", "#7c3aed", "#f59e0b", "#e11d48", "#0ea5e9", "#10b981"];
+const PIN_COLORS_HEX = ["#00e5a0", "#7c6fff", "#fbbf24", "#f87171", "#38bdf8", "#34d399"];
 
-// Custom colored circular marker
+// Custom glowing pin icon for dark map
 const createColoredIcon = (color: string, index: number) => {
   const svg = `
-    <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-      <filter id="shadow${index}">
-        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
-      </filter>
-      <path d="M16 0C9.4 0 4 5.4 4 12c0 9 12 28 12 28s12-19 12-28c0-6.6-5.4-12-12-12z"
-        fill="${color}" filter="url(#shadow${index})"/>
-      <circle cx="16" cy="12" r="6" fill="white" opacity="0.9"/>
-      <text x="16" y="16" text-anchor="middle" font-size="8" font-weight="bold" fill="${color}">${index + 1}</text>
+    <svg width="36" height="44" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow${index}" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <path d="M18 0C10.3 0 4 6.3 4 14c0 10.5 14 30 14 30s14-19.5 14-30c0-7.7-6.3-14-14-14z"
+        fill="${color}" filter="url(#glow${index})" opacity="0.95"/>
+      <circle cx="18" cy="14" r="7" fill="#0a0f1e" opacity="0.85"/>
+      <circle cx="18" cy="14" r="4" fill="${color}" opacity="0.9"/>
+      <text x="18" y="18" text-anchor="middle" font-size="7" font-weight="bold" fill="#0a0f1e">${index + 1}</text>
     </svg>`;
   return L.divIcon({
     html: svg,
     className: "",
-    iconSize: [32, 40],
-    iconAnchor: [16, 40],
-    popupAnchor: [0, -40],
+    iconSize: [36, 44],
+    iconAnchor: [18, 44],
+    popupAnchor: [0, -44],
   });
 };
 
+// ── Animated marker drop helper ──────────────────────────────────────────────
+const dropMarkerAnimated = (
+  map: L.Map,
+  trip: TripPin,
+  index: number,
+  color: string,
+  onClickCb: (t: TripPin) => void,
+  delay: number
+): Promise<L.Marker> =>
+  new Promise(resolve => {
+    setTimeout(() => {
+      const icon = createColoredIcon(color, index);
+      const date = new Date(trip.created_at).toLocaleDateString("en-IN", {
+        day: "numeric", month: "short", year: "numeric",
+      });
+      const marker = L.marker([trip.lat!, trip.lng!], { icon })
+        .addTo(map)
+        .bindPopup(`
+          <div style="font-family:system-ui;padding:6px 4px;min-width:170px;background:#0d1b2a;border-radius:10px">
+            <div style="font-weight:700;font-size:14px;color:${color};margin-bottom:4px">📍 ${trip.destination}</div>
+            <div style="font-size:11px;color:#8ab4c9;margin-bottom:6px">${date}</div>
+            <div style="font-size:11px;font-weight:600;color:#0a0f1e;background:${color};padding:3px 8px;border-radius:6px;display:inline-block">Trip #${index + 1}</div>
+          </div>
+        `, { maxWidth: 210 });
+      marker.on("click", () => onClickCb(trip));
+      resolve(marker);
+    }, delay);
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 const LeafletMap = ({
   trips,
   onSelectTrip,
+  newTripId,
 }: {
   trips: TripPin[];
   onSelectTrip: (trip: TripPin) => void;
+  newTripId?: string | null;
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const polylinesRef = useRef<L.Polyline[]>([]);
 
+  const rebuildMap = useCallback(async (map: L.Map, validTrips: TripPin[]) => {
+    // Clear old markers and lines
+    markersRef.current.forEach(m => m.remove());
+    polylinesRef.current.forEach(p => p.remove());
+    markersRef.current = [];
+    polylinesRef.current = [];
+
+    if (validTrips.length === 0) return;
+
+    const latlngs: [number, number][] = [];
+
+    // Drop markers one by one with staggered animation
+    const markerPromises = validTrips.map((trip, i) => {
+      const color = PIN_COLORS_HEX[i % PIN_COLORS_HEX.length];
+      latlngs.push([trip.lat!, trip.lng!]);
+      return dropMarkerAnimated(map, trip, i, color, onSelectTrip, i * 250);
+    });
+
+    const markers = await Promise.all(markerPromises);
+    markersRef.current = markers;
+
+    // Draw animated polyline connecting all trips
+    if (latlngs.length > 1) {
+      const line = L.polyline([], {
+        color: "#00e5a0",
+        weight: 2,
+        opacity: 0.7,
+        dashArray: "6, 6",
+        smoothFactor: 2,
+      }).addTo(map);
+      polylinesRef.current.push(line);
+
+      // Animate the line drawing
+      latlngs.forEach((ll, i) => {
+        setTimeout(() => {
+          const current = line.getLatLngs() as L.LatLng[];
+          line.setLatLngs([...current, ll]);
+        }, i * 250 + 100);
+      });
+    }
+
+    // Fit bounds after all pins placed
+    setTimeout(() => {
+      const bounds = L.latLngBounds(latlngs);
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 10 });
+    }, validTrips.length * 250 + 300);
+  }, [onSelectTrip]);
+
+  // Init map once
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Init map centered on India
     const map = L.map(mapRef.current, {
       center: [20.5937, 78.9629],
       zoom: 5,
@@ -126,11 +213,15 @@ const LeafletMap = ({
       scrollWheelZoom: true,
     });
 
-    // Clean, modern tile layer (OpenStreetMap)
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 18,
-    }).addTo(map);
+    // 🌑 Dark tile layer — CartoDB Dark Matter
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 20,
+      }
+    ).addTo(map);
 
     mapInstanceRef.current = map;
 
@@ -140,62 +231,29 @@ const LeafletMap = ({
     };
   }, []);
 
+  // Rebuild when trips change (including real-time additions)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
-
-    // Clear old markers and lines
-    markersRef.current.forEach(m => m.remove());
-    polylinesRef.current.forEach(p => p.remove());
-    markersRef.current = [];
-    polylinesRef.current = [];
-
     const validTrips = trips.filter(t => t.lat && t.lng);
-    if (validTrips.length === 0) return;
+    rebuildMap(map, validTrips);
+  }, [trips, rebuildMap]);
 
-    const latlngs: [number, number][] = [];
-
-    validTrips.forEach((trip, i) => {
-      const color = PIN_COLORS_HEX[i % PIN_COLORS_HEX.length];
-      const icon = createColoredIcon(color, i);
-      const date = new Date(trip.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-
-      const marker = L.marker([trip.lat!, trip.lng!], { icon })
-        .addTo(map)
-        .bindPopup(`
-          <div style="font-family:system-ui;padding:4px;min-width:160px">
-            <div style="font-weight:700;font-size:14px;color:#1a3a2a;margin-bottom:4px">📍 ${trip.destination}</div>
-            <div style="font-size:11px;color:#666;margin-bottom:6px">${date}</div>
-            <div style="font-size:11px;font-weight:600;color:${color};background:${color}18;padding:3px 8px;border-radius:6px;display:inline-block">Trip #${i + 1}</div>
-          </div>
-        `, { maxWidth: 200 });
-
-      marker.on("click", () => onSelectTrip(trip));
-      markersRef.current.push(marker);
-      latlngs.push([trip.lat!, trip.lng!]);
-    });
-
-    // Draw connecting lines between trips in chronological order
-    if (latlngs.length > 1) {
-      const line = L.polyline(latlngs, {
-        color: "#2d9b6b",
-        weight: 2.5,
-        opacity: 0.55,
-        dashArray: "8, 8",
-        smoothFactor: 1.5,
-      }).addTo(map);
-      polylinesRef.current.push(line);
-    }
-
-    // Fit map bounds to show all pins
-    const bounds = L.latLngBounds(latlngs);
-    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 10 });
-
-  }, [trips]);
-
-  return <div ref={mapRef} style={{ height: "480px", width: "100%", borderRadius: "16px", zIndex: 1 }} />;
+  return (
+    <div
+      ref={mapRef}
+      style={{
+        height: "500px",
+        width: "100%",
+        borderRadius: "16px",
+        zIndex: 1,
+        background: "#0a0f1e",
+      }}
+    />
+  );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
 const TravelMap = () => {
   const navigate = useNavigate();
   const [trips, setTrips] = useState<TripPin[]>([]);
@@ -203,28 +261,64 @@ const TravelMap = () => {
   const [selectedTrip, setSelectedTrip] = useState<TripPin | null>(null);
   const [view, setView] = useState<"map" | "timeline">("map");
   const [subscription, setSubscription] = useState<any>(null);
+  const [newTripId, setNewTripId] = useState<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
+
+  const enrichWithCoords = (raw: any[]): TripPin[] =>
+    raw.map((t: any) => {
+      const coords = getLatLng(t.destination);
+      return { ...t, lat: coords?.[0], lng: coords?.[1] };
+    });
 
   useEffect(() => { init(); }, []);
 
   const init = async () => {
     const { data: { user: u } } = await supabase.auth.getUser();
     if (!u) { navigate("/auth?redirect=/travel-map"); return; }
+    userIdRef.current = u.id;
 
     const [{ data: tripsData }, { data: sub }] = await Promise.all([
-      supabase.from("saved_itineraries").select("id,destination,created_at,preferences,status")
-        .eq("user_id", u.id).order("created_at", { ascending: true }),
+      supabase
+        .from("saved_itineraries")
+        .select("id,destination,created_at,preferences,status")
+        .eq("user_id", u.id)
+        .order("created_at", { ascending: true }),
       supabase.from("user_subscriptions").select("*").eq("user_id", u.id).maybeSingle(),
     ]);
 
-    // Resolve lat/lng for each trip
-    const withCoords: TripPin[] = (tripsData || []).map((t: any) => {
-      const coords = getLatLng(t.destination);
-      return { ...t, lat: coords?.[0], lng: coords?.[1] };
-    });
-
-    setTrips(withCoords);
+    setTrips(enrichWithCoords(tripsData || []));
     setSubscription(sub);
     setLoading(false);
+
+    // 🔴 Realtime: auto-pin new trips as they are planned
+    const channel = supabase
+      .channel(`travel-map-${u.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "saved_itineraries",
+          filter: `user_id=eq.${u.id}`,
+        },
+        (payload) => {
+          const newTrip = payload.new as any;
+          const coords = getLatLng(newTrip.destination);
+          const enriched: TripPin = {
+            ...newTrip,
+            lat: coords?.[0],
+            lng: coords?.[1],
+          };
+          setNewTripId(enriched.id);
+          setTrips(prev => {
+            if (prev.find(t => t.id === enriched.id)) return prev;
+            return [...prev, enriched];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   };
 
   const isPremium = subscription?.plan === "voyager" || subscription?.is_super_premium;
@@ -263,6 +357,13 @@ const TravelMap = () => {
                 Travel Life Map
               </h1>
               <p className="text-sm text-muted-foreground">Every place you've visited, pinned forever</p>
+            </div>
+
+            {/* Live badge */}
+            <div className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+              style={{ background: "hsla(158,80%,38%,0.12)", color: "hsl(158,80%,32%)", border: "1px solid hsla(158,80%,38%,0.30)" }}>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Live
             </div>
           </div>
 
@@ -310,10 +411,10 @@ const TravelMap = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Real Leaflet Map */}
-                <div className="rounded-2xl overflow-hidden shadow-lg"
-                  style={{ border: "1px solid hsla(148,35%,78%,0.30)" }}>
-                  <LeafletMap trips={mappedTrips} onSelectTrip={setSelectedTrip} />
+                {/* Dark Leaflet Map */}
+                <div className="rounded-2xl overflow-hidden shadow-2xl"
+                  style={{ border: "1px solid hsla(148,35%,60%,0.20)", background: "#0a0f1e" }}>
+                  <LeafletMap trips={mappedTrips} onSelectTrip={setSelectedTrip} newTripId={newTripId} />
                 </div>
 
                 {/* Legend */}
@@ -326,11 +427,11 @@ const TravelMap = () => {
                         className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all"
                         style={{
                           background: selectedTrip?.id === trip.id ? PIN_COLORS_HEX[i % PIN_COLORS_HEX.length] + "22" : "hsla(0,0%,50%,0.08)",
-                          border: `1px solid ${PIN_COLORS_HEX[i % PIN_COLORS_HEX.length]}44`,
+                          border: `1px solid ${PIN_COLORS_HEX[i % PIN_COLORS_HEX.length]}55`,
                           color: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length],
                         }}>
-                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                          style={{ background: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length] }}>
+                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                          style={{ background: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length], color: "#0a0f1e" }}>
                           {i + 1}
                         </span>
                         {trip.destination.split(",")[0]}
@@ -363,7 +464,11 @@ const TravelMap = () => {
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(selectedTrip.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                            {selectedTrip.lat && <span className="ml-2 opacity-60">{selectedTrip.lat.toFixed(2)}°N, {selectedTrip.lng?.toFixed(2)}°E</span>}
+                            {selectedTrip.lat && (
+                              <span className="ml-2 opacity-60">
+                                {selectedTrip.lat.toFixed(2)}°N, {selectedTrip.lng?.toFixed(2)}°E
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
