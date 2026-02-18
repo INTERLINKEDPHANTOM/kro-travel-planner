@@ -32,6 +32,7 @@ const CITY_LATLONG: Record<string, [number, number]> = {
   "shimla": [31.1048, 77.1734], "manali": [32.2432, 77.1892],
   "amritsar": [31.6340, 74.8723], "chandigarh": [30.7333, 76.7794],
   "jammu": [32.7266, 74.8570], "srinagar": [34.0837, 74.7973],
+  "katra": [32.9917, 74.9321],
   "leh": [34.1526, 77.5771], "ladakh": [34.1526, 77.5771],
   "spiti": [32.2461, 78.0339], "spiti valley": [32.2461, 78.0339],
   "mumbai": [19.0760, 72.8777], "pune": [18.5204, 73.8567],
@@ -63,6 +64,23 @@ const CITY_LATLONG: Record<string, [number, number]> = {
   "lakshadweep": [10.5667, 72.6417],
   "agartala": [23.8315, 91.2868], "aizawl": [23.7307, 92.7173],
   "imphal": [24.8170, 93.9368], "kohima": [25.6751, 94.1086],
+  // Bihar & East India
+  "patna": [25.5941, 85.1376], "gaya": [24.7914, 84.9994],
+  "biharsharif": [25.1977, 85.5200], "bihar sharif": [25.1977, 85.5200],
+  "muzaffarpur": [26.1197, 85.3910], "bhagalpur": [25.2425, 86.9842],
+  "ranchi": [23.3441, 85.3096], "jamshedpur": [22.8046, 86.2029],
+  "dhanbad": [23.7957, 86.4304], "bokaro": [23.6693, 85.9948],
+  // More cities
+  "surat": [21.1702, 72.8311], "vadodara": [22.3072, 73.1812],
+  "rajkot": [22.3039, 70.8022], "amravati": [20.9320, 77.7523],
+  "nashik": [19.9975, 73.7898], "aurangabad": [19.8762, 75.3433],
+  "solapur": [17.6599, 75.9064], "vijayawada": [16.5062, 80.6480],
+  "visakhapatnam": [17.6868, 83.2185], "tirupati": [13.6288, 79.4192],
+  "madurai": [9.9252, 78.1198], "coimbatore": [11.0168, 76.9558],
+  "salem": [11.6643, 78.1460], "vellore": [12.9165, 79.1325],
+  "pondicherry": [11.9416, 79.8083], "mangalore": [12.9141, 74.8560],
+  "hubli": [15.3647, 75.1240], "belgaum": [15.8497, 74.4977],
+  // International
   "pattaya": [12.9236, 100.8824], "bangkok": [13.7563, 100.5018],
   "singapore": [1.3521, 103.8198], "dubai": [25.2048, 55.2708],
   "maldives": [3.2028, 73.2207], "bali": [-8.3405, 115.0920],
@@ -82,13 +100,13 @@ const getLatLng = (destination: string): [number, number] | null => {
 
 const PIN_COLORS_HEX = ["#00e5a0", "#7c6fff", "#fbbf24", "#f87171", "#38bdf8", "#34d399"];
 
-// Custom glowing pin icon for dark map
+// Custom glowing pin icon
 const createColoredIcon = (color: string, index: number) => {
   const svg = `
     <svg width="36" height="44" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <filter id="glow${index}" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <filter id="glow${index}" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
           <feMerge>
             <feMergeNode in="coloredBlur"/>
             <feMergeNode in="SourceGraphic"/>
@@ -96,10 +114,10 @@ const createColoredIcon = (color: string, index: number) => {
         </filter>
       </defs>
       <path d="M18 0C10.3 0 4 6.3 4 14c0 10.5 14 30 14 30s14-19.5 14-30c0-7.7-6.3-14-14-14z"
-        fill="${color}" filter="url(#glow${index})" opacity="0.95"/>
-      <circle cx="18" cy="14" r="7" fill="#0a0f1e" opacity="0.85"/>
-      <circle cx="18" cy="14" r="4" fill="${color}" opacity="0.9"/>
-      <text x="18" y="18" text-anchor="middle" font-size="7" font-weight="bold" fill="#0a0f1e">${index + 1}</text>
+        fill="${color}" filter="url(#glow${index})" opacity="0.92"/>
+      <circle cx="18" cy="14" r="7" fill="white" opacity="0.90"/>
+      <circle cx="18" cy="14" r="4" fill="${color}" opacity="0.95"/>
+      <text x="18" y="18" text-anchor="middle" font-size="7" font-weight="bold" fill="white">${index + 1}</text>
     </svg>`;
   return L.divIcon({
     html: svg,
@@ -128,10 +146,10 @@ const dropMarkerAnimated = (
       const marker = L.marker([trip.lat!, trip.lng!], { icon })
         .addTo(map)
         .bindPopup(`
-          <div style="font-family:system-ui;padding:6px 4px;min-width:170px;background:#0d1b2a;border-radius:10px">
-            <div style="font-weight:700;font-size:14px;color:${color};margin-bottom:4px">📍 ${trip.destination}</div>
-            <div style="font-size:11px;color:#8ab4c9;margin-bottom:6px">${date}</div>
-            <div style="font-size:11px;font-weight:600;color:#0a0f1e;background:${color};padding:3px 8px;border-radius:6px;display:inline-block">Trip #${index + 1}</div>
+          <div style="font-family:system-ui;padding:6px 4px;min-width:170px;background:#f8fffe;border-radius:10px;border:1px solid #c8e6d8">
+            <div style="font-weight:700;font-size:14px;color:#1a3a2a;margin-bottom:4px">📍 ${trip.destination}</div>
+            <div style="font-size:11px;color:#5a7a6a;margin-bottom:6px">${date}</div>
+            <div style="font-size:11px;font-weight:600;color:white;background:${color};padding:3px 8px;border-radius:6px;display:inline-block">Trip #${index + 1}</div>
           </div>
         `, { maxWidth: 210 });
       marker.on("click", () => onClickCb(trip));
@@ -178,9 +196,9 @@ const LeafletMap = ({
     // Draw animated polyline connecting all trips
     if (latlngs.length > 1) {
       const line = L.polyline([], {
-        color: "#00e5a0",
-        weight: 2,
-        opacity: 0.7,
+        color: "#e11d48",
+        weight: 2.5,
+        opacity: 0.75,
         dashArray: "6, 6",
         smoothFactor: 2,
       }).addTo(map);
@@ -213,13 +231,12 @@ const LeafletMap = ({
       scrollWheelZoom: true,
     });
 
-    // 🌑 Dark tile layer — CartoDB Dark Matter
+    // 🌍 Natural tile layer — ESRI World Topo (blue water, green land)
     L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
       {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 20,
+        attribution: 'Tiles © <a href="https://www.esri.com/">Esri</a>',
+        maxZoom: 18,
       }
     ).addTo(map);
 
@@ -247,7 +264,7 @@ const LeafletMap = ({
         width: "100%",
         borderRadius: "16px",
         zIndex: 1,
-        background: "#0a0f1e",
+        background: "#a8d5e2",
       }}
     />
   );
@@ -411,9 +428,9 @@ const TravelMap = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Dark Leaflet Map */}
+                {/* Natural colour Leaflet Map */}
                 <div className="rounded-2xl overflow-hidden shadow-2xl"
-                  style={{ border: "1px solid hsla(148,35%,60%,0.20)", background: "#0a0f1e" }}>
+                  style={{ border: "1px solid hsla(148,35%,60%,0.30)" }}>
                   <LeafletMap trips={mappedTrips} onSelectTrip={setSelectedTrip} newTripId={newTripId} />
                 </div>
 
@@ -430,8 +447,8 @@ const TravelMap = () => {
                           border: `1px solid ${PIN_COLORS_HEX[i % PIN_COLORS_HEX.length]}55`,
                           color: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length],
                         }}>
-                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                          style={{ background: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length], color: "#0a0f1e" }}>
+                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                          style={{ background: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length] }}>
                           {i + 1}
                         </span>
                         {trip.destination.split(",")[0]}
