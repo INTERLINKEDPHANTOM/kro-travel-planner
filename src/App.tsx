@@ -29,6 +29,7 @@ import TravelPage from "./pages/TravelPage";
 import TripWrapped from "./pages/TripWrapped";
 import CreatorStudio from "./pages/CreatorStudio";
 import TravelMap from "./pages/TravelMap";
+import PackingChecklist from "./pages/PackingChecklist";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,8 @@ const AnimatedRoutes = () => {
         <Route path="/trip-wrapped/:tripId" element={<PageTransition><TripWrapped /></PageTransition>} />
         <Route path="/creator-studio" element={<PageTransition><CreatorStudio /></PageTransition>} />
         <Route path="/travel-map" element={<PageTransition><TravelMap /></PageTransition>} />
+        <Route path="/packing-checklist" element={<PageTransition><PackingChecklist /></PageTransition>} />
+        <Route path="/packing-checklist/:tripId" element={<PageTransition><PackingChecklist /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
