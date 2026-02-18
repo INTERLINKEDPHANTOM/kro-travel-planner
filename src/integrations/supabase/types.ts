@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage_logs: {
+        Row: {
+          created_at: string
+          destination: string | null
+          id: string
+          regenerate_count: number | null
+          status: string
+          usage_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          destination?: string | null
+          id?: string
+          regenerate_count?: number | null
+          status?: string
+          usage_type?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          destination?: string | null
+          id?: string
+          regenerate_count?: number | null
+          status?: string
+          usage_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       itineraries: {
         Row: {
           content: Json
@@ -124,6 +154,89 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_code_uses: {
+        Row: {
+          amount_saved: number | null
+          id: string
+          promo_code_id: string | null
+          trip_id: string | null
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_saved?: number | null
+          id?: string
+          promo_code_id?: string | null
+          trip_id?: string | null
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_saved?: number | null
+          id?: string
+          promo_code_id?: string | null
+          trip_id?: string | null
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_uses_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_cart_value: number | null
+          new_users_only: boolean
+          one_time_per_user: boolean
+          uses_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_cart_value?: number | null
+          new_users_only?: boolean
+          one_time_per_user?: boolean
+          uses_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_cart_value?: number | null
+          new_users_only?: boolean
+          one_time_per_user?: boolean
+          uses_count?: number
+        }
+        Relationships: []
+      }
       saved_itineraries: {
         Row: {
           created_at: string
@@ -194,6 +307,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      super_premium_access: {
+        Row: {
+          access_type: string
+          expires_at: string | null
+          granted_at: string
+          granted_by: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_type?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       trip_photos: {
         Row: {
@@ -320,6 +469,7 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: string
+          is_super_premium: boolean
           plan: string
           reels_remaining: number
           started_at: string
@@ -332,6 +482,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          is_super_premium?: boolean
           plan?: string
           reels_remaining?: number
           started_at?: string
@@ -344,6 +495,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          is_super_premium?: boolean
           plan?: string
           reels_remaining?: number
           started_at?: string

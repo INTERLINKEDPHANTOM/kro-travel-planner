@@ -54,6 +54,11 @@ export default {
         sage: "hsl(158, 22%, 63%)",
         forest: "hsl(161, 33%, 27%)",
         mint: "hsl(153, 55%, 60%)",
+        premium: {
+          DEFAULT: "hsl(43, 95%, 52%)",
+          foreground: "hsl(43, 80%, 15%)",
+          muted: "hsl(43, 95%, 52%, 0.1)",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
