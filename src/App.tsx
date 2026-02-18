@@ -15,6 +15,12 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Destinations from "./pages/Destinations";
 import TripGallery from "./pages/TripGallery";
+import About from "./pages/About";
+import Founder from "./pages/Founder";
+import Contact from "./pages/Contact";
+import Legal from "./pages/Legal";
+import Offers from "./pages/Offers";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +38,12 @@ const AnimatedRoutes = () => {
         <Route path="/my-trips" element={<PageTransition><MyTrips /></PageTransition>} />
         <Route path="/trip-gallery/:tripId" element={<PageTransition><TripGallery /></PageTransition>} />
         <Route path="/destinations" element={<PageTransition><Destinations /></PageTransition>} />
+        <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+        <Route path="/founder" element={<PageTransition><Founder /></PageTransition>} />
+        <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
+        <Route path="/legal" element={<PageTransition><Legal /></PageTransition>} />
+        <Route path="/offers" element={<PageTransition><Offers /></PageTransition>} />
+        <Route path="/checkout" element={<PageTransition><Checkout /></PageTransition>} />
         <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
         <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
