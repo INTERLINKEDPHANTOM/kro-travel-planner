@@ -19,7 +19,7 @@ const Navbar = () => {
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50"
+      className="fixed top-0 left-0 right-0 z-50 nav-glass"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
@@ -74,7 +74,7 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="md:hidden border-t border-border/50 bg-background/98 backdrop-blur-md"
+          className="md:hidden border-t nav-glass"
         >
           <div className="px-4 py-4 space-y-2">
             {navItems.map((item) => (

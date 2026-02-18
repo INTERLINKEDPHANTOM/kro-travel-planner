@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Compass, Instagram, Twitter, Mail } from "lucide-react";
 
 const Footer = () => (
-  <footer className="border-t border-border bg-card">
+  <footer className="relative z-10 border-t" style={{ borderColor: "hsla(145, 30%, 80%, 0.4)", background: "hsla(145, 35%, 97%, 0.6)", backdropFilter: "blur(20px)" }}>
     <div className="max-w-7xl mx-auto section-padding">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
         <div className="md:col-span-2">
