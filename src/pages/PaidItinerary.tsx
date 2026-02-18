@@ -6,7 +6,7 @@ import {
   Lightbulb, ArrowRight, ExternalLink, Loader2, Package, Users,
   CheckCircle2, AlertCircle, Download, RotateCcw, Train, Car, Plane,
   IndianRupee, Camera, ChevronLeft, ChevronRight, Navigation,
-  Image as ImageIcon, X, Zap
+  Image as ImageIcon, X, Zap, Shield
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateItineraryPDF } from "@/lib/generatePDF";
@@ -15,9 +15,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const fadeUp = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
+  transition: { duration: 0.55, ease: "easeOut" as const },
 };
 
 const buildAffiliateLinks = (destination: string, departure: string, departureDate?: string, arrivalDate?: string) => {
@@ -33,70 +34,79 @@ const buildAffiliateLinks = (destination: string, departure: string, departureDa
   };
 };
 
-// Free image source – uses Wikimedia Commons / Google image search redirect
+// Reliable seeded picsum images
 const getDestPhoto = (query: string, index: number, w = 800, h = 600) => {
-  // Seed based on query + index for consistent images per destination
-  const seed = encodeURIComponent(query.replace(/\s+/g, "-").toLowerCase()) + index;
+  const seed = encodeURIComponent(query.replace(/\s+/g, "-").toLowerCase()) + "-" + index;
   return `https://picsum.photos/seed/${seed}/${w}/${h}`;
 };
 
-// Get a Google image search URL for a destination query
-const getGoogleImageSearch = (destination: string) =>
-  `https://www.google.com/search?q=${encodeURIComponent(destination + " india tourism photos")}&tbm=isch`;
+const formatINR = (val: any): string => {
+  if (!val) return "—";
+  const str = String(val).replace(/[^\d]/g, "");
+  const num = parseInt(str, 10);
+  if (isNaN(num)) return String(val);
+  return "₹" + num.toLocaleString("en-IN");
+};
 
 type ActivityPhoto = { id: string; storage_path: string; place_name: string };
 
-// ─── Destination Photo Gallery ─────────────────────────────────────────────
-const PHOTO_LABELS = ["Landmark", "Nature", "Architecture", "Street Food", "Culture", "Landscape", "Temples", "Markets"];
+const PHOTO_LABELS = ["Landmark", "Nature", "Temples", "Street Food", "Markets", "Landscape"];
 
+// ─── Destination Photo Gallery ─────────────────────────────────────────────
 const DestinationGallery = ({ destination }: { destination: string }) => {
   const [active, setActive] = useState<number | null>(null);
-  const googleSearchUrl = getGoogleImageSearch(destination);
 
-  // Generate 6 seeded picsum images for this destination
   const photos = Array.from({ length: 6 }, (_, i) => ({
     label: PHOTO_LABELS[i],
-    src: getDestPhoto(`${destination}-${PHOTO_LABELS[i]}`, i, i === 0 ? 1200 : 600, i === 0 ? 600 : 400),
+    src: getDestPhoto(`${destination}-${PHOTO_LABELS[i]}`, i, 600, 400),
     lightboxSrc: getDestPhoto(`${destination}-${PHOTO_LABELS[i]}`, i, 1200, 700),
   }));
 
   return (
-    <motion.section {...fadeUp} className="mb-16">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-          <ImageIcon className="w-7 h-7 text-primary" />
-          <span>{destination} <span className="text-mint-gradient">in pictures</span></span>
+    <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+      <div className="flex items-center justify-between mb-5 sm:mb-6 gap-3">
+        <h2 className="text-xl sm:text-2xl font-heading flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
+            <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+          </div>
+          {destination} <span className="text-mint-gradient hidden sm:inline">in pictures</span>
         </h2>
         <a
-          href={googleSearchUrl}
+          href={`https://www.google.com/search?q=${encodeURIComponent(destination + " india tourism photos")}&tbm=isch`}
           target="_blank"
           rel="noopener noreferrer"
-          className="booking-chip text-xs"
+          className="booking-chip text-xs flex-shrink-0"
         >
-          More on Google <ExternalLink className="w-3 h-3" />
+          Google <ExternalLink className="w-3 h-3" />
         </a>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {/* Responsive bento grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
         {photos.map((photo, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.93 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.07 }}
-            className="dest-photo-card cursor-pointer"
-            style={{ height: i === 0 ? "220px" : "160px", gridColumn: i === 0 ? "span 2" : "span 1" }}
+            transition={{ delay: i * 0.06, duration: 0.45 }}
+            className={`dest-photo-card cursor-pointer ${i === 0 ? "col-span-2 sm:col-span-1 sm:row-span-2" : ""}`}
+            style={{
+              height: i === 0
+                ? "clamp(180px, 40vw, 280px)"
+                : "clamp(110px, 20vw, 150px)",
+            }}
             onClick={() => setActive(i)}
           >
             <img
               src={photo.src}
               alt={`${destination} ${photo.label}`}
               loading="lazy"
-              onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${i + 10}/600/400`; }}
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/travel${i}/600/400`; }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-              <span className="text-white text-xs font-medium">{photo.label}</span>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent flex items-end p-2.5 sm:p-3">
+              <span className="text-white text-[10px] sm:text-xs font-semibold">{photo.label}</span>
             </div>
           </motion.div>
         ))}
@@ -109,36 +119,39 @@ const DestinationGallery = ({ destination }: { destination: string }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md px-4 py-8"
             onClick={() => setActive(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.88, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-3xl w-full rounded-3xl overflow-hidden"
+              exit={{ scale: 0.88, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              className="relative max-w-2xl w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={photos[active].lightboxSrc}
                 alt={`${destination} ${photos[active].label}`}
-                className="w-full object-cover"
+                className="w-full object-cover max-h-[80vh]"
               />
-              <button
-                onClick={() => setActive(null)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <div className="absolute bottom-4 left-4 right-4 flex justify-center gap-2">
+              <div className="absolute inset-0 flex items-center justify-between px-3 sm:px-4 pointer-events-none">
                 <button onClick={() => setActive((active - 1 + photos.length) % photos.length)}
-                  className="p-2 rounded-full bg-black/50 backdrop-blur-sm text-white">
+                  className="pointer-events-auto w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors">
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button onClick={() => setActive((active + 1) % photos.length)}
-                  className="p-2 rounded-full bg-black/50 backdrop-blur-sm text-white">
+                  className="pointer-events-auto w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors">
                   <ChevronRight className="w-5 h-5" />
                 </button>
+              </div>
+              <button onClick={() => setActive(null)}
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="absolute bottom-0 left-0 right-0 px-4 py-3 bg-gradient-to-t from-black/60 to-transparent">
+                <span className="text-white/90 text-xs font-semibold">{photos[active].label}</span>
+                <span className="text-white/50 text-xs ml-2">{active + 1} / {photos.length}</span>
               </div>
             </motion.div>
           </motion.div>
@@ -148,7 +161,7 @@ const DestinationGallery = ({ destination }: { destination: string }) => {
   );
 };
 
-// ─── Day Carousel ─────────────────────────────────────────────────────────
+// ─── Day Carousel ──────────────────────────────────────────────────────────
 const DayCarousel = ({
   days, tripId, userId, photos, onPhotoAdded
 }: {
@@ -161,6 +174,17 @@ const DayCarousel = ({
   const [activeDay, setActiveDay] = useState(0);
   const [uploadingAct, setUploadingAct] = useState<string | null>(null);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  const scrollTabIntoView = (idx: number) => {
+    const el = tabsRef.current?.children[idx] as HTMLElement;
+    el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  };
+
+  const changeDay = (idx: number) => {
+    setActiveDay(idx);
+    scrollTabIntoView(idx);
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, activityName: string) => {
     const files = e.target.files;
@@ -185,128 +209,124 @@ const DayCarousel = ({
 
   const day = days[activeDay];
   const dayCost = day?.activities?.reduce((sum: number, act: any) => {
-    return sum + (parseInt(String(act.cost || "0").replace(/[^\d]/g, "")) || 0);
+    const raw = String(act.cost || "0").replace(/[^\d]/g, "");
+    return sum + (parseInt(raw, 10) || 0);
   }, 0) || 0;
 
   return (
-    <motion.section {...fadeUp} className="mb-16">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl sm:text-3xl font-heading flex items-center gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-          <Calendar className="w-7 h-7 text-primary" />
+    <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
+        <h2 className="text-xl sm:text-2xl font-heading flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+          </div>
           Day-by-Day Journey
         </h2>
-        <span className="text-sm text-muted-foreground">{days.length} days total</span>
+        <span className="text-xs text-muted-foreground px-3 py-1.5 rounded-full glass-panel">{days.length} days</span>
       </div>
 
-      {/* Day tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
-        {days.map((d: any, i: number) => (
-          <motion.button
-            key={i}
-            onClick={() => setActiveDay(i)}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className={`flex-shrink-0 flex flex-col items-center gap-1 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 border ${
-              activeDay === i
-                ? "text-white border-transparent shadow-lg"
-                : "glass-panel border-border/50 text-foreground/70 hover:border-primary/30"
-            }`}
-            style={activeDay === i ? {
-              background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))",
-              boxShadow: "0 6px 20px hsla(158, 42%, 36%, 0.38)"
-            } : {}}
-          >
-            <MapPin className="w-3.5 h-3.5" />
-            <span className="text-[11px] font-bold whitespace-nowrap">Day {i + 1}</span>
-            <span className="text-[10px] opacity-70 hidden sm:block truncate max-w-[80px]">
-              {d.day_label?.split("–")[1]?.trim() || d.day_label?.split("-")[1]?.trim() || d.theme || ""}
-            </span>
-          </motion.button>
-        ))}
+      {/* Day tabs – scrollable */}
+      <div ref={tabsRef} className="flex gap-2 overflow-x-auto pb-3 mb-5 scrollbar-hide snap-x snap-mandatory">
+        {days.map((d: any, i: number) => {
+          const label = d.day_label?.split("–")[1]?.trim() || d.day_label?.split("-")[1]?.trim() || d.theme || "";
+          return (
+            <motion.button
+              key={i}
+              onClick={() => changeDay(i)}
+              whileTap={{ scale: 0.95 }}
+              className={`snap-start flex-shrink-0 flex flex-col items-center gap-0.5 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-300 border min-w-[60px] ${
+                activeDay === i
+                  ? "text-white border-transparent"
+                  : "glass-panel border-border/50 text-foreground/70"
+              }`}
+              style={activeDay === i ? {
+                background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))",
+                boxShadow: "0 4px 16px hsla(158, 42%, 36%, 0.35)"
+              } : {}}
+            >
+              <span className="font-bold text-[11px]">D{i + 1}</span>
+              {label && <span className="text-[9px] opacity-70 truncate max-w-[56px]">{label}</span>}
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Active day card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeDay}
-          initial={{ opacity: 0, x: 30, scale: 0.98 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: -30, scale: 0.98 }}
-          transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           className="prism-card overflow-hidden"
         >
           {/* Day header */}
-          <div className="p-5 sm:p-6 border-b border-border/30"
+          <div className="p-4 sm:p-6 border-b border-border/30"
             style={{ background: "linear-gradient(135deg, hsla(148, 45%, 98%, 0.55) 0%, hsla(155, 40%, 95%, 0.35) 100%)" }}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                  style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
-                  <Calendar className="w-6 h-6 text-primary" />
-                </div>
+            
+            {/* Day image */}
+            <div className="rounded-xl sm:rounded-2xl overflow-hidden mb-4 relative" style={{ height: "clamp(140px, 30vw, 200px)" }}>
+              <img
+                src={getDestPhoto(day?.theme || day?.day_label || "travel-landscape", activeDay, 900, 350)}
+                alt={day?.day_label}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/day${activeDay + 1}/900/350`; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
                 <div>
-                  <h3 className="text-lg font-heading" style={{ color: "hsl(158, 45%, 12%)" }}>{day?.day_label}</h3>
-                  {day?.theme && <p className="text-sm text-muted-foreground italic">{day.theme}</p>}
+                  <h3 className="text-white font-heading text-sm sm:text-base font-bold leading-tight">{day?.day_label}</h3>
+                  {day?.theme && <p className="text-white/75 text-[11px] sm:text-xs italic mt-0.5">{day.theme}</p>}
                 </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
                 {dayCost > 0 && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
-                    style={{ background: "hsla(158, 42%, 38%, 0.12)", color: "hsl(158, 42%, 32%)" }}>
-                    <IndianRupee className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
+                    style={{ background: "hsla(0,0%,0%,0.45)", backdropFilter: "blur(8px)", color: "white" }}>
+                    <IndianRupee className="w-3 h-3" />
                     {dayCost.toLocaleString("en-IN")}
                   </div>
                 )}
-                <span className="text-xs text-muted-foreground px-2">{day?.activities?.length || 0} activities</span>
               </div>
             </div>
-
-            {/* Day photo from destination */}
-            {day?.day_label && (
-              <div className="mt-4 rounded-2xl overflow-hidden h-40 sm:h-48 relative">
-                <img
-                  src={`https://picsum.photos/seed/${encodeURIComponent((day.day_label.split("–")[1]?.trim() || day.theme || "travel").replace(/\s+/g, "-").toLowerCase())}-day${activeDay}/1000/400`}
-                  alt={day.day_label}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/day${activeDay + 1}/1000/400`; }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-              </div>
-            )}
           </div>
 
           {/* Activities */}
-          <div className="p-4 sm:p-6 space-y-3">
+          <div className="p-3 sm:p-5 space-y-2.5">
             {day?.activities?.map((act: any, ai: number) => {
               const actKey = `${activeDay}-${ai}`;
               const actPhotos = photos.filter(p => p.place_name === act.activity);
+              const costNum = parseInt(String(act.cost || "0").replace(/[^\d]/g, ""), 10);
 
               return (
                 <motion.div
                   key={actKey}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: ai * 0.06 }}
-                  className="rounded-2xl overflow-hidden"
-                  style={{ background: "hsla(148, 40%, 98%, 0.55)", border: "1px solid hsla(148, 35%, 80%, 0.40)" }}
+                  transition={{ delay: ai * 0.05 }}
+                  className="rounded-xl sm:rounded-2xl overflow-hidden"
+                  style={{ background: "hsla(148, 40%, 98%, 0.60)", border: "1px solid hsla(148, 35%, 82%, 0.45)" }}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 p-3.5">
-                    {/* Time */}
-                    <div className="flex items-center gap-2 sm:w-20 flex-shrink-0">
-                      <Clock className="w-3.5 h-3.5" style={{ color: "hsl(158, 42%, 40%)" }} />
-                      <span className="font-mono text-xs font-bold" style={{ color: "hsl(158, 42%, 38%)" }}>{act.time}</span>
+                  <div className="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-4">
+                    {/* Time badge */}
+                    <div className="flex-shrink-0 flex flex-col items-center mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      <div className="w-px flex-1 bg-border/40 my-0.5" style={{ minHeight: "20px" }} />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="font-semibold text-sm" style={{ color: "hsl(158, 45%, 12%)" }}>{act.activity}</p>
-                          {act.note && <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{act.note}</p>}
+                        <div className="min-w-0 flex-1">
+                          {act.time && (
+                            <span className="text-[10px] font-bold tracking-wide text-primary/80 block mb-0.5">{act.time}</span>
+                          )}
+                          <p className="font-semibold text-sm leading-snug" style={{ color: "hsl(158, 45%, 12%)" }}>{act.activity}</p>
+                          {act.note && <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">{act.note}</p>}
                         </div>
+                        {/* Action icons */}
                         <div className="flex items-center gap-1.5 flex-shrink-0">
-                          {/* Photo upload */}
                           {tripId && userId && (
                             <>
                               <input
@@ -314,25 +334,22 @@ const DayCarousel = ({
                                 type="file" multiple accept="image/*" className="hidden"
                                 onChange={(e) => handleUpload(e, act.activity)}
                               />
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
+                              <button
                                 onClick={(e) => { e.stopPropagation(); fileRefs.current[actKey]?.click(); }}
-                                className="p-1.5 rounded-xl transition-all"
-                                style={{ background: "hsla(158, 42%, 38%, 0.08)", color: "hsl(158, 42%, 40%)" }}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                                style={{ background: "hsla(158, 42%, 38%, 0.10)", color: "hsl(158, 42%, 40%)" }}
                                 title="Add photo"
                               >
                                 {uploadingAct === act.activity
                                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                  : <Camera className="w-3.5 h-3.5" />
-                                }
-                              </motion.button>
+                                  : <Camera className="w-3.5 h-3.5" />}
+                              </button>
                             </>
                           )}
                           {act.maps_url && (
                             <a href={act.maps_url} target="_blank" rel="noopener noreferrer"
-                              className="p-1.5 rounded-xl transition-all"
-                              style={{ background: "hsla(158, 42%, 38%, 0.08)", color: "hsl(158, 42%, 40%)" }}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                              style={{ background: "hsla(158, 42%, 38%, 0.10)", color: "hsl(158, 42%, 40%)" }}
                               title="View on Maps">
                               <Navigation className="w-3.5 h-3.5" />
                             </a>
@@ -343,20 +360,26 @@ const DayCarousel = ({
                       {/* Tags */}
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {act.duration && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full"
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full"
                             style={{ background: "hsla(148, 35%, 88%, 0.7)", color: "hsl(158, 30%, 38%)" }}>
-                            ⏱ {act.duration}
+                            <Clock className="w-2.5 h-2.5" /> {act.duration}
                           </span>
                         )}
-                        {act.cost && act.cost !== "₹0" && act.cost !== "Free" && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                        {costNum > 0 && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold"
                             style={{ background: "hsla(158, 42%, 38%, 0.10)", color: "hsl(158, 42%, 30%)" }}>
-                            ₹ {act.cost}
+                            <IndianRupee className="w-2.5 h-2.5" />{costNum.toLocaleString("en-IN")}
+                          </span>
+                        )}
+                        {act.cost === "Free" && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{ background: "hsla(152, 55%, 52%, 0.12)", color: "hsl(152, 45%, 32%)" }}>
+                            Free
                           </span>
                         )}
                         {act.category && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full"
-                            style={{ background: "hsla(152, 55%, 52%, 0.12)", color: "hsl(152, 45%, 35%)" }}>
+                            style={{ background: "hsla(152, 55%, 52%, 0.10)", color: "hsl(152, 40%, 36%)" }}>
                             {act.category}
                           </span>
                         )}
@@ -364,12 +387,12 @@ const DayCarousel = ({
                     </div>
                   </div>
 
-                  {/* Activity photos strip */}
+                  {/* Activity photos */}
                   {actPhotos.length > 0 && (
-                    <div className="flex gap-2 px-3.5 pb-3.5 overflow-x-auto">
+                    <div className="flex gap-2 px-3 pb-3 overflow-x-auto scrollbar-hide">
                       {actPhotos.map(p => (
                         <img key={p.id} src={getPhotoUrl(p.storage_path)} alt=""
-                          className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-border/50"
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover flex-shrink-0 border border-border/50"
                           loading="lazy" />
                       ))}
                     </div>
@@ -380,38 +403,58 @@ const DayCarousel = ({
 
             {/* Day cost footer */}
             {dayCost > 0 && (
-              <div className="flex items-center justify-between pt-3 mt-2 px-1 border-t border-border/30">
+              <div className="flex items-center justify-between pt-3 mt-1 px-1 border-t border-border/30">
                 <span className="text-xs text-muted-foreground">Day {activeDay + 1} estimated spend</span>
-                <span className="font-heading font-bold" style={{ color: "hsl(158, 42%, 38%)" }}>
+                <span className="font-heading font-bold text-sm" style={{ color: "hsl(158, 42%, 38%)" }}>
                   ₹{dayCost.toLocaleString("en-IN")}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Prev / Next nav */}
-          <div className="flex items-center gap-3 px-5 pb-5">
+          {/* Prev/Next */}
+          <div className="flex items-center gap-3 px-4 pb-4 sm:px-5 sm:pb-5">
             <button
-              onClick={() => setActiveDay(Math.max(0, activeDay - 1))}
+              onClick={() => changeDay(Math.max(0, activeDay - 1))}
               disabled={activeDay === 0}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium btn-ghost-glass disabled:opacity-40"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-medium btn-ghost-glass disabled:opacity-40 disabled:pointer-events-none"
             >
-              <ChevronLeft className="w-4 h-4" /> Previous Day
+              <ChevronLeft className="w-4 h-4" /> Prev
             </button>
-            <div className="flex-1 text-center text-xs text-muted-foreground">
-              {activeDay + 1} / {days.length}
+            <div className="flex-1 flex items-center justify-center gap-1">
+              {days.map((_, i) => (
+                <button key={i} onClick={() => changeDay(i)}
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === activeDay ? "bg-primary w-4" : "bg-border"}`} />
+              ))}
             </div>
             <button
-              onClick={() => setActiveDay(Math.min(days.length - 1, activeDay + 1))}
+              onClick={() => changeDay(Math.min(days.length - 1, activeDay + 1))}
               disabled={activeDay === days.length - 1}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium btn-primary disabled:opacity-40"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-medium btn-primary disabled:opacity-40 disabled:pointer-events-none"
             >
-              Next Day <ChevronRight className="w-4 h-4" />
+              Next <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </motion.div>
       </AnimatePresence>
     </motion.section>
+  );
+};
+
+// ─── Budget Row ────────────────────────────────────────────────────────────
+const BudgetRow = ({ label, amount, isTotal = false }: { label: string; amount: any; isTotal?: boolean }) => {
+  const display = formatINR(amount);
+  return (
+    <div className={`flex items-center justify-between py-3 ${isTotal ? "border-t-2 border-primary/20 mt-2 pt-4" : "border-b border-border/30 last:border-0"}`}>
+      <span className={`${isTotal ? "font-heading text-base" : "text-sm text-muted-foreground"}`}
+        style={isTotal ? { color: "hsl(158, 45%, 12%)" } : {}}>
+        {label}
+      </span>
+      <span className={`font-semibold tabular-nums ${isTotal ? "font-heading text-lg text-primary" : "text-sm"}`}
+        style={!isTotal ? { color: "hsl(158, 45%, 15%)" } : {}}>
+        {display}
+      </span>
+    </div>
   );
 };
 
@@ -428,6 +471,19 @@ const PaidItinerary = () => {
   const [regenerating, setRegenerating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [activityPhotos, setActivityPhotos] = useState<ActivityPhoto[]>([]);
+  const [progressStep, setProgressStep] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("Starting...");
+
+  const PIPELINE_STEPS = [
+    { step: 1, label: "Validating preferences...", Icon: CheckCircle2 },
+    { step: 2, label: "Analyzing travel context...", Icon: Zap },
+    { step: 3, label: "Finding best transport...", Icon: Train },
+    { step: 4, label: "Recalculating budget...", Icon: IndianRupee },
+    { step: 5, label: "Searching hotels...", Icon: Hotel },
+    { step: 6, label: "Building itinerary...", Icon: Package },
+    { step: 7, label: "Adding restaurants & tips...", Icon: Utensils },
+    { step: 8, label: "Finalizing...", Icon: Star },
+  ];
 
   useEffect(() => {
     const stored = sessionStorage.getItem("tripPreferences");
@@ -457,20 +513,6 @@ const PaidItinerary = () => {
     setActivityPhotos((data as ActivityPhoto[]) || []);
   };
   useEffect(() => { if (savedId) fetchActivityPhotos(); }, [savedId]);
-
-  const [progressStep, setProgressStep] = useState(0);
-  const [progressLabel, setProgressLabel] = useState("Starting...");
-
-  const PIPELINE_STEPS = [
-    { step: 1, label: "Validating preferences...", Icon: CheckCircle2 },
-    { step: 2, label: "Analyzing travel context...", Icon: Zap },
-    { step: 3, label: "Finding best transport...", Icon: Train },
-    { step: 4, label: "Recalculating budget...", Icon: IndianRupee },
-    { step: 5, label: "Searching hotels...", Icon: Hotel },
-    { step: 6, label: "Building itinerary...", Icon: Package },
-    { step: 7, label: "Adding restaurants & tips...", Icon: Utensils },
-    { step: 8, label: "Finalizing...", Icon: Star },
-  ];
 
   const generateItinerary = async (prefs: any) => {
     setProgressStep(0);
@@ -522,10 +564,6 @@ const PaidItinerary = () => {
     } else {
       const { data: inserted } = await supabase.from("saved_itineraries").insert({ user_id: user.id, preferences: prefs, itinerary_data: itineraryData, destination: prefs.arrival || "Unknown", status: "generated" }).select("id").single();
       if (inserted) setSavedId(inserted.id);
-      if (prefs.departureDate) {
-        const depDate = new Date(prefs.departureDate);
-        await supabase.from("notifications").insert({ user_id: user.id, trip_id: inserted?.id, type: "departure_reminder", title: `🧳 Trip to ${prefs.arrival} tomorrow!`, message: `Your trip starts ${depDate.toLocaleDateString()}. Check your itinerary!`, scheduled_for: new Date(depDate.getTime() - 86400000).toISOString() });
-      }
     }
   };
 
@@ -534,14 +572,14 @@ const PaidItinerary = () => {
     setRegenerating(true); setLoading(true); setError(""); setItinerary(null);
     await generateItinerary(preferences);
     setRegenerating(false);
-    toast({ title: "✨ Itinerary regenerated!" });
+    toast({ title: "Itinerary regenerated!" });
   };
 
   const handleDownloadPDF = async () => {
     if (!itinerary) return;
     setDownloading(true);
-    try { generateItineraryPDF(itinerary, preferences); toast({ title: "📄 PDF downloaded!" }); }
-    catch (err) { toast({ title: "PDF failed", variant: "destructive" }); }
+    try { generateItineraryPDF(itinerary, preferences); toast({ title: "PDF downloaded!" }); }
+    catch { toast({ title: "PDF failed", variant: "destructive" }); }
     finally { setDownloading(false); }
   };
 
@@ -554,54 +592,56 @@ const PaidItinerary = () => {
           <div className="ambient-orb-1" style={{ top: "10%", left: "15%" }} />
           <div className="ambient-orb-2" style={{ bottom: "20%", right: "10%" }} />
         </div>
-        <div className="relative z-10 pt-32 flex flex-col items-center justify-center gap-8 px-4 pb-20">
-          {/* Animated spinner */}
-          <div className="relative w-20 h-20">
+        <div className="relative z-10 pt-28 sm:pt-36 flex flex-col items-center gap-6 sm:gap-8 px-4 pb-20">
+          {/* Spinner */}
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20">
             <div className="absolute inset-0 rounded-full border-4 border-border/40" />
             <div className="absolute inset-0 rounded-full border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent animate-spin" />
             <div className="absolute inset-3 rounded-full flex items-center justify-center">
-              <Plane className="w-7 h-7 text-primary" />
+              <Plane className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
             </div>
           </div>
 
-          <div className="text-center max-w-sm">
-            <h2 className="text-2xl sm:text-3xl font-heading mb-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+          <div className="text-center max-w-xs sm:max-w-sm px-4">
+            <h2 className="text-xl sm:text-2xl font-heading mb-2" style={{ color: "hsl(158, 45%, 12%)" }}>
               {regenerating ? "Regenerating your trip" : "Crafting your perfect trip"}
             </h2>
-            <p className="text-primary font-medium mb-1">{progressLabel}</p>
+            <p className="text-primary font-medium text-sm mb-1">{progressLabel}</p>
             <p className="text-xs text-muted-foreground">Step {progressStep || 1} of 8 — ~30-60 seconds</p>
           </div>
 
-          {/* Progress bar */}
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-xs sm:max-w-sm px-4">
             <div className="progress-bar-track">
-              <div className="progress-bar-fill" style={{ width: `${(progressStep / 8) * 100}%` }} />
+              <motion.div
+                className="progress-bar-fill"
+                animate={{ width: `${(progressStep / 8) * 100}%` }}
+                transition={{ duration: 0.5 }}
+              />
             </div>
           </div>
 
-          {/* Pipeline steps */}
-          <div className="w-full max-w-md space-y-2">
+          <div className="w-full max-w-xs sm:max-w-md px-4 space-y-2">
             {PIPELINE_STEPS.map((s) => (
               <motion.div
                 key={s.step}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: s.step <= progressStep ? 1 : 0.3, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm transition-all ${
+                transition={{ duration: 0.3, delay: s.step * 0.05 }}
+                className={`flex items-center gap-3 px-3 sm:px-4 py-2.5 rounded-xl sm:rounded-2xl text-sm transition-all ${
                   s.step < progressStep ? "glass-panel text-primary" :
                   s.step === progressStep ? "prism-card text-primary font-medium" :
                   "bg-muted/30 text-muted-foreground"
                 }`}
               >
-                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
                   {s.step < progressStep
                     ? <CheckCircle2 className="w-4 h-4 text-primary" />
                     : s.step === progressStep
                     ? <s.Icon className="w-4 h-4 text-primary" />
                     : <Clock className="w-4 h-4 text-muted-foreground opacity-50" />}
                 </div>
-                <span className="flex-1">{s.label}</span>
-                {s.step === progressStep && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                <span className="flex-1 text-xs sm:text-sm">{s.label}</span>
+                {s.step === progressStep && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
               </motion.div>
             ))}
           </div>
@@ -616,12 +656,12 @@ const PaidItinerary = () => {
       <div className="min-h-screen">
         <Navbar />
         <div className="pt-32 text-center px-4">
-          <div className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6"
-            style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-            <AlertCircle className="w-8 h-8 text-primary" />
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
+            style={{ background: "hsla(0, 72%, 55%, 0.10)" }}>
+            <AlertCircle className="w-7 h-7 text-destructive" />
           </div>
-          <h1 className="text-2xl font-heading mb-3" style={{ color: "hsl(158, 45%, 12%)" }}>Generation Failed</h1>
-          <p className="text-muted-foreground mb-8 max-w-md mx-auto">{error}</p>
+          <h1 className="text-xl sm:text-2xl font-heading mb-3" style={{ color: "hsl(158, 45%, 12%)" }}>Generation Failed</h1>
+          <p className="text-muted-foreground mb-8 max-w-sm mx-auto text-sm">{error}</p>
           <button onClick={() => { setError(""); setLoading(true); generateItinerary(preferences); }} className="btn-primary px-8 py-3">
             Try Again <Zap className="w-4 h-4 inline ml-1" />
           </button>
@@ -637,61 +677,64 @@ const PaidItinerary = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Ambient */}
+      {/* Ambient orbs */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="ambient-orb-1" style={{ top: "5%", left: "10%", opacity: 0.5 }} />
-        <div className="ambient-orb-2" style={{ bottom: "25%", right: "8%", opacity: 0.4 }} />
+        <div className="ambient-orb-1" style={{ top: "5%", left: "10%", opacity: 0.4 }} />
+        <div className="ambient-orb-2" style={{ bottom: "25%", right: "8%", opacity: 0.35 }} />
       </div>
 
       <Navbar />
 
-      {/* Sticky Action Bar */}
+      {/* Sticky floating action bar */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex gap-2 px-4 py-2.5 rounded-full"
+        transition={{ delay: 0.6 }}
+        className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 flex gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full w-auto max-w-[calc(100vw-2rem)]"
         style={{
-          background: "hsla(148, 40%, 97%, 0.85)",
+          background: "hsla(148, 40%, 97%, 0.90)",
           backdropFilter: "blur(24px)",
           border: "1px solid hsla(148, 35%, 78%, 0.50)",
-          boxShadow: "0 8px 32px hsla(158, 45%, 18%, 0.14)"
+          boxShadow: "0 8px 32px hsla(158, 45%, 18%, 0.16)",
         }}
       >
         <button onClick={handleDownloadPDF} disabled={downloading}
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold btn-primary disabled:opacity-50">
-          {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          {downloading ? "Generating..." : "Download PDF"}
+          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold btn-primary disabled:opacity-50 whitespace-nowrap">
+          {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+          {downloading ? "Generating..." : "PDF"}
         </button>
         <button onClick={handleRegenerate}
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold btn-ghost-glass">
-          <RotateCcw className="w-4 h-4" /> Regenerate
+          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold btn-ghost-glass whitespace-nowrap">
+          <RotateCcw className="w-3.5 h-3.5" /> Regenerate
         </button>
       </motion.div>
 
-      {/* Hero cover */}
+      {/* Hero */}
       <section className="relative pt-0">
-        <div className="relative h-72 sm:h-[420px] overflow-hidden">
-          <img
-            src={`https://picsum.photos/seed/${encodeURIComponent((preferences?.arrival || "travel").replace(/\s+/g, "-").toLowerCase())}-hero/1600/800`}
+        <div className="relative overflow-hidden" style={{ height: "clamp(240px, 50vw, 480px)" }}>
+          <motion.img
+            initial={{ scale: 1.08 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            src={getDestPhoto(preferences?.arrival || "india-travel", 0, 1400, 700)}
             alt={preferences?.arrival}
             className="w-full h-full object-cover"
             loading="eager"
-            onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/travel-hero/1600/800"; }}
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/travel-india-hero/1400/700"; }}
           />
           <div className="absolute inset-0"
-            style={{ background: "linear-gradient(to top, hsl(148, 35%, 95%) 0%, hsla(148, 35%, 95%, 0.5) 40%, transparent 100%)" }} />
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-10">
+            style={{ background: "linear-gradient(to top, hsl(148, 35%, 95%) 0%, hsla(148, 35%, 95%, 0.6) 35%, transparent 100%)" }} />
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-8 sm:pb-12">
             <motion.div {...fadeUp} className="max-w-4xl mx-auto">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md text-xs font-bold uppercase tracking-wider mb-4"
-                style={{ background: "hsla(158, 42%, 38%, 0.85)", color: "white" }}>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full backdrop-blur-md text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4"
+                style={{ background: "hsla(158, 42%, 38%, 0.88)", color: "white" }}>
                 <Star className="w-3 h-3" /> AI-Crafted Itinerary
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading leading-tight mb-3" style={{ color: "hsl(158, 45%, 10%)" }}>
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-heading leading-tight mb-2 sm:mb-3" style={{ color: "hsl(158, 45%, 10%)" }}>
                 {it.cover_title || `Your Trip to ${preferences?.arrival}`}
               </h1>
               {it.intro && (
-                <p className="max-w-xl text-base font-light" style={{ color: "hsl(158, 25%, 38%)" }}>
+                <p className="max-w-xl text-sm sm:text-base font-light line-clamp-2 sm:line-clamp-none" style={{ color: "hsl(158, 25%, 38%)" }}>
                   {it.intro}
                 </p>
               )}
@@ -700,49 +743,49 @@ const PaidItinerary = () => {
         </div>
       </section>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-28">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
 
         {/* Preferences summary */}
         {it.user_preferences_summary && (
-          <motion.section {...fadeUp} className="glass-panel p-6 sm:p-8 mb-12 mt-8">
-            <h2 className="text-base font-heading mb-4 flex items-center gap-2" style={{ color: "hsl(158, 38%, 22%)" }}>
-              <Users className="w-5 h-5 text-primary" /> Your Preferences
+          <motion.section {...fadeUp} className="glass-panel p-5 sm:p-7 mb-10 mt-6 sm:mt-8">
+            <h2 className="text-sm font-heading mb-4 flex items-center gap-2" style={{ color: "hsl(158, 38%, 22%)" }}>
+              <Users className="w-4 h-4 text-primary" /> Your Preferences
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               {Object.entries(it.user_preferences_summary).map(([key, val]: [string, any]) => (
-                <div key={key} className="flex flex-col gap-1">
-                  <span className="text-muted-foreground text-xs capitalize">{key.replace(/_/g, " ")}</span>
-                  <span className="font-semibold" style={{ color: "hsl(158, 38%, 20%)" }}>{val}</span>
+                <div key={key} className="flex flex-col gap-0.5">
+                  <span className="text-muted-foreground text-[10px] sm:text-xs capitalize">{key.replace(/_/g, " ")}</span>
+                  <span className="font-semibold text-xs sm:text-sm" style={{ color: "hsl(158, 38%, 20%)" }}>{val}</span>
                 </div>
               ))}
             </div>
           </motion.section>
         )}
 
-        {/* Quick booking links */}
-        <motion.section {...fadeUp} className="mb-12">
-          <h2 className="text-lg font-heading mb-4 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
-            <Zap className="w-5 h-5 text-primary" /> Quick Book Links
+        {/* Quick Book Links */}
+        <motion.section {...fadeUp} className="mb-10 sm:mb-12">
+          <h2 className="text-base sm:text-lg font-heading mb-3 sm:mb-4 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Quick Book
           </h2>
-          <div className="flex flex-wrap gap-2 sm:gap-3">
+          <div className="flex flex-wrap gap-2">
             {[
-              { label: "Book Train", Icon: Train, url: LINKS.train },
-              { label: "Book Hotel", Icon: Hotel, url: LINKS.hotel },
-              { label: "Book Bus", Icon: Bus, url: LINKS.bus },
-              { label: "Book Flight", Icon: Plane, url: LINKS.flight },
-              { label: "Book Cab", Icon: Car, url: LINKS.cab },
-              { label: "Google Maps", Icon: Navigation, url: LINKS.maps },
+              { label: "Train", Icon: Train, url: LINKS.train },
+              { label: "Hotel", Icon: Hotel, url: LINKS.hotel },
+              { label: "Bus", Icon: Bus, url: LINKS.bus },
+              { label: "Flight", Icon: Plane, url: LINKS.flight },
+              { label: "Cab", Icon: Car, url: LINKS.cab },
+              { label: "Maps", Icon: Navigation, url: LINKS.maps },
             ].map((link) => (
               <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer" className="booking-chip">
                 <link.Icon className="w-3.5 h-3.5" />
                 {link.label}
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3 h-3 opacity-60" />
               </a>
             ))}
           </div>
         </motion.section>
 
-        {/* Destination photo gallery */}
+        {/* Destination Gallery */}
         {preferences?.arrival && <DestinationGallery destination={preferences.arrival} />}
 
         {/* Day carousel */}
@@ -758,37 +801,57 @@ const PaidItinerary = () => {
 
         {/* Hotels */}
         {it.hotels?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-heading mb-6 flex items-center gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-              <Hotel className="w-7 h-7 text-primary" /> Hotel Options
+          <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+            <h2 className="text-xl sm:text-2xl font-heading mb-5 flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
+                <Hotel className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              Hotel Options
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {it.hotels.map((hotel: any, i: number) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                  className="prism-card p-6 flex flex-col">
+                <motion.div key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                  className="prism-card p-4 sm:p-5 flex flex-col">
                   {/* Hotel photo */}
-                  <div className="h-32 rounded-2xl overflow-hidden mb-4 -mx-2">
-                    <img src={`https://source.unsplash.com/600x300/?hotel,${encodeURIComponent(hotel.name || "resort india")}`}
-                      alt={hotel.name} className="w-full h-full object-cover"
-                      loading="lazy" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }} />
+                  <div className="h-28 sm:h-32 rounded-xl overflow-hidden mb-3 -mx-1">
+                    <img
+                      src={getDestPhoto(`hotel-${hotel.name || "resort"}-india`, i, 600, 300)}
+                      alt={hotel.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/hotel${i}/600/300`; }}
+                    />
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
+                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
                       hotel.tier === "Low" ? "bg-primary/10 text-primary" :
                       hotel.tier === "Mid" ? "bg-accent/20 text-accent-foreground" :
                       "bg-secondary/10 text-secondary"
                     }`}>{hotel.tier}</span>
-                    <span className="font-heading font-bold text-primary">{hotel.price_per_night}</span>
+                    <span className="font-bold text-sm text-primary tabular-nums">{formatINR(hotel.price_per_night)}<span className="text-[10px] text-muted-foreground font-normal">/night</span></span>
                   </div>
-                  <h3 className="font-heading text-base mb-1.5" style={{ color: "hsl(158, 45%, 12%)" }}>{hotel.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-3 flex-1">{hotel.description}</p>
+                  <h3 className="font-heading text-sm mb-1" style={{ color: "hsl(158, 45%, 12%)" }}>{hotel.name}</h3>
+                  <p className="text-xs text-muted-foreground mb-3 flex-1 leading-relaxed">{hotel.description}</p>
                   <div className="space-y-1 text-xs text-muted-foreground mb-3">
-                    <p>📍 {hotel.distance_station}</p>
-                    {hotel.breakfast_included && <p className="text-primary font-medium">✅ Breakfast included</p>}
+                    {hotel.distance_station && (
+                      <p className="flex items-center gap-1.5">
+                        <MapPin className="w-3 h-3 flex-shrink-0 text-primary" /> {hotel.distance_station}
+                      </p>
+                    )}
+                    {hotel.breakfast_included && (
+                      <p className="flex items-center gap-1.5 text-primary font-medium">
+                        <CheckCircle2 className="w-3 h-3" /> Breakfast included
+                      </p>
+                    )}
                   </div>
-                  <div className="flex gap-2 mt-auto pt-3 border-t border-border/30">
+                  <div className="flex gap-3 mt-auto pt-3 border-t border-border/30">
                     {hotel.maps_url && (
-                      <a href={hotel.maps_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                      <a href={hotel.maps_url} target="_blank" rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline flex items-center gap-1">
                         <Navigation className="w-3 h-3" /> Maps
                       </a>
                     )}
@@ -805,24 +868,31 @@ const PaidItinerary = () => {
 
         {/* Restaurants */}
         {it.restaurants?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-heading mb-6 flex items-center gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-              <Utensils className="w-7 h-7 text-primary" /> Food & Restaurants
+          <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+            <h2 className="text-xl sm:text-2xl font-heading mb-5 flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
+                <Utensils className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              Food & Restaurants
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {it.restaurants.map((r: any, i: number) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}
-                  className="glass-panel p-5 hover-lift">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-heading text-base" style={{ color: "hsl(158, 45%, 12%)" }}>{r.name}</h4>
-                    <span className="text-xs px-2 py-1 rounded-full font-semibold"
+                <motion.div key={i}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.06 }}
+                  className="glass-panel p-4 sm:p-5 hover-lift">
+                  <div className="flex items-start justify-between mb-1.5 gap-2">
+                    <h4 className="font-heading text-sm sm:text-base leading-tight" style={{ color: "hsl(158, 45%, 12%)" }}>{r.name}</h4>
+                    <span className="text-[10px] px-2 py-1 rounded-full font-semibold flex-shrink-0"
                       style={{ background: "hsla(158, 42%, 38%, 0.10)", color: "hsl(158, 42%, 30%)" }}>
                       {r.meal}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">{r.reason}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <MapPin className="w-3 h-3" /> Near {r.near_landmark}
+                  <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{r.reason}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {r.near_landmark}</span>
                     <span className="ml-auto px-2 py-0.5 rounded-full"
                       style={{ background: "hsla(148, 35%, 88%, 0.7)", color: "hsl(158, 30%, 38%)" }}>
                       {r.type}
@@ -836,34 +906,34 @@ const PaidItinerary = () => {
 
         {/* Budget breakdown */}
         {it.budget_breakdown && (
-          <motion.section {...fadeUp} className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-heading mb-6 flex items-center gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-              <Wallet className="w-7 h-7 text-primary" /> Budget Breakdown
+          <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+            <h2 className="text-xl sm:text-2xl font-heading mb-5 flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
+                <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              Budget Breakdown
             </h2>
-            <div className="glass-panel p-6 sm:p-8">
+            <div className="glass-panel p-5 sm:p-7">
               {it.budget_breakdown.items?.map((item: any) => (
-                <div key={item.label} className="flex justify-between items-center py-3 border-b border-border/30 last:border-0">
-                  <span className="text-muted-foreground text-sm">{item.label}</span>
-                  <span className="font-semibold text-sm" style={{ color: "hsl(158, 45%, 12%)" }}>{item.amount}</span>
-                </div>
+                <BudgetRow key={item.label} label={item.label} amount={item.amount} />
               ))}
               {it.budget_breakdown.emergency_buffer && (
-                <div className="flex justify-between items-center py-3 border-b border-border/30">
-                  <span className="text-sm">🛡️ Emergency Buffer (10%)</span>
-                  <span className="font-semibold text-sm">{it.budget_breakdown.emergency_buffer}</span>
-                </div>
+                <BudgetRow label="Emergency Buffer (10%)" amount={it.budget_breakdown.emergency_buffer} />
               )}
-              <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-primary/20">
-                <span className="font-heading text-lg" style={{ color: "hsl(158, 45%, 12%)" }}>Total Estimated</span>
-                <span className="font-heading text-xl text-primary">{it.budget_breakdown.total_estimated}</span>
-              </div>
+              <BudgetRow label="Total Estimated" amount={it.budget_breakdown.total_estimated} isTotal />
               {it.budget_breakdown.savings_message && (
-                <div className="flex items-center gap-2 mt-4 p-4 rounded-2xl"
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="flex items-center gap-2.5 mt-4 p-3.5 rounded-2xl"
                   style={{ background: "hsla(158, 42%, 38%, 0.08)", border: "1px solid hsla(158, 42%, 50%, 0.20)" }}>
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                  <span className="text-sm font-medium text-primary">{it.budget_breakdown.savings_message}</span>
-                  <span className="ml-auto font-bold text-primary">{it.budget_breakdown.percent_used}</span>
-                </div>
+                  <Shield className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium text-primary flex-1">{it.budget_breakdown.savings_message}</span>
+                  {it.budget_breakdown.percent_used && (
+                    <span className="font-bold text-sm text-primary flex-shrink-0">{it.budget_breakdown.percent_used}</span>
+                  )}
+                </motion.div>
               )}
             </div>
           </motion.section>
@@ -871,35 +941,49 @@ const PaidItinerary = () => {
 
         {/* Travel Tips */}
         {it.travel_tips?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-heading mb-6 flex items-center gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-              <Lightbulb className="w-7 h-7 text-primary" /> Travel Tips
+          <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+            <h2 className="text-xl sm:text-2xl font-heading mb-5 flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
+                <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              Travel Tips
             </h2>
-            <div className="glass-panel p-6 sm:p-8">
-              <ul className="space-y-3">
-                {it.travel_tips.map((tip: string, i: number) => (
-                  <motion.li key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
-                    className="flex items-start gap-3 text-sm" style={{ color: "hsl(158, 25%, 28%)" }}>
-                    <span className="text-primary flex-shrink-0 mt-0.5">✅</span>
-                    <span>{tip}</span>
-                  </motion.li>
-                ))}
-              </ul>
+            <div className="glass-panel p-5 sm:p-7 space-y-3">
+              {it.travel_tips.map((tip: string, i: number) => (
+                <motion.div key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-start gap-3 text-sm"
+                  style={{ color: "hsl(158, 25%, 28%)" }}>
+                  <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{tip}</span>
+                </motion.div>
+              ))}
             </div>
           </motion.section>
         )}
 
         {/* Packing checklist */}
         {it.packing_checklist?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-heading mb-6 flex items-center gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-              <Package className="w-7 h-7 text-primary" /> Packing Checklist
+          <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+            <h2 className="text-xl sm:text-2xl font-heading mb-5 flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              Packing Checklist
             </h2>
-            <div className="glass-panel p-6 sm:p-8">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="glass-panel p-5 sm:p-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {it.packing_checklist.map((item: string, i: number) => (
-                  <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.03 }}
-                    className="flex items-center gap-2 text-sm" style={{ color: "hsl(158, 25%, 28%)" }}>
+                  <motion.div key={i}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.03 }}
+                    className="flex items-center gap-2.5 text-sm py-1"
+                    style={{ color: "hsl(158, 25%, 28%)" }}>
                     <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
                     <span>{item}</span>
                   </motion.div>
@@ -911,25 +995,32 @@ const PaidItinerary = () => {
 
         {/* Trip summary */}
         {it.trip_summary && (
-          <motion.section {...fadeUp} className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-heading mb-6 flex items-center gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-              <Calendar className="w-7 h-7 text-primary" /> Trip Summary
+          <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+            <h2 className="text-xl sm:text-2xl font-heading mb-5 flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              Trip Summary
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: "Total Nights", value: it.trip_summary.total_nights, Icon: Clock },
                 { label: "Transport", value: it.trip_summary.transport_percent, Icon: Train },
                 { label: "Stay", value: it.trip_summary.stay_percent, Icon: Hotel },
                 { label: "Food", value: it.trip_summary.food_percent, Icon: Utensils },
               ].map((s) => (
-                <div key={s.label} className="prism-card p-4 sm:p-5 text-center">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2"
+                <motion.div key={s.label}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  className="prism-card p-4 sm:p-5 text-center">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2.5"
                     style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-                    <s.Icon className="w-5 h-5 text-primary" />
+                    <s.Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
-                  <div className="text-xs text-muted-foreground mb-1">{s.label}</div>
-                  <div className="font-heading text-base sm:text-lg font-bold text-primary">{s.value}</div>
-                </div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground mb-1">{s.label}</div>
+                  <div className="font-heading text-sm sm:text-base font-bold text-primary tabular-nums">{s.value}</div>
+                </motion.div>
               ))}
             </div>
           </motion.section>
@@ -937,33 +1028,33 @@ const PaidItinerary = () => {
 
         {/* Closing note */}
         {it.closing_note && (
-          <motion.section {...fadeUp} className="mb-16">
-            <div className="prism-card p-8 sm:p-12 text-center">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          <motion.section {...fadeUp} className="mb-12 sm:mb-16">
+            <div className="prism-card p-6 sm:p-10 text-center">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-4"
                 style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-                <Star className="w-6 h-6 text-primary" />
+                <Star className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-lg font-heading italic leading-relaxed max-w-2xl mx-auto" style={{ color: "hsl(158, 35%, 25%)" }}>
+              <p className="text-base sm:text-lg font-heading italic leading-relaxed max-w-2xl mx-auto"
+                style={{ color: "hsl(158, 35%, 25%)" }}>
                 "{it.closing_note}"
               </p>
             </div>
           </motion.section>
         )}
 
-        {/* Contact */}
-        <motion.section {...fadeUp} className="mb-20">
+        {/* Help */}
+        <motion.section {...fadeUp} className="mb-20 sm:mb-24">
           <div className="glass-panel p-6 sm:p-8 text-center">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3"
               style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-              <Lightbulb className="w-6 h-6 text-primary" />
+              <Lightbulb className="w-5 h-5 text-primary" />
             </div>
-            <h2 className="text-xl font-heading mb-2" style={{ color: "hsl(158, 45%, 12%)" }}>Need Help?</h2>
+            <h2 className="text-lg sm:text-xl font-heading mb-2" style={{ color: "hsl(158, 45%, 12%)" }}>Need Help?</h2>
             <p className="text-muted-foreground text-sm mb-5">Our travel experts are here for you 24/7</p>
             <a href="mailto:support@krotravel.com"
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full font-semibold text-sm btn-primary">
-              <ArrowRight className="w-4 h-4" /> support@krotravel.com
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm btn-primary">
+              <ArrowRight className="w-4 h-4" /> Contact Support
             </a>
-            <p className="text-xs text-muted-foreground mt-4 italic">Share feedback to get your next itinerary free</p>
           </div>
         </motion.section>
       </div>
