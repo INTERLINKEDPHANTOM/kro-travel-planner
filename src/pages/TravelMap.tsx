@@ -1,10 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Calendar, Globe, Loader2, Lock, ArrowRight, Download, Crown, Sparkles } from "lucide-react";
+import { MapPin, Calendar, Globe, Loader2, ArrowRight, Crown, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix default marker icons broken by webpack/vite
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 type TripPin = {
   id: string;
@@ -12,59 +22,182 @@ type TripPin = {
   created_at: string;
   preferences: any;
   status: string;
+  lat?: number;
+  lng?: number;
 };
 
-// Indian cities rough lat/lng for map pinning (normalized 0-100 for SVG)
-const CITY_COORDS: Record<string, { x: number; y: number }> = {
-  // North India
-  "delhi": { x: 38, y: 22 }, "new delhi": { x: 38, y: 22 },
-  "shimla": { x: 37, y: 17 }, "manali": { x: 37, y: 14 },
-  "amritsar": { x: 34, y: 18 }, "chandigarh": { x: 37, y: 20 },
-  "jammu": { x: 34, y: 15 }, "srinagar": { x: 33, y: 11 },
-  "leh": { x: 38, y: 10 }, "ladakh": { x: 40, y: 10 },
-  // West India
-  "mumbai": { x: 28, y: 55 }, "pune": { x: 30, y: 57 },
-  "goa": { x: 27, y: 65 }, "ahmedabad": { x: 27, y: 42 },
-  "jaipur": { x: 34, y: 30 }, "udaipur": { x: 32, y: 36 },
-  "jodhpur": { x: 29, y: 30 }, "jaisalmer": { x: 25, y: 29 },
-  "mount abu": { x: 28, y: 37 },
-  // South India
-  "bangalore": { x: 35, y: 72 }, "bengaluru": { x: 35, y: 72 },
-  "mysore": { x: 34, y: 74 }, "mysuru": { x: 34, y: 74 },
-  "chennai": { x: 42, y: 70 }, "hyderabad": { x: 38, y: 63 },
-  "kerala": { x: 33, y: 80 }, "kochi": { x: 32, y: 80 },
-  "munnar": { x: 32, y: 78 }, "ooty": { x: 34, y: 76 },
-  "coorg": { x: 33, y: 74 },
-  // East India
-  "kolkata": { x: 56, y: 47 }, "darjeeling": { x: 58, y: 38 },
-  "bhubaneswar": { x: 54, y: 56 }, "puri": { x: 55, y: 58 },
-  // Central India
-  "bhopal": { x: 38, y: 44 }, "indore": { x: 35, y: 44 },
-  "nagpur": { x: 41, y: 50 }, "varanasi": { x: 47, y: 36 },
-  "lucknow": { x: 44, y: 30 }, "agra": { x: 40, y: 28 },
-  // North East
-  "assam": { x: 64, y: 35 }, "guwahati": { x: 64, y: 34 },
-  "shillong": { x: 66, y: 37 }, "gangtok": { x: 60, y: 38 },
-  // Andaman
-  "andaman": { x: 68, y: 72 }, "port blair": { x: 68, y: 72 },
+// Real lat/lng coordinates for Indian cities & destinations
+const CITY_LATLONG: Record<string, [number, number]> = {
+  "delhi": [28.6139, 77.2090], "new delhi": [28.6139, 77.2090],
+  "shimla": [31.1048, 77.1734], "manali": [32.2432, 77.1892],
+  "amritsar": [31.6340, 74.8723], "chandigarh": [30.7333, 76.7794],
+  "jammu": [32.7266, 74.8570], "srinagar": [34.0837, 74.7973],
+  "leh": [34.1526, 77.5771], "ladakh": [34.1526, 77.5771],
+  "spiti": [32.2461, 78.0339], "spiti valley": [32.2461, 78.0339],
+  "mumbai": [19.0760, 72.8777], "pune": [18.5204, 73.8567],
+  "goa": [15.2993, 74.1240], "ahmedabad": [23.0225, 72.5714],
+  "jaipur": [26.9124, 75.7873], "udaipur": [24.5854, 73.7125],
+  "jodhpur": [26.2389, 73.0243], "jaisalmer": [26.9157, 70.9083],
+  "mount abu": [24.5926, 72.7156], "pushkar": [26.4899, 74.5514],
+  "ajmer": [26.4499, 74.6399], "bikaner": [28.0229, 73.3119],
+  "bangalore": [12.9716, 77.5946], "bengaluru": [12.9716, 77.5946],
+  "mysore": [12.2958, 76.6394], "mysuru": [12.2958, 76.6394],
+  "chennai": [13.0827, 80.2707], "hyderabad": [17.3850, 78.4867],
+  "kerala": [10.8505, 76.2711], "kochi": [9.9312, 76.2673],
+  "munnar": [10.0889, 77.0595], "ooty": [11.4102, 76.6950],
+  "coorg": [12.3375, 75.8069], "wayanad": [11.6854, 76.1320],
+  "alleppey": [9.4981, 76.3388], "kovalam": [8.4004, 76.9787],
+  "trivandrum": [8.5241, 76.9366], "thiruvananthapuram": [8.5241, 76.9366],
+  "kolkata": [22.5726, 88.3639], "darjeeling": [27.0360, 88.2627],
+  "bhubaneswar": [20.2961, 85.8245], "puri": [19.8135, 85.8312],
+  "bhopal": [23.2599, 77.4126], "indore": [22.7196, 75.8577],
+  "nagpur": [21.1458, 79.0882], "varanasi": [25.3176, 82.9739],
+  "lucknow": [26.8467, 80.9462], "agra": [27.1767, 78.0081],
+  "mathura": [27.4924, 77.6737], "haridwar": [29.9457, 78.1642],
+  "rishikesh": [30.0869, 78.2676], "dehradun": [30.3165, 78.0322],
+  "nainital": [29.3919, 79.4542], "mussoorie": [30.4598, 78.0664],
+  "assam": [26.2006, 92.9376], "guwahati": [26.1445, 91.7362],
+  "shillong": [25.5788, 91.8933], "gangtok": [27.3314, 88.6138],
+  "kaziranga": [26.6638, 93.3699], "meghalaya": [25.4670, 91.3662],
+  "andaman": [11.7401, 92.6586], "port blair": [11.6234, 92.7265],
+  "lakshadweep": [10.5667, 72.6417],
+  "agartala": [23.8315, 91.2868], "aizawl": [23.7307, 92.7173],
+  "imphal": [24.8170, 93.9368], "kohima": [25.6751, 94.1086],
+  "pattaya": [12.9236, 100.8824], "bangkok": [13.7563, 100.5018],
+  "singapore": [1.3521, 103.8198], "dubai": [25.2048, 55.2708],
+  "maldives": [3.2028, 73.2207], "bali": [-8.3405, 115.0920],
+  "paris": [48.8566, 2.3522], "london": [51.5074, -0.1278],
+  "new york": [40.7128, -74.0060], "tokyo": [35.6762, 139.6503],
+  "kathmandu": [27.7172, 85.3240], "colombo": [6.9271, 79.8612],
+  "dhaka": [23.8103, 90.4125],
 };
 
-const getCoords = (destination: string): { x: number; y: number } | null => {
-  const lower = destination.toLowerCase();
-  for (const [key, coords] of Object.entries(CITY_COORDS)) {
-    if (lower.includes(key)) return coords;
+const getLatLng = (destination: string): [number, number] | null => {
+  const lower = destination.toLowerCase().trim();
+  for (const [key, coords] of Object.entries(CITY_LATLONG)) {
+    if (lower.includes(key) || key.includes(lower.split(",")[0].trim())) return coords;
   }
   return null;
 };
 
-const PIN_COLORS = [
-  "hsl(158,42%,38%)", "hsl(258,70%,50%)", "hsl(38,90%,50%)",
-  "hsl(340,75%,50%)", "hsl(200,80%,45%)", "hsl(120,60%,40%)",
-];
+const PIN_COLORS_HEX = ["#2d9b6b", "#7c3aed", "#f59e0b", "#e11d48", "#0ea5e9", "#10b981"];
+
+// Custom colored circular marker
+const createColoredIcon = (color: string, index: number) => {
+  const svg = `
+    <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+      <filter id="shadow${index}">
+        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+      </filter>
+      <path d="M16 0C9.4 0 4 5.4 4 12c0 9 12 28 12 28s12-19 12-28c0-6.6-5.4-12-12-12z"
+        fill="${color}" filter="url(#shadow${index})"/>
+      <circle cx="16" cy="12" r="6" fill="white" opacity="0.9"/>
+      <text x="16" y="16" text-anchor="middle" font-size="8" font-weight="bold" fill="${color}">${index + 1}</text>
+    </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: "",
+    iconSize: [32, 40],
+    iconAnchor: [16, 40],
+    popupAnchor: [0, -40],
+  });
+};
+
+const LeafletMap = ({
+  trips,
+  onSelectTrip,
+}: {
+  trips: TripPin[];
+  onSelectTrip: (trip: TripPin) => void;
+}) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const polylinesRef = useRef<L.Polyline[]>([]);
+
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    // Init map centered on India
+    const map = L.map(mapRef.current, {
+      center: [20.5937, 78.9629],
+      zoom: 5,
+      zoomControl: true,
+      scrollWheelZoom: true,
+    });
+
+    // Clean, modern tile layer (OpenStreetMap)
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 18,
+    }).addTo(map);
+
+    mapInstanceRef.current = map;
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // Clear old markers and lines
+    markersRef.current.forEach(m => m.remove());
+    polylinesRef.current.forEach(p => p.remove());
+    markersRef.current = [];
+    polylinesRef.current = [];
+
+    const validTrips = trips.filter(t => t.lat && t.lng);
+    if (validTrips.length === 0) return;
+
+    const latlngs: [number, number][] = [];
+
+    validTrips.forEach((trip, i) => {
+      const color = PIN_COLORS_HEX[i % PIN_COLORS_HEX.length];
+      const icon = createColoredIcon(color, i);
+      const date = new Date(trip.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+      const marker = L.marker([trip.lat!, trip.lng!], { icon })
+        .addTo(map)
+        .bindPopup(`
+          <div style="font-family:system-ui;padding:4px;min-width:160px">
+            <div style="font-weight:700;font-size:14px;color:#1a3a2a;margin-bottom:4px">📍 ${trip.destination}</div>
+            <div style="font-size:11px;color:#666;margin-bottom:6px">${date}</div>
+            <div style="font-size:11px;font-weight:600;color:${color};background:${color}18;padding:3px 8px;border-radius:6px;display:inline-block">Trip #${i + 1}</div>
+          </div>
+        `, { maxWidth: 200 });
+
+      marker.on("click", () => onSelectTrip(trip));
+      markersRef.current.push(marker);
+      latlngs.push([trip.lat!, trip.lng!]);
+    });
+
+    // Draw connecting lines between trips in chronological order
+    if (latlngs.length > 1) {
+      const line = L.polyline(latlngs, {
+        color: "#2d9b6b",
+        weight: 2.5,
+        opacity: 0.55,
+        dashArray: "8, 8",
+        smoothFactor: 1.5,
+      }).addTo(map);
+      polylinesRef.current.push(line);
+    }
+
+    // Fit map bounds to show all pins
+    const bounds = L.latLngBounds(latlngs);
+    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 10 });
+
+  }, [trips]);
+
+  return <div ref={mapRef} style={{ height: "480px", width: "100%", borderRadius: "16px", zIndex: 1 }} />;
+};
 
 const TravelMap = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
   const [trips, setTrips] = useState<TripPin[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTrip, setSelectedTrip] = useState<TripPin | null>(null);
@@ -76,7 +209,6 @@ const TravelMap = () => {
   const init = async () => {
     const { data: { user: u } } = await supabase.auth.getUser();
     if (!u) { navigate("/auth?redirect=/travel-map"); return; }
-    setUser(u);
 
     const [{ data: tripsData }, { data: sub }] = await Promise.all([
       supabase.from("saved_itineraries").select("id,destination,created_at,preferences,status")
@@ -84,22 +216,22 @@ const TravelMap = () => {
       supabase.from("user_subscriptions").select("*").eq("user_id", u.id).maybeSingle(),
     ]);
 
-    setTrips((tripsData || []) as TripPin[]);
+    // Resolve lat/lng for each trip
+    const withCoords: TripPin[] = (tripsData || []).map((t: any) => {
+      const coords = getLatLng(t.destination);
+      return { ...t, lat: coords?.[0], lng: coords?.[1] };
+    });
+
+    setTrips(withCoords);
     setSubscription(sub);
     setLoading(false);
   };
 
   const isPremium = subscription?.plan === "voyager" || subscription?.is_super_premium;
-
-  // Limit to 3 pins for free users
   const visibleTrips = isPremium ? trips : trips.slice(0, 3);
   const lockedCount = trips.length - visibleTrips.length;
+  const mappedTrips = visibleTrips.filter(t => t.lat && t.lng);
 
-  const pinsWithCoords = visibleTrips
-    .map((t, i) => ({ trip: t, coords: getCoords(t.destination), color: PIN_COLORS[i % PIN_COLORS.length] }))
-    .filter(p => p.coords !== null);
-
-  // Group trips by year for timeline
   const byYear: Record<string, TripPin[]> = {};
   trips.forEach(t => {
     const yr = new Date(t.created_at).getFullYear().toString();
@@ -116,10 +248,6 @@ const TravelMap = () => {
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))" }}>
       <Navbar />
-      <div className="relative z-0 pointer-events-none fixed inset-0">
-        <div className="ambient-orb-1" style={{ top: "10%", left: "8%", opacity: 0.35 }} />
-        <div className="ambient-orb-2" style={{ bottom: "20%", right: "8%", opacity: 0.30 }} />
-      </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-20">
 
@@ -132,9 +260,9 @@ const TravelMap = () => {
             </div>
             <div>
               <h1 className="font-heading text-2xl sm:text-3xl" style={{ color: "hsl(158,45%,10%)" }}>
-                Travel Timeline / Life Map
+                Travel Life Map
               </h1>
-              <p className="text-sm text-muted-foreground">Your journey, pinned forever on the map</p>
+              <p className="text-sm text-muted-foreground">Every place you've visited, pinned forever</p>
             </div>
           </div>
 
@@ -142,7 +270,7 @@ const TravelMap = () => {
           <div className="grid grid-cols-3 gap-3 mt-5">
             {[
               { label: "Trips Planned", value: trips.length, emoji: "✈️" },
-              { label: "Cities Visited", value: pinsWithCoords.length, emoji: "📍" },
+              { label: "Places on Map", value: mappedTrips.length, emoji: "📍" },
               { label: "Years Explored", value: Object.keys(byYear).length, emoji: "🗓️" },
             ].map(s => (
               <div key={s.label} className="glass-panel p-3 text-center">
@@ -155,15 +283,15 @@ const TravelMap = () => {
         </motion.div>
 
         {/* View Toggle */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-5">
           {(["map", "timeline"] as const).map(v => (
             <button key={v} onClick={() => setView(v)}
-              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all capitalize"
+              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
               style={{
                 background: view === v ? "linear-gradient(135deg, hsl(158,42%,40%), hsl(162,45%,28%))" : "hsla(158,42%,38%,0.10)",
                 color: view === v ? "white" : "hsl(158,42%,32%)",
               }}>
-              {v === "map" ? "🗺️ India Map" : "📅 Timeline"}
+              {v === "map" ? "🗺️ Live Map" : "📅 Timeline"}
             </button>
           ))}
         </div>
@@ -181,55 +309,40 @@ const TravelMap = () => {
                 </Link>
               </div>
             ) : (
-              <div className="glass-panel p-4 sm:p-6">
-                {/* SVG India Map with pins */}
-                <div className="relative rounded-2xl overflow-hidden" style={{ background: "hsla(158,35%,96%,0.8)", border: "1px solid hsla(148,35%,78%,0.30)" }}>
-                  <svg viewBox="0 0 100 100" className="w-full" style={{ maxHeight: "480px" }}>
-                    {/* India outline (simplified paths) */}
-                    <path d="M30,10 L45,8 L55,10 L65,12 L72,18 L75,25 L73,32 L68,38 L65,45 L67,52 L65,60 L62,68 L58,74 L54,80 L50,85 L45,88 L40,85 L37,80 L34,72 L30,65 L26,58 L22,50 L20,42 L22,35 L25,28 L28,20 Z"
-                      fill="hsla(158,30%,88%,0.6)" stroke="hsla(158,42%,45%,0.35)" strokeWidth="0.5" />
-                    {/* State borders hint */}
-                    <path d="M38,22 L44,28 M38,22 L30,30 M44,28 L50,35 M30,30 L35,40 M50,35 L55,45 M35,40 L40,50 M55,45 L58,55 M40,50 L45,60 M58,55 L55,65"
-                      stroke="hsla(158,42%,60%,0.25)" strokeWidth="0.3" fill="none" />
-
-                    {/* Trip Pins */}
-                    {pinsWithCoords.map(({ trip, coords, color }, i) => (
-                      <g key={trip.id} style={{ cursor: "pointer" }}
-                        onClick={() => setSelectedTrip(selectedTrip?.id === trip.id ? null : trip)}>
-                        <circle cx={coords!.x} cy={coords!.y} r="2.5" fill={color} opacity="0.9">
-                          <animate attributeName="r" values="2.5;3.5;2.5" dur="2s" repeatCount="indefinite" begin={`${i * 0.3}s`} />
-                        </circle>
-                        <circle cx={coords!.x} cy={coords!.y} r="4" fill={color} opacity="0.2">
-                          <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" begin={`${i * 0.3}s`} />
-                        </circle>
-                        {/* Label */}
-                        <text x={coords!.x + 3.5} y={coords!.y - 1} fontSize="2.5" fill={color} fontWeight="bold">
-                          {trip.destination.split(",")[0].split(" ").slice(0, 1).join(" ")}
-                        </text>
-                      </g>
-                    ))}
-
-                    {/* Locked pins */}
-                    {lockedCount > 0 && (
-                      <g>
-                        <text x="50" y="95" textAnchor="middle" fontSize="3" fill="hsl(0,0%,55%)">
-                          +{lockedCount} more · Upgrade to unlock
-                        </text>
-                      </g>
-                    )}
-                  </svg>
-
-                  {/* Legend */}
-                  <div className="px-4 pb-3 flex flex-wrap gap-2">
-                    {pinsWithCoords.slice(0, 6).map(({ trip, color }) => (
-                      <div key={trip.id} className="flex items-center gap-1.5 text-[11px]"
-                        style={{ color: "hsl(158,38%,25%)" }}>
-                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                        <span>{trip.destination.split(",")[0]}</span>
-                      </div>
-                    ))}
-                  </div>
+              <div className="space-y-4">
+                {/* Real Leaflet Map */}
+                <div className="rounded-2xl overflow-hidden shadow-lg"
+                  style={{ border: "1px solid hsla(148,35%,78%,0.30)" }}>
+                  <LeafletMap trips={mappedTrips} onSelectTrip={setSelectedTrip} />
                 </div>
+
+                {/* Legend */}
+                {mappedTrips.length > 0 && (
+                  <div className="glass-panel p-3 flex flex-wrap gap-2 items-center">
+                    <span className="text-[11px] text-muted-foreground font-medium mr-1">Pins:</span>
+                    {mappedTrips.map((trip, i) => (
+                      <button key={trip.id}
+                        onClick={() => setSelectedTrip(selectedTrip?.id === trip.id ? null : trip)}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all"
+                        style={{
+                          background: selectedTrip?.id === trip.id ? PIN_COLORS_HEX[i % PIN_COLORS_HEX.length] + "22" : "hsla(0,0%,50%,0.08)",
+                          border: `1px solid ${PIN_COLORS_HEX[i % PIN_COLORS_HEX.length]}44`,
+                          color: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length],
+                        }}>
+                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                          style={{ background: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length] }}>
+                          {i + 1}
+                        </span>
+                        {trip.destination.split(",")[0]}
+                      </button>
+                    ))}
+                    {trips.filter(t => !t.lat).length > 0 && (
+                      <span className="text-[10px] text-muted-foreground ml-auto">
+                        {trips.filter(t => !t.lat).length} destination{trips.filter(t => !t.lat).length > 1 ? "s" : ""} not yet on map
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Selected Trip Card */}
                 <AnimatePresence>
@@ -238,18 +351,23 @@ const TravelMap = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="mt-4 p-4 rounded-2xl flex items-center justify-between gap-3"
+                      className="p-4 rounded-2xl flex items-center justify-between gap-3"
                       style={{ background: "hsla(158,42%,38%,0.08)", border: "1px solid hsla(158,42%,50%,0.20)" }}
                     >
-                      <div>
-                        <p className="font-heading text-sm" style={{ color: "hsl(158,45%,12%)" }}>
-                          📍 {selectedTrip.destination}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(selectedTrip.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                          style={{ background: "hsla(158,42%,38%,0.12)" }}>📍</div>
+                        <div>
+                          <p className="font-heading text-sm font-semibold" style={{ color: "hsl(158,45%,12%)" }}>
+                            {selectedTrip.destination}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(selectedTrip.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            {selectedTrip.lat && <span className="ml-2 opacity-60">{selectedTrip.lat.toFixed(2)}°N, {selectedTrip.lng?.toFixed(2)}°E</span>}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <Link to={`/trip-wrapped/${selectedTrip.id}`}>
                           <button className="px-3 py-1.5 rounded-lg text-xs font-semibold"
                             style={{ background: "hsla(158,42%,38%,0.12)", color: "hsl(158,42%,30%)" }}>
@@ -257,9 +375,8 @@ const TravelMap = () => {
                           </button>
                         </Link>
                         <button onClick={() => setSelectedTrip(null)}
-                          className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground"
-                          style={{ background: "hsla(0,0%,50%,0.10)" }}>
-                          Close
+                          className="w-7 h-7 rounded-full glass-panel flex items-center justify-center text-muted-foreground">
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </motion.div>
@@ -269,19 +386,19 @@ const TravelMap = () => {
                 {/* Upgrade CTA */}
                 {!isPremium && lockedCount > 0 && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="mt-4 p-4 rounded-2xl text-center"
+                    className="p-4 rounded-2xl text-center"
                     style={{ background: "linear-gradient(135deg, hsla(258,70%,50%,0.10), hsla(280,65%,38%,0.08))", border: "1px solid hsla(258,70%,50%,0.20)" }}>
                     <Crown className="w-5 h-5 mx-auto mb-2" style={{ color: "hsl(258,70%,50%)" }} />
                     <p className="font-heading text-sm mb-1" style={{ color: "hsl(258,45%,18%)" }}>
-                      Unlock all {trips.length} trip pins
+                      Unlock {lockedCount} more trip{lockedCount > 1 ? "s" : ""} on the map
                     </p>
                     <p className="text-xs text-muted-foreground mb-3">
-                      Upgrade to Voyager to show your full travel history + export as PDF poster
+                      Upgrade to Voyager for your full travel history
                     </p>
                     <Link to="/plans">
                       <button className="px-5 py-2 rounded-xl text-xs font-bold text-white"
                         style={{ background: "linear-gradient(135deg, hsl(258,70%,50%), hsl(280,65%,38%))" }}>
-                        Upgrade to Voyager <Sparkles className="w-3 h-3 inline ml-1" />
+                        Upgrade <Sparkles className="w-3 h-3 inline ml-1" />
                       </button>
                     </Link>
                   </motion.div>
@@ -304,7 +421,7 @@ const TravelMap = () => {
                 {Object.entries(byYear).sort(([a], [b]) => Number(b) - Number(a)).map(([year, yearTrips]) => (
                   <motion.div key={year} initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center font-heading font-bold text-sm"
+                      <div className="w-14 h-10 rounded-xl flex items-center justify-center font-heading font-bold text-sm"
                         style={{ background: "linear-gradient(135deg, hsl(158,42%,40%), hsl(162,45%,28%))", color: "white" }}>
                         {year}
                       </div>
@@ -322,7 +439,7 @@ const TravelMap = () => {
                           className="relative glass-panel p-4 hover-lift">
                           <div className="absolute -left-9 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2"
                             style={{
-                              background: PIN_COLORS[i % PIN_COLORS.length],
+                              background: PIN_COLORS_HEX[i % PIN_COLORS_HEX.length],
                               borderColor: "hsl(var(--background))",
                             }} />
                           <div className="flex items-center justify-between gap-2">
@@ -331,16 +448,31 @@ const TravelMap = () => {
                                 <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                                 {trip.destination}
                               </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
+                              <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
                                 {new Date(trip.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long" })}
+                                {trip.lat && (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px]"
+                                    style={{ background: "hsla(158,42%,38%,0.08)", color: "hsl(158,42%,38%)" }}>
+                                    📍 On map
+                                  </span>
+                                )}
                               </p>
                             </div>
-                            <Link to={`/trip-wrapped/${trip.id}`}>
-                              <button className="text-[11px] px-2.5 py-1.5 rounded-lg font-semibold flex-shrink-0"
-                                style={{ background: "hsla(158,42%,38%,0.10)", color: "hsl(158,42%,30%)" }}>
-                                Wrapped
-                              </button>
-                            </Link>
+                            <div className="flex gap-2 flex-shrink-0">
+                              {trip.lat && (
+                                <button onClick={() => { setView("map"); setSelectedTrip(trip); }}
+                                  className="text-[11px] px-2.5 py-1.5 rounded-lg font-semibold"
+                                  style={{ background: "hsla(200,70%,40%,0.10)", color: "hsl(200,70%,35%)" }}>
+                                  View Map
+                                </button>
+                              )}
+                              <Link to={`/trip-wrapped/${trip.id}`}>
+                                <button className="text-[11px] px-2.5 py-1.5 rounded-lg font-semibold"
+                                  style={{ background: "hsla(158,42%,38%,0.10)", color: "hsl(158,42%,30%)" }}>
+                                  Wrapped
+                                </button>
+                              </Link>
+                            </div>
                           </div>
                         </motion.div>
                       ))}
