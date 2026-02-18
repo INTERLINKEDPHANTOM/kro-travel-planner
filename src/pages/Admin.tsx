@@ -5,7 +5,9 @@ import {
   Plus, Edit, Trash2, Eye, EyeOff, LogOut, Sparkles, Loader2,
   Users, BarChart3, FileText, Tag, Crown, Shield, Star, RefreshCw,
   TrendingUp, ChevronRight, X, Check, AlertCircle, Download, Ban,
-  Gift, Calendar, DollarSign, Activity, Search, UserCheck, Clock
+  Gift, Calendar, DollarSign, Activity, Search, UserCheck, Clock,
+  Settings, Home, MapPin, Lock, CreditCard, Image, Megaphone, Save,
+  ToggleLeft, ToggleRight, Globe, Phone, BookOpen, ScrollText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +26,7 @@ interface UserWithStats extends UserProfile { trip_count: number; paid_count: nu
 interface PromoCode { id: string; code: string; discount_type: string; discount_value: number; uses_count: number; max_uses: number | null; is_active: boolean; expires_at: string | null; new_users_only: boolean; one_time_per_user: boolean; min_cart_value: number; created_at: string; }
 interface SuperPremiumUser { id: string; user_id: string; access_type: string; expires_at: string | null; notes: string | null; is_active: boolean; granted_at: string; profiles?: { full_name: string | null; email: string | null } | null; }
 
-type Tab = "dashboard" | "users" | "itineraries" | "promos" | "super_premium";
+type Tab = "dashboard" | "users" | "itineraries" | "promos" | "super_premium" | "page_controls";
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -32,6 +34,7 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "itineraries", label: "Itineraries", icon: FileText },
   { id: "promos", label: "Promo Codes", icon: Tag },
   { id: "super_premium", label: "Super Premium", icon: Crown },
+  { id: "page_controls", label: "Page Controls", icon: Settings },
 ];
 
 const sectionLabels: Record<string, string> = {
@@ -95,6 +98,11 @@ const Admin = () => {
   const [spNotes, setSpNotes] = useState("");
   const [spGranting, setSpGranting] = useState(false);
 
+  // page controls
+  const [siteSettings, setSiteSettings] = useState<Record<string, any>>({});
+  const [activePageControl, setActivePageControl] = useState("home");
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
   /* ── auth check ── */
   useEffect(() => { checkAdmin(); }, []);
 
@@ -113,7 +121,7 @@ const Admin = () => {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchDashboardStats(), fetchItineraries(), fetchUsers(), fetchPromos(), fetchSuperPremium()]);
+    await Promise.all([fetchDashboardStats(), fetchItineraries(), fetchUsers(), fetchPromos(), fetchSuperPremium(), fetchSiteSettings()]);
     setLoading(false);
   }, []);
 
@@ -307,6 +315,32 @@ const Admin = () => {
     await supabase.from("user_subscriptions").update({ is_super_premium: false, plan: "free" }).eq("user_id", userId);
     toast({ title: "Access revoked" });
     fetchSuperPremium(); fetchDashboardStats();
+  };
+
+  /* ── site settings ── */
+  const fetchSiteSettings = async () => {
+    const { data } = await supabase.from("site_settings").select("*");
+    if (!data) return;
+    const map: Record<string, any> = {};
+    data.forEach((row: any) => { map[row.page_key] = row.settings; });
+    setSiteSettings(map);
+  };
+
+  const saveSiteSettings = async (pageKey: string) => {
+    setSettingsSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("site_settings")
+      .upsert({ page_key: pageKey, settings: siteSettings[pageKey], updated_by: user?.id }, { onConflict: "page_key" });
+    if (error) toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    else toast({ title: `✅ ${pageKey} settings saved!` });
+    setSettingsSaving(false);
+  };
+
+  const updatePageSetting = (pageKey: string, field: string, value: any) => {
+    setSiteSettings(prev => ({
+      ...prev,
+      [pageKey]: { ...(prev[pageKey] || {}), [field]: value }
+    }));
   };
 
   const exportCSV = (data: any[], filename: string) => {
@@ -807,6 +841,420 @@ const Admin = () => {
                 </div>
               </motion.div>
             )}
+
+            {/* ═══ PAGE CONTROLS ═══ */}
+            {activeTab === "page_controls" && (
+              <motion.div key="page_controls" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="flex gap-3 mb-6 flex-wrap">
+                  {[
+                    { key: "home", label: "🏠 Home Page", Icon: Home },
+                    { key: "plan_trip", label: "🗺️ Plan My Trip", Icon: MapPin },
+                    { key: "auth", label: "🔒 Auth Page", Icon: Lock },
+                    { key: "plan_selection", label: "💳 Plan Selection", Icon: CreditCard },
+                    { key: "free_itinerary", label: "📄 Free Itinerary", Icon: FileText },
+                    { key: "paid_itinerary", label: "⭐ Paid Itinerary", Icon: Star },
+                    { key: "memory_vault", label: "🖼️ Memory Vault", Icon: Image },
+                    { key: "contact", label: "📞 Contact/Support", Icon: Phone },
+                    { key: "legal", label: "📜 Legal Pages", Icon: ScrollText },
+                  ].map(p => (
+                    <button
+                      key={p.key}
+                      onClick={() => setActivePageControl(p.key)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all border
+                        ${activePageControl === p.key
+                          ? "bg-primary text-primary-foreground border-primary shadow-md"
+                          : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* ── HOME PAGE CONTROLS ── */}
+                {activePageControl === "home" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><Home className="w-5 h-5 text-primary" /> Home Page Content</h2>
+                      <button onClick={() => saveSiteSettings("home")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+
+                    {/* Announcement Banner */}
+                    <div className="rounded-2xl border border-border p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-foreground flex items-center gap-2"><Megaphone className="w-4 h-4 text-primary" /> Announcement Banner</p>
+                        <Switch
+                          checked={siteSettings.home?.announcement_banner_active || false}
+                          onCheckedChange={v => updatePageSetting("home", "announcement_banner_active", v)}
+                        />
+                      </div>
+                      <Input
+                        placeholder="Announcement text (shown site-wide when active)…"
+                        value={siteSettings.home?.announcement_banner || ""}
+                        onChange={e => updatePageSetting("home", "announcement_banner", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Hero Content */}
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-foreground">Hero Section</p>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Main Headline</Label>
+                        <Input className="mt-1" value={siteSettings.home?.hero_headline || ""} onChange={e => updatePageSetting("home", "hero_headline", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Sub Headline</Label>
+                        <Textarea className="mt-1 min-h-[70px] text-sm" value={siteSettings.home?.hero_subheadline || ""} onChange={e => updatePageSetting("home", "hero_subheadline", e.target.value)} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Primary CTA Text</Label>
+                          <Input className="mt-1" value={siteSettings.home?.cta_primary_text || ""} onChange={e => updatePageSetting("home", "cta_primary_text", e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Secondary CTA Text</Label>
+                          <Input className="mt-1" value={siteSettings.home?.cta_secondary_text || ""} onChange={e => updatePageSetting("home", "cta_secondary_text", e.target.value)} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-foreground">Hero Stats</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Trips Planned</Label>
+                          <Input className="mt-1" value={siteSettings.home?.stats_trips || ""} onChange={e => updatePageSetting("home", "stats_trips", e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">User Rating</Label>
+                          <Input className="mt-1" value={siteSettings.home?.stats_rating || ""} onChange={e => updatePageSetting("home", "stats_rating", e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Generation Time</Label>
+                          <Input className="mt-1" value={siteSettings.home?.stats_generation_time || ""} onChange={e => updatePageSetting("home", "stats_generation_time", e.target.value)} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── PLAN TRIP CONTROLS ── */}
+                {activePageControl === "plan_trip" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><MapPin className="w-5 h-5 text-primary" /> Plan My Trip — Form Controls</h2>
+                      <button onClick={() => saveSiteSettings("plan_trip")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Min Budget (₹)</Label>
+                        <Input type="number" className="mt-1" value={siteSettings.plan_trip?.min_budget || 1000} onChange={e => updatePageSetting("plan_trip", "min_budget", +e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Max Budget (₹)</Label>
+                        <Input type="number" className="mt-1" value={siteSettings.plan_trip?.max_budget || 500000} onChange={e => updatePageSetting("plan_trip", "max_budget", +e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Max Travellers</Label>
+                        <Input type="number" className="mt-1" value={siteSettings.plan_trip?.max_people || 20} onChange={e => updatePageSetting("plan_trip", "max_people", +e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-foreground">Feature Toggles</p>
+                      {[
+                        { key: "multi_city_enabled", label: "Multi-city stops field" },
+                        { key: "notes_field_enabled", label: "Special notes field" },
+                      ].map(toggle => (
+                        <div key={toggle.key} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
+                          <span className="text-sm text-foreground">{toggle.label}</span>
+                          <Switch checked={siteSettings.plan_trip?.[toggle.key] ?? true} onCheckedChange={v => updatePageSetting("plan_trip", toggle.key, v)} />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-foreground">Enabled Travel Types</p>
+                      <p className="text-xs text-muted-foreground">Toggle to enable/disable travel type options in the form</p>
+                      <div className="flex flex-wrap gap-2">
+                        {["leisure", "adventure", "corporate", "medical", "spiritual"].map(type => {
+                          const enabled = (siteSettings.plan_trip?.travel_types_enabled || []).includes(type);
+                          return (
+                            <button key={type} onClick={() => {
+                              const curr = siteSettings.plan_trip?.travel_types_enabled || [];
+                              updatePageSetting("plan_trip", "travel_types_enabled", enabled ? curr.filter((t: string) => t !== type) : [...curr, type]);
+                            }}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all capitalize
+                                ${enabled ? "bg-primary/15 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border"}`}
+                            >
+                              {enabled ? "✓ " : ""}{type}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-foreground">Enabled Transport Modes</p>
+                      <div className="flex flex-wrap gap-2">
+                        {["flight", "train", "bus", "own", "public", "mixed"].map(mode => {
+                          const enabled = (siteSettings.plan_trip?.transport_modes_enabled || []).includes(mode);
+                          return (
+                            <button key={mode} onClick={() => {
+                              const curr = siteSettings.plan_trip?.transport_modes_enabled || [];
+                              updatePageSetting("plan_trip", "transport_modes_enabled", enabled ? curr.filter((m: string) => m !== mode) : [...curr, mode]);
+                            }}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all capitalize
+                                ${enabled ? "bg-primary/15 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border"}`}
+                            >
+                              {enabled ? "✓ " : ""}{mode}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── AUTH CONTROLS ── */}
+                {activePageControl === "auth" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><Lock className="w-5 h-5 text-primary" /> Auth Page Controls</h2>
+                      <button onClick={() => saveSiteSettings("auth")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+                    <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-muted-foreground">
+                      ⚠️ Admin cannot access user passwords or OTPs. These are UI-level toggles only.
+                    </div>
+                    {[
+                      { key: "email_login_enabled", label: "Email/Password Login", desc: "Standard email + password auth" },
+                      { key: "google_login_enabled", label: "Google Login (OAuth)", desc: "Sign in with Google" },
+                      { key: "otp_login_enabled", label: "OTP / Phone Login", desc: "Phone number one-time password" },
+                      { key: "signup_enabled", label: "New Signups Enabled", desc: "Allow new user registrations" },
+                    ].map(toggle => (
+                      <div key={toggle.key} className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{toggle.label}</p>
+                          <p className="text-xs text-muted-foreground">{toggle.desc}</p>
+                        </div>
+                        <Switch checked={siteSettings.auth?.[toggle.key] ?? true} onCheckedChange={v => updatePageSetting("auth", toggle.key, v)} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* ── PLAN SELECTION CONTROLS ── */}
+                {activePageControl === "plan_selection" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><CreditCard className="w-5 h-5 text-primary" /> Plan Selection Page</h2>
+                      <button onClick={() => saveSiteSettings("plan_selection")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Paid Plan Price Label</Label>
+                        <Input className="mt-1" value={siteSettings.plan_selection?.paid_plan_price_label || ""} onChange={e => updatePageSetting("plan_selection", "paid_plan_price_label", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Premium Plan Price Label</Label>
+                        <Input className="mt-1" value={siteSettings.plan_selection?.premium_plan_price_label || ""} onChange={e => updatePageSetting("plan_selection", "premium_plan_price_label", e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Recommended / Default Plan</Label>
+                      <select value={siteSettings.plan_selection?.recommended_plan || "basic"}
+                        onChange={e => updatePageSetting("plan_selection", "recommended_plan", e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground">
+                        <option value="free">Explorer (Free)</option>
+                        <option value="basic">Voyager (Paid)</option>
+                        <option value="premium">Nomad (Premium)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-foreground">Plan Visibility</p>
+                      {[
+                        { key: "free_plan_enabled", label: "Show Free (Explorer) Plan" },
+                        { key: "paid_plan_enabled", label: "Show Paid (Voyager) Plan" },
+                        { key: "premium_plan_enabled", label: "Show Premium (Nomad) Plan" },
+                        { key: "show_promotions", label: "Show Active Promotions Banner" },
+                      ].map(toggle => (
+                        <div key={toggle.key} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border">
+                          <span className="text-sm text-foreground">{toggle.label}</span>
+                          <Switch checked={siteSettings.plan_selection?.[toggle.key] ?? true} onCheckedChange={v => updatePageSetting("plan_selection", toggle.key, v)} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── FREE ITINERARY CONTROLS ── */}
+                {activePageControl === "free_itinerary" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Free Itinerary Page</h2>
+                      <button onClick={() => saveSiteSettings("free_itinerary")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+                    {[
+                      { key: "feature_enabled", label: "Free Itinerary Feature Active", desc: "Enable/disable free itinerary pages globally" },
+                      { key: "show_upgrade_cta", label: "Show Upgrade CTA", desc: "Show the 'Plan Full Trip' upgrade prompt" },
+                    ].map(toggle => (
+                      <div key={toggle.key} className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{toggle.label}</p>
+                          <p className="text-xs text-muted-foreground">{toggle.desc}</p>
+                        </div>
+                        <Switch checked={siteSettings.free_itinerary?.[toggle.key] ?? true} onCheckedChange={v => updatePageSetting("free_itinerary", toggle.key, v)} />
+                      </div>
+                    ))}
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Upgrade CTA Button Text</Label>
+                      <Input className="mt-1" value={siteSettings.free_itinerary?.cta_text || ""} onChange={e => updatePageSetting("free_itinerary", "cta_text", e.target.value)} />
+                    </div>
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+                      💡 To edit individual free itinerary content, go to the <strong>Itineraries</strong> tab → Free Itineraries section.
+                    </div>
+                  </div>
+                )}
+
+                {/* ── PAID ITINERARY CONTROLS ── */}
+                {activePageControl === "paid_itinerary" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><Star className="w-5 h-5 text-primary" /> Paid Itinerary Page</h2>
+                      <button onClick={() => saveSiteSettings("paid_itinerary")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+                    {[
+                      { key: "download_enabled", label: "PDF Download Enabled", desc: "Allow users to download itinerary as PDF" },
+                      { key: "sharing_enabled", label: "Sharing Enabled", desc: "Allow users to share their itinerary link" },
+                      { key: "regeneration_enabled", label: "Regeneration Enabled", desc: "Allow users to regenerate their itinerary" },
+                      { key: "watermark_enabled", label: "Show Watermark on PDF", desc: "Add KroTravel watermark to downloaded PDFs" },
+                    ].map(toggle => (
+                      <div key={toggle.key} className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{toggle.label}</p>
+                          <p className="text-xs text-muted-foreground">{toggle.desc}</p>
+                        </div>
+                        <Switch checked={siteSettings.paid_itinerary?.[toggle.key] ?? true} onCheckedChange={v => updatePageSetting("paid_itinerary", toggle.key, v)} />
+                      </div>
+                    ))}
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Max Regenerations Per Trip</Label>
+                      <Input type="number" className="mt-1 max-w-[120px]" value={siteSettings.paid_itinerary?.max_regenerations || 3} onChange={e => updatePageSetting("paid_itinerary", "max_regenerations", +e.target.value)} />
+                    </div>
+                  </div>
+                )}
+
+                {/* ── MEMORY VAULT CONTROLS ── */}
+                {activePageControl === "memory_vault" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><Image className="w-5 h-5 text-primary" /> Memory Vault / Trip Gallery</h2>
+                      <button onClick={() => saveSiteSettings("memory_vault")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Feature Globally Enabled</p>
+                        <p className="text-xs text-muted-foreground">Turn off to disable trip gallery / photo uploads for all users</p>
+                      </div>
+                      <Switch checked={siteSettings.memory_vault?.feature_enabled ?? true} onCheckedChange={v => updatePageSetting("memory_vault", "feature_enabled", v)} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Free Plan Storage Limit (MB)</Label>
+                        <Input type="number" className="mt-1" value={siteSettings.memory_vault?.storage_limit_free_mb || 1024} onChange={e => updatePageSetting("memory_vault", "storage_limit_free_mb", +e.target.value)} />
+                        <p className="text-xs text-muted-foreground mt-1">1024 MB = 1 GB</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Premium Plan Storage Limit (MB)</Label>
+                        <Input type="number" className="mt-1" value={siteSettings.memory_vault?.storage_limit_premium_mb || 40960} onChange={e => updatePageSetting("memory_vault", "storage_limit_premium_mb", +e.target.value)} />
+                        <p className="text-xs text-muted-foreground mt-1">40960 MB = 40 GB</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── CONTACT CONTROLS ── */}
+                {activePageControl === "contact" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><Phone className="w-5 h-5 text-primary" /> Contact & Support Page</h2>
+                      <button onClick={() => saveSiteSettings("contact")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">WhatsApp Support Enabled</p>
+                        <p className="text-xs text-muted-foreground">Show WhatsApp contact button</p>
+                      </div>
+                      <Switch checked={siteSettings.contact?.whatsapp_enabled ?? true} onCheckedChange={v => updatePageSetting("contact", "whatsapp_enabled", v)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">WhatsApp Number</Label>
+                      <Input className="mt-1" placeholder="+91 9876543210" value={siteSettings.contact?.whatsapp_number || ""} onChange={e => updatePageSetting("contact", "whatsapp_number", e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Support Email Address</Label>
+                      <Input className="mt-1" type="email" value={siteSettings.contact?.email_address || ""} onChange={e => updatePageSetting("contact", "email_address", e.target.value)} />
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">FAQs Section Enabled</p>
+                        <p className="text-xs text-muted-foreground">Show FAQ accordion on contact page</p>
+                      </div>
+                      <Switch checked={siteSettings.contact?.faqs_enabled ?? true} onCheckedChange={v => updatePageSetting("contact", "faqs_enabled", v)} />
+                    </div>
+                  </div>
+                )}
+
+                {/* ── LEGAL CONTROLS ── */}
+                {activePageControl === "legal" && (
+                  <div className="glass-card rounded-3xl p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2"><ScrollText className="w-5 h-5 text-primary" /> Legal Pages</h2>
+                      <button onClick={() => saveSiteSettings("legal")} disabled={settingsSaving} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                        {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                      </button>
+                    </div>
+                    {[
+                      { key: "terms_enabled", label: "Terms of Service Page", desc: "Enable the Terms & Conditions page" },
+                      { key: "privacy_enabled", label: "Privacy Policy Page", desc: "Enable the Privacy Policy page" },
+                      { key: "refund_enabled", label: "Refund Policy Page", desc: "Enable the Refund Policy page" },
+                    ].map(toggle => (
+                      <div key={toggle.key} className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{toggle.label}</p>
+                          <p className="text-xs text-muted-foreground">{toggle.desc}</p>
+                        </div>
+                        <Switch checked={siteSettings.legal?.[toggle.key] ?? true} onCheckedChange={v => updatePageSetting("legal", toggle.key, v)} />
+                      </div>
+                    ))}
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+                      ⚠️ Content updates to legal pages require approval. Use the Itineraries editor to manage structured content.
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
           </AnimatePresence>
         </div>
       </div>

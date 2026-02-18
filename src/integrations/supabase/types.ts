@@ -308,6 +308,30 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          id: string
+          page_key: string
+          settings: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          page_key: string
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          page_key?: string
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       super_premium_access: {
         Row: {
           access_type: string
