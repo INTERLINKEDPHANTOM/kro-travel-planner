@@ -469,6 +469,142 @@ export type Database = {
         }
         Relationships: []
       }
+      travel_pages: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          cover_image_url: string | null
+          created_at: string
+          display_name: string
+          id: string
+          instagram_url: string | null
+          is_public: boolean
+          show_stats: boolean
+          show_title: boolean
+          show_trips: boolean
+          slug: string
+          updated_at: string
+          user_id: string
+          youtube_url: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          instagram_url?: string | null
+          is_public?: boolean
+          show_stats?: boolean
+          show_title?: boolean
+          show_trips?: boolean
+          slug: string
+          updated_at?: string
+          user_id: string
+          youtube_url?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          instagram_url?: string | null
+          is_public?: boolean
+          show_stats?: boolean
+          show_title?: boolean
+          show_trips?: boolean
+          slug?: string
+          updated_at?: string
+          user_id?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
+      trip_anniversaries: {
+        Row: {
+          anniversary_date: string
+          created_at: string
+          destination: string
+          id: string
+          reminder_enabled: boolean
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          anniversary_date: string
+          created_at?: string
+          destination: string
+          id?: string
+          reminder_enabled?: boolean
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          anniversary_date?: string
+          created_at?: string
+          destination?: string
+          id?: string
+          reminder_enabled?: boolean
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_anniversaries_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "saved_itineraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_messages: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          message: string
+          message_type: string
+          sender_avatar: string | null
+          sender_name: string
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          message: string
+          message_type?: string
+          sender_avatar?: string | null
+          sender_name?: string
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          message?: string
+          message_type?: string
+          sender_avatar?: string | null
+          sender_name?: string
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_messages_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "saved_itineraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_photos: {
         Row: {
           caption: string | null

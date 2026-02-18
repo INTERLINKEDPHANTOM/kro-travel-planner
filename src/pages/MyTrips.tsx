@@ -314,6 +314,12 @@ const MyTrips = () => {
                       <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate(`/trip-gallery/${trip.id}`)}>
                         📸
                       </Button>
+                      <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate(`/trip-chat/${trip.id}`)} title="Trip Chat">
+                        💬
+                      </Button>
+                      <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate(`/trip-wrapped/${trip.id}`)} title="Trip Wrapped">
+                        🎬
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

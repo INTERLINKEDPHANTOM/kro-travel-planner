@@ -24,6 +24,10 @@ import Legal from "./pages/Legal";
 import Offers from "./pages/Offers";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
+import TripChat from "./pages/TripChat";
+import TravelPage from "./pages/TravelPage";
+import TripWrapped from "./pages/TripWrapped";
+import CreatorStudio from "./pages/CreatorStudio";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +53,10 @@ const AnimatedRoutes = () => {
         <Route path="/checkout" element={<PageTransition><Checkout /></PageTransition>} />
         <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
         <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
+        <Route path="/trip-chat/:tripId" element={<PageTransition><TripChat /></PageTransition>} />
+        <Route path="/travel/:slug" element={<PageTransition><TravelPage /></PageTransition>} />
+        <Route path="/trip-wrapped/:tripId" element={<PageTransition><TripWrapped /></PageTransition>} />
+        <Route path="/creator-studio" element={<PageTransition><CreatorStudio /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
