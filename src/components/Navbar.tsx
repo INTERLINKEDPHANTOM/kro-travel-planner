@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Compass, Menu, X, LayoutDashboard, Film } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -13,6 +14,13 @@ const navItems = [
 const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setIsLoggedIn(!!s?.user));
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <motion.nav
@@ -61,23 +69,49 @@ const Navbar = () => {
                 <span className="relative z-10">{item.label}</span>
               </Link>
             ))}
+            {isLoggedIn && (
+              <Link to="/creator-studio"
+                className="relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+                style={{ color: location.pathname === "/creator-studio" ? "hsl(270, 60%, 50%)" : "hsl(158, 18%, 48%)" }}>
+                {location.pathname === "/creator-studio" && (
+                  <motion.div layoutId="navPill" className="absolute inset-0 rounded-full"
+                    style={{ background: "hsla(270, 60%, 50%, 0.10)" }}
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }} />
+                )}
+                <span className="relative z-10 flex items-center gap-1"><Film className="w-3.5 h-3.5" /> Studio</span>
+              </Link>
+            )}
           </div>
 
           {/* CTA buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/auth">
-              <button className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-                style={{ color: "hsl(158, 18%, 48%)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "hsl(158, 42%, 32%)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(158, 18%, 48%)")}>
-                Log in
-              </button>
-            </Link>
-            <Link to="/plan">
-              <button className="btn-primary text-sm px-6 py-2.5">
-                Plan My Trip
-              </button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link to="/dashboard">
+                  <button className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+                    style={{ color: "hsl(158, 42%, 38%)", background: "hsla(158, 42%, 38%, 0.08)" }}>
+                    <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
+                  </button>
+                </Link>
+                <Link to="/plan">
+                  <button className="btn-primary text-sm px-6 py-2.5">Plan My Trip</button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <button className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+                    style={{ color: "hsl(158, 18%, 48%)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "hsl(158, 42%, 32%)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(158, 18%, 48%)")}>
+                    Log in
+                  </button>
+                </Link>
+                <Link to="/plan">
+                  <button className="btn-primary text-sm px-6 py-2.5">Plan My Trip</button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -132,13 +166,35 @@ const Navbar = () => {
                   </Link>
                 </motion.div>
               ))}
+              {isLoggedIn && (
+                <Link to="/creator-studio" onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200"
+                  style={{ color: "hsl(270, 55%, 45%)" }}>
+                  <Film className="w-4 h-4" /> Creator Studio
+                </Link>
+              )}
               <div className="pt-3 space-y-2.5 border-t border-border/30 mt-2">
-                <Link to="/auth" onClick={() => setMobileOpen(false)}>
-                  <button className="w-full btn-ghost-glass py-3 text-sm">Log in</button>
-                </Link>
-                <Link to="/plan" onClick={() => setMobileOpen(false)}>
-                  <button className="w-full btn-primary py-3 text-sm">Plan My Trip</button>
-                </Link>
+                {isLoggedIn ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                      <button className="w-full btn-ghost-glass py-3 text-sm flex items-center justify-center gap-2">
+                        <LayoutDashboard className="w-4 h-4" /> Dashboard
+                      </button>
+                    </Link>
+                    <Link to="/plan" onClick={() => setMobileOpen(false)}>
+                      <button className="w-full btn-primary py-3 text-sm">Plan My Trip</button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/auth" onClick={() => setMobileOpen(false)}>
+                      <button className="w-full btn-ghost-glass py-3 text-sm">Log in</button>
+                    </Link>
+                    <Link to="/plan" onClick={() => setMobileOpen(false)}>
+                      <button className="w-full btn-primary py-3 text-sm">Plan My Trip</button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

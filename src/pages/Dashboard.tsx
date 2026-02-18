@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import {
   MapPin, Calendar, Wallet, Eye, Trash2, RotateCcw, Bell, Loader2,
   LogOut, Settings, Star, Crown, Camera, Image, Compass, ArrowRight,
-  TrendingUp, Clock, Shield, Zap, Users, ChevronRight, Download
+  TrendingUp, Clock, Shield, Zap, Users, ChevronRight, Download,
+  Globe, Film, MessageCircle, Heart, Sparkles, ExternalLink, Check, X
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -56,6 +57,7 @@ const Dashboard = () => {
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [titleInfo, setTitleInfo] = useState(TITLES[0]);
+  const [travelPageSlug, setTravelPageSlug] = useState<string>("");
 
   useEffect(() => { init(); }, []);
 
@@ -84,14 +86,31 @@ const Dashboard = () => {
     setTitleInfo(computeTitle((tripsData || []).length, dominant));
 
     // upsert user title
-    await supabase.from("user_titles").upsert({
+    const titlePayload = {
       user_id: user.id,
       title: computeTitle((tripsData || []).length, dominant).label,
       badge_emoji: computeTitle((tripsData || []).length, dominant).emoji,
       trips_count: (tripsData || []).length,
       dominant_persona: dominant || null,
       updated_at: new Date().toISOString(),
+    };
+    await supabase.from("user_titles").upsert(titlePayload, { onConflict: "user_id" });
+
+    // auto-create travel page if not exists
+    const slug = `${(prof?.full_name || user.email?.split("@")[0] || "traveller").toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 20)}-${user.id.slice(0, 6)}`;
+    await supabase.from("travel_pages").upsert({
+      user_id: user.id,
+      slug,
+      display_name: prof?.full_name || user.email?.split("@")[0] || "Traveller",
+      is_public: true,
     }, { onConflict: "user_id" });
+
+    // store slug for quick link
+    const { data: travelPage } = await supabase.from("travel_pages").select("slug").eq("user_id", user.id).maybeSingle();
+    if (travelPage?.slug) {
+      sessionStorage.setItem("travelPageSlug", travelPage.slug);
+      setTravelPageSlug(travelPage.slug);
+    }
 
     setLoading(false);
   };
@@ -291,11 +310,13 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8"
+          className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-6"
         >
           {[
             { icon: Compass, label: "Plan Trip", link: "/plan", primary: true },
             { icon: MapPin, label: "My Trips", link: "/my-trips" },
+            { icon: Film, label: "Studio", link: "/creator-studio" },
+            { icon: Globe, label: "My Page", link: travelPageSlug ? `/travel/${travelPageSlug}` : "/dashboard" },
             { icon: Image, label: "Gallery", link: trips[0] ? `/trip-gallery/${trips[0].id}` : "/my-trips" },
             { icon: Star, label: "Offers", link: "/offers" },
           ].map(({ icon: Icon, label, link, primary }) => (
@@ -303,12 +324,66 @@ const Dashboard = () => {
               <button className={`w-full py-3.5 rounded-xl text-sm font-medium flex flex-col items-center gap-2 transition-all ${
                 primary ? "btn-primary" : "glass-panel hover:shadow-md"
               }`} style={!primary ? { color: "hsl(158, 38%, 22%)" } : {}}>
-                <Icon className="w-5 h-5" />
-                {label}
+                <Icon className="w-4 h-4" />
+                <span className="text-[11px]">{label}</span>
               </button>
             </Link>
           ))}
         </motion.div>
+
+        {/* ── Travel Page CTA ── */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
+          className="prism-card p-4 sm:p-5 mb-4 flex items-center gap-4">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "linear-gradient(135deg, hsl(200, 65%, 38%), hsl(220, 60%, 28%))" }}>
+            <Globe className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="font-heading text-sm mb-0.5" style={{ color: "hsl(158, 45%, 10%)" }}>Your Personal Travel Page</p>
+            <p className="text-xs text-muted-foreground">One shareable link — your entire journey, public or private.</p>
+          </div>
+          <Link to={travelPageSlug ? `/travel/${travelPageSlug}` : "/dashboard"}>
+            <button className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl glass-panel"
+              style={{ color: "hsl(200, 65%, 38%)" }}>
+              View <ExternalLink className="w-3 h-3" />
+            </button>
+          </Link>
+        </motion.div>
+
+        {/* ── Anniversary reminders ── */}
+        {trips.some(t => t.preferences?.departureDate) && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}
+            className="glass-panel p-4 sm:p-5 mb-6 rounded-2xl">
+            <div className="flex items-center gap-2 mb-3">
+              <Heart className="w-4 h-4" style={{ color: "hsl(0, 70%, 55%)" }} />
+              <p className="font-heading text-sm" style={{ color: "hsl(158, 45%, 12%)" }}>Travel Anniversaries</p>
+            </div>
+            <div className="space-y-2">
+              {trips.filter(t => t.preferences?.departureDate).slice(0, 3).map((trip) => {
+                const dep = new Date(trip.preferences.departureDate);
+                const today = new Date();
+                const thisYear = new Date(today.getFullYear(), dep.getMonth(), dep.getDate());
+                const daysUntil = Math.ceil((thisYear.getTime() - today.getTime()) / 86400000);
+                const isUpcoming = daysUntil >= 0 && daysUntil <= 30;
+                return (
+                  <div key={trip.id} className="flex items-center gap-3">
+                    <div className="text-lg">{isUpcoming ? "🎉" : "💝"}</div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium" style={{ color: "hsl(158, 38%, 18%)" }}>{trip.destination}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {dep.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} anniversary
+                        {isUpcoming && <span className="font-medium" style={{ color: "hsl(0, 65%, 50%)" }}> · {daysUntil === 0 ? "Today! 🎊" : `in ${daysUntil} days`}</span>}
+                      </p>
+                    </div>
+                    <Link to={`/trip-wrapped/${trip.id}`}>
+                      <span className="text-[10px] px-2.5 py-1 rounded-full glass-panel text-primary font-medium">Wrapped</span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* ── Recent trips ── */}
         <motion.div
