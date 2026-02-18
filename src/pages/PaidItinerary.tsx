@@ -764,38 +764,72 @@ const PaidItinerary = () => {
   const LINKS = buildAffiliateLinks(preferences?.arrival, preferences?.departure, preferences?.departureDate, preferences?.arrivalDate);
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden">
+    <div className="min-h-screen relative" style={{ overflowX: "hidden", maxWidth: "100vw" }}>
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="ambient-orb-1" style={{ top: "5%", left: "10%", opacity: 0.4 }} />
         <div className="ambient-orb-2" style={{ bottom: "25%", right: "8%", opacity: 0.35 }} />
       </div>
-
       <Navbar />
-
-      {/* Sticky floating action bar */}
+      {/* Fixed Action Bar below Navbar */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 flex gap-2 px-3 py-2 rounded-full"
+        transition={{ delay: 0.5, duration: 0.35, ease: "easeOut" }}
+        className="fixed left-0 right-0 z-40 flex items-center justify-between gap-2 px-3 sm:px-6 py-2"
         style={{
-          background: "hsla(148, 40%, 97%, 0.92)",
-          backdropFilter: "blur(24px)",
-          border: "1px solid hsla(148, 35%, 78%, 0.50)",
-          boxShadow: "0 8px 32px hsla(158, 45%, 18%, 0.16)",
-          maxWidth: "calc(100vw - 2rem)",
+          top: "64px",
+          background: "hsla(148, 45%, 98%, 0.88)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          borderBottom: "1px solid hsla(148, 35%, 80%, 0.40)",
+          boxShadow: "0 2px 14px hsla(158, 42%, 36%, 0.08)",
         }}
       >
-        <button onClick={handleDownloadPDF} disabled={downloading}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold btn-primary disabled:opacity-50 whitespace-nowrap">
-          {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-          {downloading ? "Generating..." : "PDF"}
-        </button>
-        <button onClick={handleRegenerate}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold btn-ghost-glass whitespace-nowrap">
-          <RotateCcw className="w-3.5 h-3.5" /> Regenerate
-        </button>
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+          <span className="text-xs sm:text-sm font-semibold truncate" style={{ color: "hsl(158, 45%, 14%)" }}>
+            {preferences?.arrival || "Your Trip"}
+          </span>
+          {it.days?.length && (
+            <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0"
+              style={{ background: "hsla(158, 42%, 38%, 0.10)", color: "hsl(158, 42%, 35%)" }}>
+              {it.days.length} days
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all disabled:opacity-60"
+            style={{
+              background: "hsla(148, 40%, 97%, 0.8)",
+              border: "1px solid hsla(148, 35%, 75%, 0.55)",
+              color: "hsl(158, 42%, 35%)",
+            }}
+          >
+            <RotateCcw className={`w-3 h-3 ${regenerating ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">{regenerating ? "Regenerating…" : "Regenerate"}</span>
+            <span className="sm:hidden">Retry</span>
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={handleDownloadPDF}
+            disabled={downloading}
+            className="flex items-center gap-1 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold text-white disabled:opacity-60 transition-all"
+            style={{
+              background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))",
+              boxShadow: "0 2px 8px hsla(158, 42%, 36%, 0.28)",
+            }}
+          >
+            {downloading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+            <span className="hidden sm:inline">{downloading ? "Generating…" : "Download PDF"}</span>
+            <span className="sm:hidden">PDF</span>
+          </motion.button>
+        </div>
       </motion.div>
+
 
       {/* Hero */}
       <section className="relative pt-0">

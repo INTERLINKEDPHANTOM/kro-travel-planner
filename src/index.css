@@ -46,6 +46,11 @@
 }
 
 @layer base {
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
   * { @apply border-border; }
 
   body {
