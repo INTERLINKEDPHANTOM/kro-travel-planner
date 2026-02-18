@@ -855,7 +855,7 @@ const PaidItinerary = () => {
                 <Star className="w-3 h-3" /> AI-Crafted Itinerary
               </span>
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-heading leading-tight mb-2" style={{ color: "hsl(158, 45%, 10%)" }}>
-                {it.cover_title || `Your Trip to ${preferences?.arrival}`}
+                {(it.cover_title || `Your Trip to ${preferences?.arrival}`).replace(/\*\*/g, "")}
               </h1>
               {it.intro && (
                 <p className="max-w-xl text-sm font-light line-clamp-2" style={{ color: "hsl(158, 25%, 38%)" }}>

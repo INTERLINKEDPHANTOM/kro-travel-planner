@@ -58,6 +58,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [titleInfo, setTitleInfo] = useState(TITLES[0]);
   const [travelPageSlug, setTravelPageSlug] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => { init(); }, []);
 
@@ -66,11 +67,13 @@ const Dashboard = () => {
     if (!user) { navigate("/auth?redirect=/dashboard"); return; }
     setUser(user);
 
-    const [{ data: prof }, { data: tripsData }, { data: sub }] = await Promise.all([
+    const [{ data: prof }, { data: tripsData }, { data: sub }, { data: roleData }] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("saved_itineraries").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("user_subscriptions").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle(),
     ]);
+    setIsAdmin(roleData?.role === "admin");
 
     setProfile(prof);
     setTrips(tripsData || []);
@@ -210,7 +213,8 @@ const Dashboard = () => {
                   {plan === "nomad" ? "👑 Nomad" : plan === "voyager" ? "✈️ Voyager" : "🗺️ Explorer"}
                 </span>
                 {subscription?.is_super_premium && (
-                  <span className="text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-purple-100 text-purple-700">
+                  <span className="text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider"
+                    style={{ background: "hsla(270,70%,55%,0.12)", color: "hsl(270,60%,45%)" }}>
                     ⚡ Super Premium
                   </span>
                 )}
@@ -310,7 +314,7 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-6"
+          className={`grid gap-3 mb-6 ${isAdmin ? "grid-cols-4 sm:grid-cols-7" : "grid-cols-3 sm:grid-cols-6"}`}
         >
           {[
             { icon: Compass, label: "Plan Trip", link: "/plan", primary: true },
@@ -319,11 +323,11 @@ const Dashboard = () => {
             { icon: Globe, label: "Travel Map", link: "/travel-map" },
             { icon: Image, label: "Gallery", link: trips[0] ? `/trip-gallery/${trips[0].id}` : "/my-trips" },
             { icon: Star, label: "Offers", link: "/offers" },
-          ].map(({ icon: Icon, label, link, primary }) => (
+            ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", link: "/admin", primary: false, admin: true }] : []),
+          ].map(({ icon: Icon, label, link, primary, ...rest }) => (
             <Link key={label} to={link}>
-              <button className={`w-full py-3.5 rounded-xl text-sm font-medium flex flex-col items-center gap-2 transition-all ${
-                primary ? "btn-primary" : "glass-panel hover:shadow-md"
-              }`} style={!primary ? { color: "hsl(158, 38%, 22%)" } : {}}>
+              <button className={`w-full py-3.5 rounded-xl text-sm font-medium flex flex-col items-center gap-2 transition-all ${"admin" in rest && rest.admin ? "glass-panel hover:shadow-md border border-destructive/30" : primary ? "btn-primary" : "glass-panel hover:shadow-md"}`}
+                style={"admin" in rest && rest.admin ? { color: "hsl(0,65%,50%)" } : !primary ? { color: "hsl(158, 38%, 22%)" } : {}}>
                 <Icon className="w-4 h-4" />
                 <span className="text-[11px]">{label}</span>
               </button>
