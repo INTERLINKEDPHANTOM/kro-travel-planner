@@ -16,23 +16,27 @@ const fadeUp = {
   transition: { duration: 0.5, ease: "easeOut" as const },
 };
 
-const getPhoto = (query: string, w = 800, h = 500) =>
-  `https://picsum.photos/seed/${encodeURIComponent(query.replace(/\s+/g, "-").toLowerCase())}/${w}/${h}`;
+const getPhoto = (query: string, w = 800, h = 500, sig = 1) => {
+  const safe = query.replace(/[^a-zA-Z\s]/g, "").trim().split(" ").slice(0, 2).join(",") || "travel";
+  return `https://source.unsplash.com/${w}x${h}/?${encodeURIComponent(safe)}&sig=${sig}`;
+};
 
 const formatCost = (val: any): string => {
   if (!val) return "";
-  const str = String(val);
-  if (str.includes("₹") || str.includes("-") || str.includes("Free") || str.includes("free")) return str;
-  const num = parseInt(str.replace(/[^\d]/g, ""), 10);
-  if (!isNaN(num) && num > 0) return "₹" + num.toLocaleString("en-IN");
-  return str;
+  const str = String(val).trim();
+  if (/^₹[\d,]+/.test(str) || /free|%/i.test(str) || str.includes("–") || str.includes("-")) return str;
+  const digits = str.replace(/[^\d]/g, "");
+  if (!digits || digits === "0") return str;
+  const num = parseInt(digits, 10);
+  if (isNaN(num) || num === 0) return str;
+  return "₹" + num.toLocaleString("en-IN");
 };
 
 const SectionHeader = ({ icon: Icon, title }: { icon: any; title: string }) => (
-  <h2 className="text-xl sm:text-2xl font-heading mb-5 sm:mb-6 flex items-center gap-2 sm:gap-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+  <h2 className="text-lg sm:text-xl font-heading mb-4 sm:mb-5 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
       style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
-      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+      <Icon className="w-4 h-4 text-primary" />
     </div>
     {title}
   </h2>
@@ -67,7 +71,7 @@ const FreeItinerary = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative w-14 h-14">
+          <div className="relative w-12 h-12">
             <div className="absolute inset-0 rounded-full border-4 border-border/40" />
             <div className="absolute inset-0 rounded-full border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent animate-spin" />
           </div>
@@ -82,11 +86,11 @@ const FreeItinerary = () => {
       <div className="min-h-screen">
         <Navbar />
         <div className="pt-32 text-center px-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
             style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-            <MapPin className="w-7 h-7 text-primary" />
+            <MapPin className="w-6 h-6 text-primary" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-heading mb-3" style={{ color: "hsl(158, 45%, 12%)" }}>
+          <h1 className="text-xl sm:text-2xl font-heading mb-3" style={{ color: "hsl(158, 45%, 12%)" }}>
             Itinerary Not Found
           </h1>
           <p className="text-muted-foreground mb-8 text-sm max-w-xs mx-auto">
@@ -105,7 +109,6 @@ const FreeItinerary = () => {
 
   return (
     <div className="min-h-screen relative overflow-x-hidden">
-      {/* Ambient orbs */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="ambient-orb-1" style={{ top: "8%", left: "10%", opacity: 0.35 }} />
         <div className="ambient-orb-2" style={{ bottom: "20%", right: "8%", opacity: 0.3 }} />
@@ -115,30 +118,30 @@ const FreeItinerary = () => {
 
       {/* Hero */}
       <section className="relative pt-0">
-        <div className="relative overflow-hidden" style={{ height: "clamp(220px, 45vw, 420px)" }}>
+        <div className="relative overflow-hidden" style={{ height: "clamp(200px, 42vw, 380px)" }}>
           <motion.img
             initial={{ scale: 1.08 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            src={getPhoto(destination || "travel-india", 1400, 700)}
+            transition={{ duration: 1.4, ease: "easeOut" }}
+            src={getPhoto(destination || "india travel", 1400, 700, 1)}
             alt={`${destination} landscape`}
             className="w-full h-full object-cover"
             loading="eager"
             onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/india-travel/1400/700"; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-8 sm:pb-12">
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-6 sm:pb-10">
             <motion.div {...fadeUp} className="max-w-4xl mx-auto">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full backdrop-blur-md text-xs font-bold uppercase tracking-wider mb-3"
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md text-xs font-bold uppercase tracking-wider mb-3"
                 style={{ background: "hsla(158, 42%, 38%, 0.85)", color: "white" }}>
                 <MapPin className="w-3 h-3" /> Free Explorer Guide
               </span>
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-heading leading-tight capitalize mb-3" style={{ color: "hsl(158, 45%, 10%)" }}>
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-heading leading-tight capitalize mb-2" style={{ color: "hsl(158, 45%, 10%)" }}>
                 {title || `Vibes of ${destination}`}
               </h1>
               {c.emotional_hook && (
-                <p className="text-muted-foreground max-w-lg text-sm sm:text-base italic line-clamp-2 sm:line-clamp-none">
-                  {c.emotional_hook.substring(0, 140)}...
+                <p className="text-muted-foreground max-w-lg text-sm italic line-clamp-2">
+                  {c.emotional_hook.substring(0, 120)}...
                 </p>
               )}
             </motion.div>
@@ -150,8 +153,8 @@ const FreeItinerary = () => {
 
         {/* Emotional Hook */}
         {c.emotional_hook && (
-          <motion.section {...fadeUp} className="py-10 sm:py-14">
-            <blockquote className="text-lg sm:text-2xl font-heading italic leading-relaxed border-l-4 border-primary pl-5 sm:pl-6"
+          <motion.section {...fadeUp} className="py-8 sm:py-12">
+            <blockquote className="text-base sm:text-xl font-heading italic leading-relaxed border-l-4 border-primary pl-5"
               style={{ color: "hsl(158, 38%, 18%)" }}>
               {c.emotional_hook}
             </blockquote>
@@ -160,15 +163,15 @@ const FreeItinerary = () => {
 
         {/* Local Resident */}
         {c.local_resident && (
-          <motion.section {...fadeUp} className="glass-panel p-5 sm:p-7 mb-10 sm:mb-12">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0 flex items-center justify-center"
+          <motion.section {...fadeUp} className="glass-panel p-4 sm:p-6 mb-8 sm:mb-10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
                 style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
-                <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                <Heart className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-heading text-sm sm:text-base" style={{ color: "hsl(158, 45%, 12%)" }}>Written by a Local</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">{c.local_resident}</p>
+                <h3 className="font-heading text-sm" style={{ color: "hsl(158, 45%, 12%)" }}>Written by a Local</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{c.local_resident}</p>
               </div>
             </div>
           </motion.section>
@@ -176,7 +179,7 @@ const FreeItinerary = () => {
 
         {/* Vibe */}
         {c.vibe && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
             <SectionHeader icon={Mountain} title="The Vibe" />
             <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{c.vibe}</p>
           </motion.section>
@@ -184,7 +187,7 @@ const FreeItinerary = () => {
 
         {/* Why Special */}
         {c.why_special?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
             <SectionHeader icon={Star} title={`Why ${destination} Is Special`} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {c.why_special.map((item: string, i: number) => (
@@ -193,8 +196,8 @@ const FreeItinerary = () => {
                   initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.07, ease: "easeOut" }}
-                  className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl glass-panel"
+                  transition={{ delay: i * 0.06 }}
+                  className="flex items-start gap-3 p-3.5 rounded-xl glass-panel"
                 >
                   <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-muted-foreground leading-relaxed">{item}</span>
@@ -206,32 +209,31 @@ const FreeItinerary = () => {
 
         {/* Must-Visit Places */}
         {c.must_visit_places?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
             <SectionHeader icon={MapPin} title="Must Visit" />
-            <div className="space-y-4 sm:space-y-5">
+            <div className="space-y-4">
               {c.must_visit_places.map((place: any, i: number) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 18 }}
+                  initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.08, ease: "easeOut" }}
+                  transition={{ delay: i * 0.07 }}
                   className="prism-card overflow-hidden"
                 >
-                  {/* Place image */}
-                  <div className="overflow-hidden" style={{ height: "clamp(140px, 28vw, 200px)" }}>
+                  <div className="overflow-hidden" style={{ height: "clamp(130px, 26vw, 190px)" }}>
                     <img
-                      src={getPhoto(`${place.name}-${destination}`, 800, 400)}
+                      src={getPhoto(`${place.name} ${destination}`, 800, 400, i + 5)}
                       alt={place.name}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                       loading="lazy"
                       onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/place${i + 10}/800/400`; }}
                     />
                   </div>
-                  <div className="p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="p-4 sm:p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base sm:text-lg font-heading mb-1.5" style={{ color: "hsl(158, 45%, 12%)" }}>{place.name}</h3>
+                        <h3 className="text-base font-heading mb-1" style={{ color: "hsl(158, 45%, 12%)" }}>{place.name}</h3>
                         {place.vibe && <p className="text-muted-foreground italic text-sm mb-3 leading-relaxed">{place.vibe}</p>}
                         <div className="flex flex-wrap gap-2 text-xs">
                           {place.best_time && (
@@ -251,12 +253,12 @@ const FreeItinerary = () => {
                       {place.maps_url && (
                         <a href={place.maps_url} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline flex-shrink-0 font-medium">
-                          <ExternalLink className="w-3.5 h-3.5" /> Maps
+                          <ExternalLink className="w-3 h-3" /> Maps
                         </a>
                       )}
                     </div>
                     {place.local_tip && (
-                      <div className="mt-3.5 flex items-start gap-2.5 text-xs rounded-xl p-3"
+                      <div className="mt-3 flex items-start gap-2.5 text-xs rounded-xl p-3"
                         style={{ background: "hsla(158, 42%, 38%, 0.07)", border: "1px solid hsla(158, 42%, 60%, 0.18)" }}>
                         <Lightbulb className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
                         <span style={{ color: "hsl(158, 30%, 30%)" }}>
@@ -273,19 +275,19 @@ const FreeItinerary = () => {
 
         {/* Hidden Gems */}
         {c.hidden_gems?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
             <SectionHeader icon={Star} title="Hidden Gems Only Locals Know" />
-            <div className="glass-panel p-4 sm:p-6 space-y-2">
+            <div className="glass-panel p-4 sm:p-5 space-y-1.5">
               {c.hidden_gems.map((gem: string, i: number) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -8 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.06, ease: "easeOut" }}
+                  transition={{ delay: i * 0.05 }}
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/5 transition-colors"
                 >
-                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                     style={{ background: "hsla(158, 42%, 38%, 0.12)", color: "hsl(158, 42%, 35%)" }}>
                     {i + 1}
                   </span>
@@ -298,7 +300,7 @@ const FreeItinerary = () => {
 
         {/* Food Spots */}
         {c.food_spots?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
             <SectionHeader icon={Utensils} title="Local Food Spots" />
             {c.food_timing_tip && (
               <div className="flex items-start gap-2 mb-4 text-xs sm:text-sm text-muted-foreground italic">
@@ -306,21 +308,21 @@ const FreeItinerary = () => {
                 {c.food_timing_tip}
               </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {c.food_spots.map((spot: any, i: number) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.96 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.07, ease: "easeOut" }}
-                  className="glass-panel p-4 sm:p-5 hover-lift"
+                  transition={{ delay: i * 0.06 }}
+                  className="glass-panel p-4 hover-lift"
                 >
                   <div className="flex justify-between items-start gap-2 mb-1.5">
-                    <h4 className="font-heading text-sm sm:text-base leading-tight" style={{ color: "hsl(158, 45%, 12%)" }}>{spot.name}</h4>
+                    <h4 className="font-heading text-sm leading-tight" style={{ color: "hsl(158, 45%, 12%)" }}>{spot.name}</h4>
                     <span className="text-xs font-semibold text-primary flex-shrink-0 tabular-nums">{formatCost(spot.cost)}</span>
                   </div>
-                  {spot.area && <p className="text-[10px] sm:text-xs text-muted-foreground mb-2">{spot.area}</p>}
+                  {spot.area && <p className="text-[10px] text-muted-foreground mb-1.5">{spot.area}</p>}
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     Must try: <strong className="font-semibold" style={{ color: "hsl(158, 38%, 22%)" }}>{spot.dish}</strong>
                   </p>
@@ -332,21 +334,21 @@ const FreeItinerary = () => {
 
         {/* Cost Breakdown */}
         {c.daily_cost_breakdown?.items?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
             <SectionHeader icon={Wallet} title={`Daily Cost ${c.daily_cost_breakdown.people_count ? `(${c.daily_cost_breakdown.people_count})` : ""}`} />
-            <div className="glass-panel p-4 sm:p-7">
+            <div className="glass-panel p-4 sm:p-6">
               {c.daily_cost_breakdown.items.map((item: any) => (
-                <div key={item.label} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0 gap-3">
-                  <span className="text-sm text-muted-foreground">{item.label}</span>
+                <div key={item.label} className="flex items-center justify-between py-3 border-b border-border/25 last:border-0 gap-4">
+                  <span className="text-sm text-muted-foreground flex-1">{item.label}</span>
                   <span className="font-semibold text-sm tabular-nums flex-shrink-0" style={{ color: "hsl(158, 45%, 15%)" }}>
                     {formatCost(item.range)}
                   </span>
                 </div>
               ))}
               {c.daily_cost_breakdown.total && (
-                <div className="flex items-center justify-between pt-4 mt-2 border-t-2 border-primary/20">
-                  <span className="font-heading text-base sm:text-lg" style={{ color: "hsl(158, 45%, 12%)" }}>Total / Day</span>
-                  <span className="font-heading text-base sm:text-lg text-primary tabular-nums">{formatCost(c.daily_cost_breakdown.total)}</span>
+                <div className="flex items-center justify-between pt-4 mt-2 border-t-2 border-primary/20 gap-4">
+                  <span className="font-heading text-base" style={{ color: "hsl(158, 45%, 12%)" }}>Total / Day</span>
+                  <span className="font-heading text-base text-primary tabular-nums">{formatCost(c.daily_cost_breakdown.total)}</span>
                 </div>
               )}
             </div>
@@ -355,166 +357,98 @@ const FreeItinerary = () => {
 
         {/* Transport */}
         {c.transport_guide?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
             <SectionHeader icon={Bus} title="Transport Guide" />
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {c.transport_guide.map((t: any, i: number) => (
                 <motion.div
                   key={t.mode || i}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.06, ease: "easeOut" }}
-                  className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl sm:rounded-2xl glass-panel gap-3"
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center justify-between p-3.5 rounded-xl glass-panel gap-3"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="font-medium text-sm" style={{ color: "hsl(158, 45%, 12%)" }}>{t.mode}</span>
+                    <span className="font-medium text-sm truncate" style={{ color: "hsl(158, 45%, 12%)" }}>{t.mode}</span>
                     {t.tag && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full"
-                        style={{ background: "hsla(158, 42%, 38%, 0.10)", color: "hsl(158, 38%, 32%)" }}>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: "hsla(152, 55%, 52%, 0.12)", color: "hsl(152, 45%, 32%)" }}>
                         {t.tag}
                       </span>
                     )}
                   </div>
-                  <span className="text-sm font-bold text-primary flex-shrink-0 tabular-nums">{formatCost(t.cost)}</span>
+                  <span className="font-semibold text-xs text-primary tabular-nums flex-shrink-0">{formatCost(t.cost)}</span>
                 </motion.div>
               ))}
             </div>
-            {c.transport_warning && (
-              <div className="mt-4 flex items-start gap-2.5 text-xs p-3.5 rounded-xl"
-                style={{ background: "hsla(0, 72%, 55%, 0.08)", border: "1px solid hsla(0, 72%, 55%, 0.18)", color: "hsl(0, 60%, 40%)" }}>
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                {c.transport_warning}
-              </div>
-            )}
           </motion.section>
         )}
 
-        {/* Best Time */}
-        {c.best_time_to_visit?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={Calendar} title="Best Time & Duration" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {c.best_time_to_visit.map((s: any, i: number) => (
-                <motion.div
-                  key={s.period || i}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.07, ease: "easeOut" }}
-                  className="glass-panel p-4 sm:p-5 text-center hover-lift"
-                >
-                  {s.emoji && <div className="text-2xl mb-2">{s.emoji}</div>}
-                  <div className="font-heading text-xs sm:text-sm" style={{ color: "hsl(158, 45%, 12%)" }}>{s.period}</div>
-                  <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 leading-relaxed">{s.description}</div>
-                </motion.div>
-              ))}
-            </div>
-            {c.ideal_duration && (
-              <p className="text-center mt-4 text-xs sm:text-sm text-muted-foreground">
-                Ideal stay: <strong className="font-semibold" style={{ color: "hsl(158, 38%, 22%)" }}>{c.ideal_duration}</strong>
-              </p>
-            )}
-          </motion.section>
-        )}
-
-        {/* Local Tips */}
-        {c.local_tips?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={Lightbulb} title="Local Tips" />
-            <div className="glass-panel p-4 sm:p-7 space-y-3">
-              {c.local_tips.map((tip: string, i: number) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05, ease: "easeOut" }}
-                  className="flex items-start gap-3 text-sm"
-                  style={{ color: "hsl(158, 25%, 30%)" }}
-                >
+        {/* Calendar Tips */}
+        {c.calendar_tips && (
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
+            <SectionHeader icon={Calendar} title="Best Time to Visit" />
+            <div className="glass-panel p-4 sm:p-6 space-y-3">
+              {c.calendar_tips.best_months && (
+                <div className="flex items-start gap-2.5 text-sm">
                   <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{tip}</span>
-                </motion.div>
-              ))}
+                  <span style={{ color: "hsl(158, 25%, 28%)" }}>
+                    <strong className="font-semibold mr-1" style={{ color: "hsl(158, 45%, 12%)" }}>Best months:</strong>
+                    {c.calendar_tips.best_months}
+                  </span>
+                </div>
+              )}
+              {c.calendar_tips.avoid && (
+                <div className="flex items-start gap-2.5 text-sm">
+                  <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                  <span style={{ color: "hsl(158, 25%, 28%)" }}>
+                    <strong className="font-semibold mr-1" style={{ color: "hsl(158, 45%, 12%)" }}>Avoid:</strong>
+                    {c.calendar_tips.avoid}
+                  </span>
+                </div>
+              )}
+              {c.calendar_tips.insider_tip && (
+                <div className="flex items-start gap-2.5 text-xs rounded-xl p-3"
+                  style={{ background: "hsla(158, 42%, 38%, 0.07)", border: "1px solid hsla(158, 42%, 60%, 0.18)" }}>
+                  <Lightbulb className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
+                  <span style={{ color: "hsl(158, 30%, 30%)" }}>{c.calendar_tips.insider_tip}</span>
+                </div>
+              )}
             </div>
           </motion.section>
         )}
 
-        {/* Resident Moments */}
-        {c.resident_moments && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
-            <div className="prism-card p-6 sm:p-10 text-center">
-              <p className="text-base sm:text-xl font-heading italic leading-relaxed max-w-2xl mx-auto"
-                style={{ color: "hsl(158, 35%, 25%)" }}>
-                "{c.resident_moments}"
-              </p>
+        {/* Packing Tips */}
+        {c.packing_tips?.length > 0 && (
+          <motion.section {...fadeUp} className="mb-8 sm:mb-12">
+            <SectionHeader icon={Lightbulb} title="Packing Tips" />
+            <div className="glass-panel p-4 sm:p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {c.packing_tips.map((tip: string, i: number) => (
+                  <div key={i} className="flex items-center gap-2.5 text-sm py-1" style={{ color: "hsl(158, 25%, 28%)" }}>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    <span>{tip}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.section>
         )}
 
-        {/* Sample Itinerary */}
-        {c.sample_itinerary?.length > 0 && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
-            <SectionHeader icon={Calendar} title="Sample Itinerary" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {c.sample_itinerary.map((day: any, di: number) => (
-                <motion.div
-                  key={day.day || di}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: di * 0.08, ease: "easeOut" }}
-                  className="glass-panel p-4 sm:p-6 hover-lift"
-                >
-                  <h3 className="text-sm sm:text-base font-heading mb-3 text-primary">{day.day}</h3>
-                  <ul className="space-y-2.5 mb-3">
-                    {day.items?.map((item: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0 mt-1.5" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                  {day.cost && (
-                    <div className="pt-3 border-t border-border/40 flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Estimated</span>
-                      <span className="font-bold text-primary tabular-nums">{formatCost(day.cost)}</span>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* Ending Note */}
-        {c.ending_note && (
-          <motion.section {...fadeUp} className="mb-10 sm:mb-14">
-            <blockquote className="text-lg sm:text-2xl font-heading italic text-center max-w-2xl mx-auto leading-relaxed"
-              style={{ color: "hsl(158, 38%, 20%)" }}>
-              {c.ending_note}
-            </blockquote>
-          </motion.section>
-        )}
-
-        {/* CTA */}
-        <motion.section {...fadeUp} className="mb-16 sm:mb-20">
-          <div className="prism-card p-6 sm:p-10 text-center">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4"
-              style={{ background: "hsla(158, 42%, 38%, 0.12)", color: "hsl(158, 42%, 32%)" }}>
-              <Star className="w-3 h-3" /> Premium Plan
-            </span>
-            <h2 className="text-xl sm:text-2xl font-heading mb-3" style={{ color: "hsl(158, 45%, 12%)" }}>
-              Want a trip planned <em className="text-primary not-italic">exactly for you?</em>
-            </h2>
-            <p className="text-muted-foreground max-w-md mx-auto mb-7 text-sm leading-relaxed">
-              This was just the overview. Get hour-wise planning, transport timing, and budget optimization tailored to your dates.
+        {/* CTA to paid */}
+        <motion.section {...fadeUp} className="mt-4">
+          <div className="prism-card p-6 sm:p-8 text-center">
+            <Star className="w-8 h-8 text-primary mx-auto mb-3" />
+            <h3 className="text-xl sm:text-2xl font-heading mb-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+              Want the full experience?
+            </h3>
+            <p className="text-muted-foreground text-sm mb-5 max-w-sm mx-auto">
+              Unlock an hour-by-hour AI itinerary with hotel picks, exact budget & PDF download.
             </p>
-            <Link to="/plans">
-              <button className="btn-primary text-sm sm:text-base px-8 py-3.5 flex items-center gap-2 mx-auto group">
-                Upgrade to Custom Plan
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <Link to="/plan">
+              <button className="btn-primary px-8 py-3.5 flex items-center gap-2 mx-auto">
+                Plan My Full Trip <ArrowRight className="w-4 h-4" />
               </button>
             </Link>
           </div>
@@ -525,6 +459,5 @@ const FreeItinerary = () => {
     </div>
   );
 };
-
 
 export default FreeItinerary;
