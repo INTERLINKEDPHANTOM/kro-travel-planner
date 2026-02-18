@@ -234,7 +234,7 @@ const CreatorStudio = () => {
     <div className="min-h-screen" style={{ background: "hsl(var(--background))" }}>
       <Navbar />
 
-      {/* Reel Generator Modal */}
+      {/* Reel Generator Modal — rendered in a portal at root level to avoid scroll offset bugs */}
       <AnimatePresence>
         {showReel && (
           <ReelGenerator
@@ -248,7 +248,7 @@ const CreatorStudio = () => {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 pt-24 pb-24">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 pt-20 pb-24">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-2">

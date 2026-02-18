@@ -1103,8 +1103,8 @@ const PaidItinerary = () => {
               Packing Checklist
             </h2>
             <div className="glass-panel p-4 sm:p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {it.packing_checklist.map((item: string, i: number) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                {it.packing_checklist.slice(0, 6).map((item: string, i: number) => (
                   <motion.div key={i}
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
@@ -1117,6 +1117,11 @@ const PaidItinerary = () => {
                   </motion.div>
                 ))}
               </div>
+              <a href={savedId ? `/packing-checklist/${savedId}` : "/packing-checklist"}
+                className="btn-primary w-full py-3 text-sm font-semibold flex items-center justify-center gap-2 rounded-xl">
+                <Package className="w-4 h-4" />
+                Open Interactive Checklist — tick as you pack
+              </a>
             </div>
           </motion.section>
         )}
