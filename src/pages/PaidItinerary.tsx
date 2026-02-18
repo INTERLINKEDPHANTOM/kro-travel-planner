@@ -216,7 +216,7 @@ const DayCarousel = ({
               boxShadow: "0 6px 20px hsla(158, 42%, 36%, 0.38)"
             } : {}}
           >
-            <span className="text-lg">{d.emoji || "📍"}</span>
+            <MapPin className="w-3.5 h-3.5" />
             <span className="text-[11px] font-bold whitespace-nowrap">Day {i + 1}</span>
             <span className="text-[10px] opacity-70 hidden sm:block truncate max-w-[80px]">
               {d.day_label?.split("–")[1]?.trim() || d.day_label?.split("-")[1]?.trim() || d.theme || ""}
@@ -240,9 +240,9 @@ const DayCarousel = ({
             style={{ background: "linear-gradient(135deg, hsla(148, 45%, 98%, 0.55) 0%, hsla(155, 40%, 95%, 0.35) 100%)" }}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
                   style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
-                  {day?.emoji || "📍"}
+                  <Calendar className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="text-lg font-heading" style={{ color: "hsl(158, 45%, 12%)" }}>{day?.day_label}</h3>
@@ -265,11 +265,11 @@ const DayCarousel = ({
             {day?.day_label && (
               <div className="mt-4 rounded-2xl overflow-hidden h-40 sm:h-48 relative">
                 <img
-                  src={`https://source.unsplash.com/1000x400/?${encodeURIComponent(day.day_label.split("–")[1]?.trim() || day.theme || "travel india")}`}
+                  src={`https://picsum.photos/seed/${encodeURIComponent((day.day_label.split("–")[1]?.trim() || day.theme || "travel").replace(/\s+/g, "-").toLowerCase())}-day${activeDay}/1000/400`}
                   alt={day.day_label}
                   className="w-full h-full object-cover"
                   loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+                  onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/day${activeDay + 1}/1000/400`; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
               </div>
@@ -462,14 +462,14 @@ const PaidItinerary = () => {
   const [progressLabel, setProgressLabel] = useState("Starting...");
 
   const PIPELINE_STEPS = [
-    { step: 1, label: "Validating preferences...", icon: "✅" },
-    { step: 2, label: "Analyzing travel context...", icon: "🧠" },
-    { step: 3, label: "Finding best transport...", icon: "🚆" },
-    { step: 4, label: "Recalculating budget...", icon: "💰" },
-    { step: 5, label: "Searching hotels...", icon: "🏨" },
-    { step: 6, label: "Building itinerary...", icon: "📋" },
-    { step: 7, label: "Adding restaurants & tips...", icon: "🍽️" },
-    { step: 8, label: "Finalizing...", icon: "✨" },
+    { step: 1, label: "Validating preferences...", Icon: CheckCircle2 },
+    { step: 2, label: "Analyzing travel context...", Icon: Zap },
+    { step: 3, label: "Finding best transport...", Icon: Train },
+    { step: 4, label: "Recalculating budget...", Icon: IndianRupee },
+    { step: 5, label: "Searching hotels...", Icon: Hotel },
+    { step: 6, label: "Building itinerary...", Icon: Package },
+    { step: 7, label: "Adding restaurants & tips...", Icon: Utensils },
+    { step: 8, label: "Finalizing...", Icon: Star },
   ];
 
   const generateItinerary = async (prefs: any) => {
@@ -559,7 +559,9 @@ const PaidItinerary = () => {
           <div className="relative w-20 h-20">
             <div className="absolute inset-0 rounded-full border-4 border-border/40" />
             <div className="absolute inset-0 rounded-full border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent animate-spin" />
-            <div className="absolute inset-3 rounded-full flex items-center justify-center text-2xl">✈️</div>
+            <div className="absolute inset-3 rounded-full flex items-center justify-center">
+              <Plane className="w-7 h-7 text-primary" />
+            </div>
           </div>
 
           <div className="text-center max-w-sm">
@@ -591,9 +593,13 @@ const PaidItinerary = () => {
                   "bg-muted/30 text-muted-foreground"
                 }`}
               >
-                <span className="text-lg w-6 text-center">
-                  {s.step < progressStep ? "✅" : s.step === progressStep ? s.icon : "⏳"}
-                </span>
+                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                  {s.step < progressStep
+                    ? <CheckCircle2 className="w-4 h-4 text-primary" />
+                    : s.step === progressStep
+                    ? <s.Icon className="w-4 h-4 text-primary" />
+                    : <Clock className="w-4 h-4 text-muted-foreground opacity-50" />}
+                </div>
                 <span className="flex-1">{s.label}</span>
                 {s.step === progressStep && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
               </motion.div>
@@ -610,7 +616,10 @@ const PaidItinerary = () => {
       <div className="min-h-screen">
         <Navbar />
         <div className="pt-32 text-center px-4">
-          <div className="text-6xl mb-6">😕</div>
+          <div className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6"
+            style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
+            <AlertCircle className="w-8 h-8 text-primary" />
+          </div>
           <h1 className="text-2xl font-heading mb-3" style={{ color: "hsl(158, 45%, 12%)" }}>Generation Failed</h1>
           <p className="text-muted-foreground mb-8 max-w-md mx-auto">{error}</p>
           <button onClick={() => { setError(""); setLoading(true); generateItinerary(preferences); }} className="btn-primary px-8 py-3">
@@ -664,11 +673,11 @@ const PaidItinerary = () => {
       <section className="relative pt-0">
         <div className="relative h-72 sm:h-[420px] overflow-hidden">
           <img
-            src={`https://source.unsplash.com/1600x800/?${encodeURIComponent(preferences?.arrival || "travel")},india,landscape,tourism`}
+            src={`https://picsum.photos/seed/${encodeURIComponent((preferences?.arrival || "travel").replace(/\s+/g, "-").toLowerCase())}-hero/1600/800`}
             alt={preferences?.arrival}
             className="w-full h-full object-cover"
             loading="eager"
-            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/travel-hero/1600/800"; }}
           />
           <div className="absolute inset-0"
             style={{ background: "linear-gradient(to top, hsl(148, 35%, 95%) 0%, hsla(148, 35%, 95%, 0.5) 40%, transparent 100%)" }} />
@@ -715,16 +724,17 @@ const PaidItinerary = () => {
           <h2 className="text-lg font-heading mb-4 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
             <Zap className="w-5 h-5 text-primary" /> Quick Book Links
           </h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             {[
-              { label: "🚆 Book Train", url: LINKS.train },
-              { label: "🏨 Book Hotel", url: LINKS.hotel },
-              { label: "🚌 Book Bus", url: LINKS.bus },
-              { label: "✈️ Book Flight", url: LINKS.flight },
-              { label: "🚕 Book Cab", url: LINKS.cab },
-              { label: "🗺️ Google Maps", url: LINKS.maps },
+              { label: "Book Train", Icon: Train, url: LINKS.train },
+              { label: "Book Hotel", Icon: Hotel, url: LINKS.hotel },
+              { label: "Book Bus", Icon: Bus, url: LINKS.bus },
+              { label: "Book Flight", Icon: Plane, url: LINKS.flight },
+              { label: "Book Cab", Icon: Car, url: LINKS.cab },
+              { label: "Google Maps", Icon: Navigation, url: LINKS.maps },
             ].map((link) => (
               <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer" className="booking-chip">
+                <link.Icon className="w-3.5 h-3.5" />
                 {link.label}
                 <ExternalLink className="w-3 h-3" />
               </a>
@@ -907,15 +917,18 @@ const PaidItinerary = () => {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Total Nights", value: it.trip_summary.total_nights, icon: "🌙" },
-                { label: "Transport", value: it.trip_summary.transport_percent, icon: "🚆" },
-                { label: "Stay", value: it.trip_summary.stay_percent, icon: "🏨" },
-                { label: "Food", value: it.trip_summary.food_percent, icon: "🍽️" },
+                { label: "Total Nights", value: it.trip_summary.total_nights, Icon: Clock },
+                { label: "Transport", value: it.trip_summary.transport_percent, Icon: Train },
+                { label: "Stay", value: it.trip_summary.stay_percent, Icon: Hotel },
+                { label: "Food", value: it.trip_summary.food_percent, Icon: Utensils },
               ].map((s) => (
-                <div key={s.label} className="prism-card p-5 text-center">
-                  <div className="text-3xl mb-2">{s.icon}</div>
+                <div key={s.label} className="prism-card p-4 sm:p-5 text-center">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2"
+                    style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
+                    <s.Icon className="w-5 h-5 text-primary" />
+                  </div>
                   <div className="text-xs text-muted-foreground mb-1">{s.label}</div>
-                  <div className="font-heading text-lg font-bold text-primary">{s.value}</div>
+                  <div className="font-heading text-base sm:text-lg font-bold text-primary">{s.value}</div>
                 </div>
               ))}
             </div>
@@ -926,7 +939,10 @@ const PaidItinerary = () => {
         {it.closing_note && (
           <motion.section {...fadeUp} className="mb-16">
             <div className="prism-card p-8 sm:p-12 text-center">
-              <div className="text-4xl mb-4">🌟</div>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
+                <Star className="w-6 h-6 text-primary" />
+              </div>
               <p className="text-lg font-heading italic leading-relaxed max-w-2xl mx-auto" style={{ color: "hsl(158, 35%, 25%)" }}>
                 "{it.closing_note}"
               </p>
@@ -936,15 +952,18 @@ const PaidItinerary = () => {
 
         {/* Contact */}
         <motion.section {...fadeUp} className="mb-20">
-          <div className="glass-panel p-8 text-center">
-            <div className="text-3xl mb-3">💬</div>
+          <div className="glass-panel p-6 sm:p-8 text-center">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+              style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
+              <Lightbulb className="w-6 h-6 text-primary" />
+            </div>
             <h2 className="text-xl font-heading mb-2" style={{ color: "hsl(158, 45%, 12%)" }}>Need Help?</h2>
             <p className="text-muted-foreground text-sm mb-5">Our travel experts are here for you 24/7</p>
             <a href="mailto:support@krotravel.com"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-full font-semibold text-sm btn-primary">
-              ✉️ support@krotravel.com
+              <ArrowRight className="w-4 h-4" /> support@krotravel.com
             </a>
-            <p className="text-xs text-muted-foreground mt-4 italic">Share feedback to get your next itinerary free ✨</p>
+            <p className="text-xs text-muted-foreground mt-4 italic">Share feedback to get your next itinerary free</p>
           </div>
         </motion.section>
       </div>

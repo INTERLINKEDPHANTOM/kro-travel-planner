@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Compass, Shield, Leaf } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
@@ -72,7 +72,7 @@ const Auth = () => {
           >
             <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 relative"
               style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))", boxShadow: "0 8px 32px hsla(158, 42%, 36%, 0.40)" }}>
-              <span className="text-3xl">🎒</span>
+              <Compass className="w-9 h-9 text-white" />
               {/* Glow ring */}
               <div className="absolute inset-0 rounded-3xl animate-glow-ring" />
             </div>
@@ -204,9 +204,9 @@ const Auth = () => {
             transition={{ delay: 0.4 }}
             className="flex items-center justify-center gap-5 mt-6 text-xs text-muted-foreground"
           >
-            <span>🔒 Secure login</span>
-            <span>🌿 No spam</span>
-            <span>🎒 Free forever</span>
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-primary" /> Secure login</span>
+            <span className="flex items-center gap-1"><Leaf className="w-3 h-3 text-primary" /> No spam</span>
+            <span className="flex items-center gap-1"><Compass className="w-3 h-3 text-primary" /> Free forever</span>
           </motion.div>
         </div>
       </div>

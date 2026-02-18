@@ -4,49 +4,51 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Calendar, Users, Wallet, Plane, Utensils, FileText,
-  ArrowRight, ArrowLeft, Plus, X, Check
+  ArrowRight, ArrowLeft, Plus, X, Check, Train, Bus, Car, Shuffle,
+  Palmtree, Mountain, Briefcase, HeartPulse, Sun, Compass,
+  Leaf, Drumstick, Star, Backpack, Globe, Home, Shield, Zap
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const travelTypes = [
-  { value: "leisure", label: "🌴 Leisure", desc: "Relax & unwind" },
-  { value: "adventure", label: "🏔️ Adventure", desc: "Thrills & trails" },
-  { value: "corporate", label: "💼 Corporate", desc: "Work-ready travel" },
-  { value: "medical", label: "🏥 Medical", desc: "Healthcare travel" },
-  { value: "religious", label: "🕉️ Spiritual", desc: "Sacred journeys" },
+  { value: "leisure", label: "Leisure", Icon: Palmtree, desc: "Relax & unwind" },
+  { value: "adventure", label: "Adventure", Icon: Mountain, desc: "Thrills & trails" },
+  { value: "corporate", label: "Corporate", Icon: Briefcase, desc: "Work-ready travel" },
+  { value: "medical", label: "Medical", Icon: HeartPulse, desc: "Healthcare travel" },
+  { value: "religious", label: "Spiritual", Icon: Sun, desc: "Sacred journeys" },
 ];
 
 const transportModes = [
-  { value: "flight", label: "✈️ Flight", desc: "Fastest option" },
-  { value: "train", label: "🚆 Train", desc: "Scenic & affordable" },
-  { value: "bus", label: "🚌 Bus", desc: "Budget friendly" },
-  { value: "own", label: "🚗 Own Car", desc: "Maximum freedom" },
-  { value: "public", label: "🚇 Public", desc: "Local experience" },
-  { value: "mixed", label: "🔀 Mixed", desc: "Best of all" },
+  { value: "flight", label: "Flight", Icon: Plane, desc: "Fastest option" },
+  { value: "train", label: "Train", Icon: Train, desc: "Scenic & affordable" },
+  { value: "bus", label: "Bus", Icon: Bus, desc: "Budget friendly" },
+  { value: "own", label: "Own Car", Icon: Car, desc: "Maximum freedom" },
+  { value: "public", label: "Public", Icon: Globe, desc: "Local experience" },
+  { value: "mixed", label: "Mixed", Icon: Shuffle, desc: "Best of all" },
 ];
 
 const foodPrefs = [
-  { value: "vegetarian", label: "🥗 Vegetarian", icon: "🥗" },
-  { value: "non-vegetarian", label: "🍖 Non-Veg", icon: "🍖" },
-  { value: "mixed", label: "🍽️ Mixed", icon: "🍽️" },
+  { value: "vegetarian", label: "Vegetarian", Icon: Leaf },
+  { value: "non-vegetarian", label: "Non-Veg", Icon: Drumstick },
+  { value: "mixed", label: "Mixed", Icon: Utensils },
 ];
 
 const travelPersonas = [
-  { value: "budget", label: "💰 Budget", desc: "Smart spending, max value" },
-  { value: "luxury", label: "✨ Luxury", desc: "Premium comfort" },
-  { value: "backpacker", label: "🎒 Backpacker", desc: "Adventure spirit" },
-  { value: "spiritual", label: "🕉️ Spiritual", desc: "Inner peace journey" },
-  { value: "explorer", label: "🧭 Explorer", desc: "Hidden gems & culture" },
-  { value: "family", label: "👨‍👩‍👧 Family", desc: "Kid-friendly & safe" },
+  { value: "budget", label: "Budget", Icon: Wallet, desc: "Smart spending, max value" },
+  { value: "luxury", label: "Luxury", Icon: Star, desc: "Premium comfort" },
+  { value: "backpacker", label: "Backpacker", Icon: Backpack, desc: "Adventure spirit" },
+  { value: "spiritual", label: "Spiritual", Icon: Sun, desc: "Inner peace journey" },
+  { value: "explorer", label: "Explorer", Icon: Compass, desc: "Hidden gems & culture" },
+  { value: "family", label: "Family", Icon: Home, desc: "Kid-friendly & safe" },
 ];
 
 const STEPS = [
-  { id: 1, title: "Where to?", icon: "📍", desc: "Set your route" },
-  { id: 2, title: "When & Who", icon: "📅", desc: "Dates & group" },
-  { id: 3, title: "Your Budget", icon: "💰", desc: "Money matters" },
-  { id: 4, title: "Travel Style", icon: "✨", desc: "Vibe & persona" },
-  { id: 5, title: "Details", icon: "📋", desc: "Extras & notes" },
+  { id: 1, title: "Where to?", Icon: MapPin, desc: "Set your route" },
+  { id: 2, title: "When & Who", Icon: Calendar, desc: "Dates & group" },
+  { id: 3, title: "Your Budget", Icon: Wallet, desc: "Money matters" },
+  { id: 4, title: "Travel Style", Icon: Star, desc: "Vibe & persona" },
+  { id: 5, title: "Details", Icon: FileText, desc: "Extras & notes" },
 ];
 
 const slideVariants = {
@@ -141,7 +143,7 @@ const PlanTrip = () => {
                     : "bg-muted/60 text-muted-foreground"
                 }`}
               >
-                <span>{s.icon}</span>
+                <s.Icon className="w-3 h-3" />
                 <span className="hidden sm:inline">{s.title}</span>
               </button>
             ))}
@@ -178,8 +180,8 @@ const PlanTrip = () => {
                 {/* ── STEP 1: Route ── */}
                 {step === 1 && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-heading mb-6" style={{ color: "hsl(158, 45%, 12%)" }}>
-                      📍 Set your route
+                    <h2 className="text-xl sm:text-2xl font-heading mb-6 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+                      <MapPin className="w-5 h-5 text-primary" /> Set your route
                     </h2>
 
                     <div className="space-y-4">
@@ -253,7 +255,7 @@ const PlanTrip = () => {
                           {form.multiCity.map((city, i) => (
                             <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
                               style={{ background: "hsla(158, 40%, 38%, 0.12)", color: "hsl(158, 40%, 30%)", border: "1px solid hsla(158, 40%, 50%, 0.25)" }}>
-                              📍 {city}
+                              <MapPin className="w-3 h-3" /> {city}
                               <button onClick={() => setForm(p => ({ ...p, multiCity: p.multiCity.filter((_, idx) => idx !== i) }))}>
                                 <X className="w-3 h-3" />
                               </button>
@@ -268,8 +270,8 @@ const PlanTrip = () => {
                 {/* ── STEP 2: Dates & People ── */}
                 {step === 2 && (
                   <div className="space-y-7">
-                    <h2 className="text-2xl font-heading mb-6" style={{ color: "hsl(158, 45%, 12%)" }}>
-                      📅 When & with whom?
+                    <h2 className="text-xl sm:text-2xl font-heading mb-6 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+                      <Calendar className="w-5 h-5 text-primary" /> When &amp; with whom?
                     </h2>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -347,9 +349,12 @@ const PlanTrip = () => {
                             onClick={() => update("transport", t.value)}
                             className={`persona-card ${form.transport === t.value ? "active" : ""}`}
                           >
-                            <div className="text-xl mb-1">{t.label.split(" ")[0]}</div>
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-1.5 mx-auto"
+                              style={{ background: form.transport === t.value ? "hsla(255,255%,255%,0.15)" : "hsla(158, 42%, 38%, 0.10)" }}>
+                              <t.Icon className={`w-4 h-4 ${form.transport === t.value ? "text-white" : "text-primary"}`} />
+                            </div>
                             <div className={`text-sm font-semibold ${form.transport === t.value ? "text-white" : "text-foreground"}`}>
-                              {t.label.split(" ").slice(1).join(" ")}
+                              {t.label}
                             </div>
                             <div className={`text-xs mt-0.5 ${form.transport === t.value ? "text-white/70" : "text-muted-foreground"}`}>
                               {t.desc}
@@ -364,8 +369,8 @@ const PlanTrip = () => {
                 {/* ── STEP 3: Budget ── */}
                 {step === 3 && (
                   <div className="space-y-8">
-                    <h2 className="text-2xl font-heading mb-6" style={{ color: "hsl(158, 45%, 12%)" }}>
-                      💰 What's your budget?
+                    <h2 className="text-xl sm:text-2xl font-heading mb-6 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+                      <Wallet className="w-5 h-5 text-primary" /> What's your budget?
                     </h2>
 
                     {/* Budget display */}
@@ -381,7 +386,7 @@ const PlanTrip = () => {
                       {/* Budget label */}
                       <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold"
                         style={{ background: "hsla(158, 42%, 38%, 0.12)", color: "hsl(158, 42%, 32%)" }}>
-                        {form.budgetMax < 8000 ? "🎒 Backpacker" : form.budgetMax < 15000 ? "💰 Budget Smart" : form.budgetMax < 30000 ? "🌟 Mid-Range" : "✨ Luxury"}
+                        {form.budgetMax < 8000 ? "Backpacker" : form.budgetMax < 15000 ? "Budget Smart" : form.budgetMax < 30000 ? "Mid-Range" : "Luxury"}
                       </div>
                     </div>
 
@@ -440,10 +445,10 @@ const PlanTrip = () => {
                       <div className="text-xs font-semibold text-muted-foreground mb-3">Quick presets</div>
                       <div className="flex flex-wrap gap-2">
                         {[
-                          { label: "Budget 🎒", min: 3000, max: 8000 },
-                          { label: "Mid-range 🌟", min: 8000, max: 20000 },
-                          { label: "Comfort 🛋️", min: 20000, max: 40000 },
-                          { label: "Luxury ✨", min: 40000, max: 100000 },
+                          { label: "Budget", min: 3000, max: 8000 },
+                          { label: "Mid-range", min: 8000, max: 20000 },
+                          { label: "Comfort", min: 20000, max: 40000 },
+                          { label: "Luxury", min: 40000, max: 100000 },
                         ].map((p) => (
                           <button
                             key={p.label}
@@ -462,14 +467,14 @@ const PlanTrip = () => {
                 {/* ── STEP 4: Style & Persona ── */}
                 {step === 4 && (
                   <div className="space-y-7">
-                    <h2 className="text-2xl font-heading mb-6" style={{ color: "hsl(158, 45%, 12%)" }}>
-                      ✨ Your travel style
+                    <h2 className="text-xl sm:text-2xl font-heading mb-6 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+                      <Star className="w-5 h-5 text-primary" /> Your travel style
                     </h2>
 
                     {/* Travel vibe */}
                     <div>
                       <label className="text-sm font-semibold mb-3 block" style={{ color: "hsl(158, 35%, 28%)" }}>
-                        🌈 Trip vibe
+                        Trip vibe
                       </label>
                       <div className="flex flex-wrap gap-2.5">
                         {travelTypes.map((t) => (
@@ -507,8 +512,11 @@ const PlanTrip = () => {
                                 : "glass-panel text-foreground/80 hover:border-primary/40"
                             }`}
                           >
-                            <div className="text-xl mb-1">{f.icon}</div>
-                            {f.label.split(" ").slice(1).join(" ")}
+                            <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-1.5 mx-auto"
+                              style={{ background: form.food === f.value ? "hsla(255,255%,255%,0.18)" : "hsla(158,42%,38%,0.10)" }}>
+                              <f.Icon className={`w-3.5 h-3.5 ${form.food === f.value ? "text-white" : "text-primary"}`} />
+                            </div>
+                            {f.label}
                           </button>
                         ))}
                       </div>
@@ -517,7 +525,7 @@ const PlanTrip = () => {
                     {/* Travel persona */}
                     <div>
                       <label className="text-sm font-semibold mb-3 block" style={{ color: "hsl(158, 35%, 28%)" }}>
-                        🧭 You are a...
+                        You are a...
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {travelPersonas.map((p) => (
@@ -527,9 +535,12 @@ const PlanTrip = () => {
                             onClick={() => update("persona", p.value)}
                             className={`persona-card ${form.persona === p.value ? "active" : ""}`}
                           >
-                            <div className="text-2xl mb-1.5">{p.label.split(" ")[0]}</div>
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-1.5 mx-auto"
+                              style={{ background: form.persona === p.value ? "hsla(255,255%,255%,0.15)" : "hsla(158, 42%, 38%, 0.10)" }}>
+                              <p.Icon className={`w-4 h-4 ${form.persona === p.value ? "text-white" : "text-primary"}`} />
+                            </div>
                             <div className={`text-sm font-bold ${form.persona === p.value ? "text-white" : "text-foreground"}`}>
-                              {p.label.split(" ").slice(1).join(" ")}
+                              {p.label}
                             </div>
                             <div className={`text-xs mt-0.5 ${form.persona === p.value ? "text-white/75" : "text-muted-foreground"}`}>
                               {p.desc}
@@ -544,8 +555,8 @@ const PlanTrip = () => {
                 {/* ── STEP 5: Notes & Submit ── */}
                 {step === 5 && (
                   <div className="space-y-7">
-                    <h2 className="text-2xl font-heading mb-6" style={{ color: "hsl(158, 45%, 12%)" }}>
-                      📋 Anything else?
+                    <h2 className="text-xl sm:text-2xl font-heading mb-6 flex items-center gap-2" style={{ color: "hsl(158, 45%, 12%)" }}>
+                      <FileText className="w-5 h-5 text-primary" /> Anything else?
                     </h2>
 
                     <div>
@@ -562,19 +573,23 @@ const PlanTrip = () => {
 
                     {/* Summary card */}
                     <div className="prism-card p-5">
-                      <h3 className="text-sm font-bold mb-4" style={{ color: "hsl(158, 38%, 22%)" }}>📋 Your trip summary</h3>
+                      <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: "hsl(158, 38%, 22%)" }}>
+                        <FileText className="w-4 h-4 text-primary" /> Your trip summary
+                      </h3>
                       <div className="space-y-2.5 text-sm">
                         {[
-                          { icon: "📍", label: "Route", value: form.departure && form.arrival ? `${form.departure} → ${form.arrival}` : "Not set" },
-                          { icon: "📅", label: "Dates", value: form.departureDate ? new Date(form.departureDate).toLocaleDateString("en-IN") + (form.arrivalDate ? " → " + new Date(form.arrivalDate).toLocaleDateString("en-IN") : "") : "Not set" },
-                          { icon: "👥", label: "People", value: `${form.numPeople} traveller${form.numPeople > 1 ? "s" : ""}` },
-                          { icon: "💰", label: "Budget", value: `₹${form.budgetMin.toLocaleString("en-IN")} – ₹${form.budgetMax.toLocaleString("en-IN")}` },
-                          { icon: "✨", label: "Style", value: form.travelType || "Not selected" },
-                          { icon: "🧭", label: "Persona", value: form.persona || "Not selected" },
+                          { Icon: MapPin, label: "Route", value: form.departure && form.arrival ? `${form.departure} → ${form.arrival}` : "Not set" },
+                          { Icon: Calendar, label: "Dates", value: form.departureDate ? new Date(form.departureDate).toLocaleDateString("en-IN") + (form.arrivalDate ? " → " + new Date(form.arrivalDate).toLocaleDateString("en-IN") : "") : "Not set" },
+                          { Icon: Users, label: "People", value: `${form.numPeople} traveller${form.numPeople > 1 ? "s" : ""}` },
+                          { Icon: Wallet, label: "Budget", value: `₹${form.budgetMin.toLocaleString("en-IN")} – ₹${form.budgetMax.toLocaleString("en-IN")}` },
+                          { Icon: Star, label: "Style", value: form.travelType || "Not selected" },
+                          { Icon: Compass, label: "Persona", value: form.persona || "Not selected" },
                         ].map((row) => (
                           <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
-                            <span className="text-muted-foreground flex items-center gap-1.5">{row.icon} {row.label}</span>
-                            <span className="font-semibold text-foreground/90 text-right max-w-[55%]">{row.value}</span>
+                            <span className="text-muted-foreground flex items-center gap-1.5">
+                              <row.Icon className="w-3.5 h-3.5 text-primary/60" /> {row.label}
+                            </span>
+                            <span className="font-semibold text-foreground/90 text-right max-w-[55%] text-xs sm:text-sm">{row.value}</span>
                           </div>
                         ))}
                       </div>
@@ -615,16 +630,16 @@ const PlanTrip = () => {
                 className="flex-1 flex items-center justify-center gap-2 btn-primary py-3.5 text-base disabled:opacity-50 animate-glow-ring"
               >
                 <Check className="w-5 h-5" />
-                Craft My Itinerary ✨
+                Craft My Itinerary
               </button>
             )}
           </div>
 
           {/* Trust badges */}
-          <div className="flex items-center justify-center gap-6 mt-8 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">🔒 Secure & private</span>
-            <span className="flex items-center gap-1.5">⚡ Ready in ~60s</span>
-            <span className="flex items-center gap-1.5">🆓 Free to start</span>
+          <div className="flex items-center justify-center gap-4 sm:gap-6 mt-8 text-xs text-muted-foreground flex-wrap">
+            <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Secure & private</span>
+            <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" /> Ready in ~60s</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-primary" /> Free to start</span>
           </div>
         </div>
       </div>
