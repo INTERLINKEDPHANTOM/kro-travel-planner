@@ -1,463 +1,681 @@
 import { jsPDF } from "jspdf";
 
-// Color palette (RGB)
-const COLORS = {
-  primary: [45, 100, 80] as [number, number, number],
-  dark: [30, 30, 30] as [number, number, number],
-  text: [55, 55, 55] as [number, number, number],
-  muted: [120, 120, 120] as [number, number, number],
-  light: [245, 243, 240] as [number, number, number],
-  white: [255, 255, 255] as [number, number, number],
-  accent: [220, 90, 50] as [number, number, number],
-  border: [220, 218, 215] as [number, number, number],
+// ── Design Tokens ────────────────────────────────────────────────────────────
+const C = {
+  primary:   [34, 110, 80]   as [number, number, number], // deep green
+  dark:      [18, 42, 30]    as [number, number, number], // near-black green
+  text:      [40, 60, 48]    as [number, number, number], // body text
+  muted:     [110, 135, 118] as [number, number, number], // muted
+  light:     [240, 248, 244] as [number, number, number], // section bg
+  white:     [255, 255, 255] as [number, number, number],
+  accent:    [215, 100, 40]  as [number, number, number], // orange accent
+  border:    [208, 230, 218] as [number, number, number],
+  rowEven:   [246, 252, 249] as [number, number, number],
 };
 
-const PAGE_W = 210;
-const PAGE_H = 297;
-const MARGIN = 18;
-const CONTENT_W = PAGE_W - MARGIN * 2;
+const PW   = 210; // A4 width mm
+const PH   = 297; // A4 height mm
+const ML   = 16;  // left margin
+const MR   = 16;  // right margin
+const CW   = PW - ML - MR; // content width
+const BOT  = PH - 14;      // bottom safe line
 
-class PDFBuilder {
-  pdf: jsPDF;
-  y: number;
-  links: { url: string; x: number; y: number; w: number; h: number; page: number }[] = [];
-  pageNum: number = 1;
+// ── PDF Builder ──────────────────────────────────────────────────────────────
+class PDF {
+  doc: jsPDF;
+  y  = ML;
+  pg = 1;
 
   constructor() {
-    this.pdf = new jsPDF("p", "mm", "a4");
-    this.y = MARGIN;
+    this.doc = new jsPDF("p", "mm", "a4");
+    this.y   = ML;
   }
 
-  checkPage(needed: number = 12) {
-    if (this.y + needed > PAGE_H - 20) {
-      this.addFooter();
-      this.pdf.addPage();
-      this.pageNum++;
-      this.y = MARGIN;
+  // ── Pagination ────────────────────────────────────────────────────────────
+  need(h: number) {
+    if (this.y + h > BOT) {
+      this._footer();
+      this.doc.addPage();
+      this.pg++;
+      this.y = ML + 4;
     }
   }
 
-  addFooter() {
-    this.pdf.setFontSize(7);
-    this.pdf.setTextColor(...COLORS.muted);
-    this.pdf.text("KroTravel — Your AI Travel Companion", MARGIN, PAGE_H - 8);
-    this.pdf.text(`Page ${this.pageNum}`, PAGE_W - MARGIN, PAGE_H - 8, { align: "right" });
+  _footer() {
+    this.doc.setFontSize(6.5);
+    this.doc.setTextColor(...C.muted);
+    this.doc.text("KroTravel — Your AI Travel Companion  •  krotravel.in", ML, PH - 6);
+    this.doc.text(`Page ${this.pg}`, PW - MR, PH - 6, { align: "right" });
+    // footer line
+    this.doc.setDrawColor(...C.border);
+    this.doc.setLineWidth(0.25);
+    this.doc.line(ML, PH - 9, PW - MR, PH - 9);
   }
 
-  // Branded header bar
-  addCover(title: string, subtitle: string, prefs: any) {
-    // Background strip
-    this.pdf.setFillColor(...COLORS.primary);
-    this.pdf.rect(0, 0, PAGE_W, 70, "F");
+  // ── Cover Page ────────────────────────────────────────────────────────────
+  cover(title: string, subtitle: string, prefs: any) {
+    // Full-width green header band
+    this.doc.setFillColor(...C.primary);
+    this.doc.rect(0, 0, PW, 80, "F");
 
     // Brand
-    this.pdf.setTextColor(...COLORS.white);
-    this.pdf.setFontSize(10);
-    this.pdf.setFont("helvetica", "bold");
-    this.pdf.text("KROTRAVEL", MARGIN, 18);
-    this.pdf.setFontSize(7);
-    this.pdf.setFont("helvetica", "normal");
-    this.pdf.text("Your AI Travel Companion", MARGIN, 23);
+    this.doc.setTextColor(...C.white);
+    this.doc.setFontSize(8);
+    this.doc.setFont("helvetica", "bold");
+    this.doc.text("KROTRAVEL", ML, 14);
+    this.doc.setFont("helvetica", "normal");
+    this.doc.setFontSize(6.5);
+    this.doc.text("Your AI Travel Companion", ML, 19);
 
-    // Title
-    this.pdf.setFontSize(24);
-    this.pdf.setFont("helvetica", "bold");
-    const titleLines = this.pdf.splitTextToSize(title, CONTENT_W);
-    this.pdf.text(titleLines, MARGIN, 38);
+    // Divider
+    this.doc.setDrawColor(255, 255, 255);
+    this.doc.setLineWidth(0.4);
+    this.doc.line(ML, 22, PW - MR, 22);
+
+    // Trip title
+    this.doc.setFont("helvetica", "bold");
+    this.doc.setFontSize(22);
+    const titleLines = this.doc.splitTextToSize(
+      title.replace(/[\u{1F300}-\u{1FAFF}]/gu, "").trim(),
+      CW
+    );
+    this.doc.text(titleLines, ML, 36);
 
     // Subtitle
-    this.pdf.setFontSize(10);
-    this.pdf.setFont("helvetica", "normal");
-    this.pdf.text(subtitle, MARGIN, 55);
+    this.doc.setFont("helvetica", "normal");
+    this.doc.setFontSize(9.5);
+    this.doc.setTextColor(200, 235, 218);
+    const subLines = this.doc.splitTextToSize(subtitle || "", CW);
+    this.doc.text(subLines, ML, 36 + titleLines.length * 8 + 3);
 
-    // Date generated
-    this.pdf.setFontSize(7);
-    this.pdf.text(`Generated: ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`, MARGIN, 63);
+    // Generated date (right-aligned)
+    this.doc.setFontSize(6.5);
+    this.doc.setTextColor(...C.white);
+    const dt = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    this.doc.text(`Generated: ${dt}`, PW - MR, 74, { align: "right" });
 
-    this.y = 80;
+    this.y = 90;
 
-    // Preferences summary box
+    // Preferences box
     if (prefs) {
-      this.pdf.setFillColor(...COLORS.light);
-      this.pdf.roundedRect(MARGIN, this.y, CONTENT_W, 32, 3, 3, "F");
+      this.doc.setFillColor(...C.light);
+      this.doc.roundedRect(ML, this.y, CW, 44, 3, 3, "F");
+      this.doc.setDrawColor(...C.border);
+      this.doc.setLineWidth(0.3);
+      this.doc.roundedRect(ML, this.y, CW, 44, 3, 3, "S");
 
-      this.pdf.setFontSize(9);
-      this.pdf.setFont("helvetica", "bold");
-      this.pdf.setTextColor(...COLORS.dark);
-      this.pdf.text("YOUR TRIP DETAILS", MARGIN + 6, this.y + 7);
+      this.doc.setFont("helvetica", "bold");
+      this.doc.setFontSize(7.5);
+      this.doc.setTextColor(...C.dark);
+      this.doc.text("YOUR TRIP DETAILS", ML + 6, this.y + 8);
 
-      this.pdf.setFont("helvetica", "normal");
-      this.pdf.setFontSize(8);
-      this.pdf.setTextColor(...COLORS.text);
+      this.doc.setDrawColor(...C.border);
+      this.doc.setLineWidth(0.3);
+      this.doc.line(ML + 6, this.y + 10, ML + CW - 6, this.y + 10);
 
-      const details = [
-        [`From: ${prefs.departure || "—"}`, `To: ${prefs.arrival || "—"}`],
-        [`Dates: ${prefs.departureDate || "—"} → ${prefs.arrivalDate || "—"}`, `People: ${prefs.numPeople || "—"}`],
-        [`Budget: ₹${prefs.budgetMin || "—"} – ₹${prefs.budgetMax || "—"}`, `Food: ${prefs.food || "Mixed"}`],
+      const half = CW / 2;
+      const rows = [
+        [`From: ${prefs.departure || "—"}`,     `To: ${prefs.arrival || "—"}`],
+        [`Dates: ${prefs.departureDate?.split("T")[0] || "—"} → ${prefs.arrivalDate?.split("T")[0] || "—"}`,
+         `People: ${prefs.numPeople || "—"}`],
+        [`Budget: ₹${prefs.budgetMin || "—"} – ₹${prefs.budgetMax || "—"}`,
+         `Food: ${prefs.food || "Mixed"}`],
+        [`Transport: ${prefs.transport || "Mixed"}`,
+         `Type: ${prefs.travelType || "Leisure"}`],
       ];
 
-      let dy = this.y + 13;
-      for (const row of details) {
-        this.pdf.text(row[0], MARGIN + 6, dy);
-        this.pdf.text(row[1], MARGIN + CONTENT_W / 2, dy);
-        dy += 6;
+      this.doc.setFont("helvetica", "normal");
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(...C.text);
+      let ry = this.y + 17;
+      for (const [a, b] of rows) {
+        this.doc.text(a, ML + 6, ry);
+        this.doc.text(b, ML + 6 + half, ry);
+        ry += 6.5;
       }
 
-      this.y += 40;
+      this.y += 52;
     }
   }
 
-  addSectionTitle(text: string, emoji?: string) {
-    this.checkPage(16);
-    this.y += 4;
-    this.pdf.setFillColor(...COLORS.primary);
-    this.pdf.rect(MARGIN, this.y, 1.5, 7, "F");
-    this.pdf.setFontSize(13);
-    this.pdf.setFont("helvetica", "bold");
-    this.pdf.setTextColor(...COLORS.dark);
-    this.pdf.text(`${emoji ? emoji + "  " : ""}${text}`, MARGIN + 5, this.y + 5.5);
-    this.y += 14;
+  // ── Section Title (large, with coloured left bar) ─────────────────────────
+  sectionTitle(text: string, emoji = "") {
+    this.need(18);
+    this.y += 5;
+
+    // Background pill
+    this.doc.setFillColor(...C.light);
+    this.doc.roundedRect(ML, this.y, CW, 11, 2, 2, "F");
+
+    // Left accent bar
+    this.doc.setFillColor(...C.primary);
+    this.doc.roundedRect(ML, this.y, 3, 11, 1, 1, "F");
+
+    this.doc.setFont("helvetica", "bold");
+    this.doc.setFontSize(11);
+    this.doc.setTextColor(...C.dark);
+    // Strip emoji from PDF text (jsPDF can't render them)
+    const clean = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim();
+    this.doc.text(`${emoji ? "" : ""}${clean}`, ML + 8, this.y + 7.8);
+
+    this.y += 16;
   }
 
-  addSubTitle(text: string) {
-    this.checkPage(10);
-    this.pdf.setFontSize(10);
-    this.pdf.setFont("helvetica", "bold");
-    this.pdf.setTextColor(...COLORS.primary);
-    this.pdf.text(text, MARGIN, this.y + 4);
+  // ── Sub-heading ───────────────────────────────────────────────────────────
+  subTitle(text: string) {
+    this.need(10);
+    this.doc.setFont("helvetica", "bold");
+    this.doc.setFontSize(9.5);
+    this.doc.setTextColor(...C.primary);
+    this.doc.text(text, ML, this.y + 3.5);
     this.y += 8;
   }
 
-  addText(text: string, options?: { bold?: boolean; color?: [number, number, number]; size?: number; indent?: number }) {
-    this.checkPage(8);
-    const size = options?.size || 8.5;
-    this.pdf.setFontSize(size);
-    this.pdf.setFont("helvetica", options?.bold ? "bold" : "normal");
-    this.pdf.setTextColor(...(options?.color || COLORS.text));
-    const x = MARGIN + (options?.indent || 0);
-    const lines = this.pdf.splitTextToSize(text, CONTENT_W - (options?.indent || 0));
+  // ── Body text with word-wrap ──────────────────────────────────────────────
+  text(content: string, opts?: {
+    bold?: boolean; color?: [number, number, number]; size?: number; indent?: number; center?: boolean;
+  }) {
+    const size   = opts?.size   || 8.5;
+    const indent = opts?.indent || 0;
+    const x      = ML + indent;
+    const width  = CW - indent;
+
+    this.doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
+    this.doc.setFontSize(size);
+    this.doc.setTextColor(...(opts?.color || C.text));
+
+    // Strip emoji characters that jsPDF can't render
+    const safe = content.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                        .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "")
+                        .trim();
+    const lines = this.doc.splitTextToSize(safe, width);
+
     for (const line of lines) {
-      this.checkPage(5);
-      this.pdf.text(line, x, this.y + 3.5);
-      this.y += 4.5;
+      this.need(5);
+      if (opts?.center) {
+        this.doc.text(line, PW / 2, this.y + 3.5, { align: "center" });
+      } else {
+        this.doc.text(line, x, this.y + 3.5);
+      }
+      this.y += 4.8;
     }
     this.y += 1;
   }
 
-  addLink(text: string, url: string, options?: { indent?: number }) {
-    this.checkPage(8);
-    this.pdf.setFontSize(8);
-    this.pdf.setFont("helvetica", "normal");
-    this.pdf.setTextColor(...COLORS.primary);
-    const x = MARGIN + (options?.indent || 0);
-    const tw = this.pdf.getTextWidth(text);
-    this.pdf.text(text, x, this.y + 3.5);
-    this.pdf.link(x, this.y, tw, 4, { url });
-    // Underline
-    this.pdf.setDrawColor(...COLORS.primary);
-    this.pdf.setLineWidth(0.2);
-    this.pdf.line(x, this.y + 4, x + tw, this.y + 4);
-    this.y += 6;
+  // ── Clickable link ────────────────────────────────────────────────────────
+  link(label: string, url: string, indent = 0) {
+    this.need(7);
+    const x  = ML + indent;
+    const tw = this.doc.getTextWidth(label);
+    this.doc.setFont("helvetica", "normal");
+    this.doc.setFontSize(8);
+    this.doc.setTextColor(...C.primary);
+    this.doc.text(label, x, this.y + 3.5);
+    this.doc.link(x, this.y, tw, 5, { url });
+    this.doc.setDrawColor(...C.primary);
+    this.doc.setLineWidth(0.2);
+    this.doc.line(x, this.y + 4.5, x + tw, this.y + 4.5);
+    this.y += 7;
   }
 
-  addDivider() {
+  // ── Bullet point ──────────────────────────────────────────────────────────
+  bullet(content: string, sym = "-") {
+    this.need(7);
+    const safe = content.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                        .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+    this.doc.setFont("helvetica", "normal");
+    this.doc.setFontSize(8.5);
+    this.doc.setTextColor(...C.text);
+    this.doc.text(sym, ML + 3, this.y + 3.5);
+    const lines = this.doc.splitTextToSize(safe, CW - 12);
+    for (const line of lines) {
+      this.need(5);
+      this.doc.text(line, ML + 10, this.y + 3.5);
+      this.y += 5;
+    }
+    this.y += 0.5;
+  }
+
+  // ── Horizontal rule ───────────────────────────────────────────────────────
+  rule() {
     this.y += 2;
-    this.pdf.setDrawColor(...COLORS.border);
-    this.pdf.setLineWidth(0.3);
-    this.pdf.line(MARGIN, this.y, PAGE_W - MARGIN, this.y);
+    this.doc.setDrawColor(...C.border);
+    this.doc.setLineWidth(0.3);
+    this.doc.line(ML, this.y, PW - MR, this.y);
     this.y += 4;
   }
 
-  addBullet(text: string, bullet: string = "•") {
-    this.checkPage(7);
-    this.pdf.setFontSize(8.5);
-    this.pdf.setFont("helvetica", "normal");
-    this.pdf.setTextColor(...COLORS.text);
-    this.pdf.text(bullet, MARGIN + 2, this.y + 3.5);
-    const lines = this.pdf.splitTextToSize(text, CONTENT_W - 10);
-    for (const line of lines) {
-      this.checkPage(5);
-      this.pdf.text(line, MARGIN + 8, this.y + 3.5);
-      this.y += 4.5;
+  // ── Thin spacer ───────────────────────────────────────────────────────────
+  gap(mm = 4) { this.y += mm; }
+
+  // ── Table header row ──────────────────────────────────────────────────────
+  tableHeader(cols: { label: string; w: number; align?: "left" | "right" | "center" }[]) {
+    this.need(9);
+    this.doc.setFillColor(...C.primary);
+    this.doc.rect(ML, this.y, CW, 8, "F");
+    let x = ML + 3;
+    for (const col of cols) {
+      this.doc.setFont("helvetica", "bold");
+      this.doc.setFontSize(7);
+      this.doc.setTextColor(...C.white);
+      const tx = col.align === "right" ? x + col.w - 3 : x;
+      this.doc.text(col.label, tx, this.y + 5.5, { align: col.align || "left" });
+      x += col.w;
     }
-    this.y += 1;
+    this.y += 8;
   }
 
-  addTableRow(cols: { text: string; width: number; bold?: boolean; color?: [number, number, number]; align?: "left" | "right" | "center" }[], bg?: boolean) {
-    this.checkPage(8);
-    if (bg) {
-      this.pdf.setFillColor(...COLORS.light);
-      this.pdf.rect(MARGIN, this.y, CONTENT_W, 7, "F");
+  // ── Table data row ────────────────────────────────────────────────────────
+  tableRow(
+    cols: { text: string; w: number; bold?: boolean; color?: [number, number, number]; align?: "left" | "right" | "center" }[],
+    shade = false
+  ) {
+    this.need(8);
+    if (shade) {
+      this.doc.setFillColor(...C.rowEven);
+      this.doc.rect(ML, this.y, CW, 7, "F");
     }
-    let x = MARGIN + 3;
+    let x = ML + 3;
     for (const col of cols) {
-      this.pdf.setFontSize(8);
-      this.pdf.setFont("helvetica", col.bold ? "bold" : "normal");
-      this.pdf.setTextColor(...(col.color || COLORS.text));
-      const align = col.align || "left";
-      const tx = align === "right" ? x + col.width - 3 : x;
-      this.pdf.text(col.text, tx, this.y + 5, { align });
-      x += col.width;
+      this.doc.setFont("helvetica", col.bold ? "bold" : "normal");
+      this.doc.setFontSize(7.8);
+      this.doc.setTextColor(...(col.color || C.text));
+      const safe = String(col.text || "—")
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+        .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "")
+        .substring(0, 58);
+      const tx = col.align === "right" ? x + col.w - 3 : x;
+      this.doc.text(safe, tx, this.y + 5, { align: col.align || "left" });
+      x += col.w;
     }
     this.y += 7;
   }
 
-  addSpace(mm: number = 4) {
-    this.y += mm;
+  // ── Summary/Total row ─────────────────────────────────────────────────────
+  totalRow(label: string, value: string) {
+    this.need(10);
+    this.doc.setFillColor(...C.primary);
+    this.doc.rect(ML, this.y, CW, 9, "F");
+    this.doc.setFont("helvetica", "bold");
+    this.doc.setFontSize(9);
+    this.doc.setTextColor(...C.white);
+    this.doc.text(label, ML + 4, this.y + 6.2);
+    this.doc.text(value, PW - MR - 3, this.y + 6.2, { align: "right" });
+    this.y += 9;
   }
 
+  // ── Info card (coloured box with text) ───────────────────────────────────
+  infoCard(lines: string[], bgColor: [number, number, number] = C.light) {
+    const lineCount = lines.length;
+    const h = 8 + lineCount * 5.5;
+    this.need(h);
+    this.doc.setFillColor(...bgColor);
+    this.doc.roundedRect(ML, this.y, CW, h, 2, 2, "F");
+    this.doc.setDrawColor(...C.border);
+    this.doc.setLineWidth(0.25);
+    this.doc.roundedRect(ML, this.y, CW, h, 2, 2, "S");
+    this.doc.setFont("helvetica", "normal");
+    this.doc.setFontSize(8);
+    this.doc.setTextColor(...C.text);
+    let ly = this.y + 6;
+    for (const l of lines) {
+      const safe = l.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                    .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+      this.doc.text(safe, ML + 5, ly);
+      ly += 5.5;
+    }
+    this.y += h + 3;
+  }
+
+  // ── Day header bar ────────────────────────────────────────────────────────
+  dayHeader(label: string, cost: number) {
+    this.need(14);
+    this.doc.setFillColor(...C.primary);
+    this.doc.roundedRect(ML, this.y, CW, 10, 2, 2, "F");
+    this.doc.setFont("helvetica", "bold");
+    this.doc.setFontSize(9.5);
+    this.doc.setTextColor(...C.white);
+    const cleanLabel = label.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                            .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+    this.doc.text(cleanLabel, ML + 5, this.y + 7);
+    if (cost > 0) {
+      this.doc.text(`Rs. ${cost.toLocaleString("en-IN")}`, PW - MR - 3, this.y + 7, { align: "right" });
+    }
+    this.y += 13;
+  }
+
+  // ── Hotel card ────────────────────────────────────────────────────────────
+  hotelCard(hotel: any) {
+    const lines = [
+      `${hotel.tier || "Hotel"} — ${hotel.name || "—"}`,
+      `${hotel.description || ""}`,
+      `Rate: ${hotel.price_per_night || "—"}/night  |  Total: ${hotel.total_cost || "—"}  |  Breakfast: ${hotel.breakfast_included ? "Yes" : "No"}`,
+      `Location: ${hotel.distance_station ? hotel.distance_station + " from station" : "—"}  |  Area: ${hotel.area || "—"}`,
+    ];
+    const h = 8 + lines.length * 5.5;
+    this.need(h);
+    this.doc.setFillColor(...C.light);
+    this.doc.roundedRect(ML, this.y, CW, h, 2, 2, "F");
+    this.doc.setDrawColor(...C.border);
+    this.doc.setLineWidth(0.25);
+    this.doc.roundedRect(ML, this.y, CW, h, 2, 2, "S");
+    // Accent left strip
+    this.doc.setFillColor(...C.primary);
+    this.doc.roundedRect(ML, this.y, 3, h, 1, 1, "F");
+
+    let ly = this.y + 6;
+    this.doc.setFont("helvetica", "bold");
+    this.doc.setFontSize(8.5);
+    this.doc.setTextColor(...C.dark);
+    const safeName = lines[0].replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "");
+    this.doc.text(safeName, ML + 6, ly);
+    ly += 5.5;
+
+    this.doc.setFont("helvetica", "normal");
+    this.doc.setFontSize(7.8);
+    this.doc.setTextColor(...C.text);
+    for (let i = 1; i < lines.length; i++) {
+      const safeL = lines[i].replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                            .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+      this.doc.text(safeL, ML + 6, ly);
+      ly += 5.5;
+    }
+    this.y += h + 3;
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
   save(filename: string) {
-    this.addFooter();
-    this.pdf.save(filename);
+    this._footer();
+    this.doc.save(filename);
   }
 }
 
+// ── Main export ───────────────────────────────────────────────────────────────
 export function generateItineraryPDF(itinerary: any, preferences: any) {
-  const b = new PDFBuilder();
-  const it = itinerary;
+  const p   = new PDF();
+  const it  = itinerary;
+  const arr = preferences?.arrival || "Your Destination";
 
-  // ── Cover ──
-  b.addCover(
-    it.cover_title || `Your Trip to ${preferences?.arrival || "—"}`,
-    it.intro || `Personalized itinerary crafted just for you`,
+  // ══ COVER ══════════════════════════════════════════════════════════════════
+  p.cover(
+    it.cover_title || `Trip to ${arr}`,
+    it.intro       || `A personalised itinerary crafted just for you.`,
     preferences
   );
 
-  // ── Route Overview ──
+  // ══ ROUTE OVERVIEW ═════════════════════════════════════════════════════════
   if (it.route_overview) {
-    b.addSectionTitle("Route Overview", "🗺️");
-    b.addText(it.route_overview);
-    b.addSpace(4);
+    p.sectionTitle("Route Overview");
+    p.text(it.route_overview);
+    p.gap(4);
   }
 
-  // ── Transport ──
+  // ══ TRANSPORT OPTIONS ══════════════════════════════════════════════════════
   if (it.transport_options?.length > 0) {
-    b.addSectionTitle("Transport Options", "🚆");
-    b.addTableRow([
-      { text: "MODE", width: 30, bold: true, color: COLORS.muted },
-      { text: "ROUTE", width: 55, bold: true, color: COLORS.muted },
-      { text: "DURATION", width: 30, bold: true, color: COLORS.muted },
-      { text: "COST", width: 30, bold: true, color: COLORS.muted, align: "right" },
-      { text: "STATUS", width: 29, bold: true, color: COLORS.muted, align: "right" },
-    ], true);
-
-    for (const opt of it.transport_options) {
-      b.addTableRow([
-        { text: opt.mode || "—", width: 30 },
-        { text: (opt.route || "—").substring(0, 35), width: 55 },
-        { text: opt.duration || "—", width: 30 },
-        { text: opt.cost_per_person || "—", width: 30, align: "right" },
-        { text: opt.feasibility || "—", width: 29, align: "right", color: opt.feasibility === "recommended" ? COLORS.primary : COLORS.text },
-      ]);
-    }
+    p.sectionTitle("Transport Options");
+    p.tableHeader([
+      { label: "MODE",     w: 28 },
+      { label: "ROUTE",    w: 56 },
+      { label: "DURATION", w: 30 },
+      { label: "COST",     w: 30, align: "right" },
+      { label: "STATUS",   w: 30, align: "right" },
+    ]);
+    it.transport_options.forEach((opt: any, i: number) => {
+      p.tableRow([
+        { text: opt.mode || "—", w: 28, bold: true, color: C.primary },
+        { text: (opt.route || "—").substring(0, 38), w: 56 },
+        { text: opt.duration || "—", w: 30 },
+        { text: opt.cost_per_person || "—", w: 30, align: "right" },
+        { text: opt.feasibility || "—", w: 30, align: "right",
+          color: opt.feasibility === "recommended" ? C.primary : C.muted },
+      ], i % 2 === 0);
+    });
 
     if (it.selected_transport) {
-      b.addSpace(3);
+      p.gap(4);
       if (it.selected_transport.outbound) {
-        b.addText(`✅ Outbound: ${it.selected_transport.outbound.details || it.selected_transport.outbound.mode || "—"} (${it.selected_transport.outbound.cost || "—"})`, { bold: true, color: COLORS.primary });
+        p.text(
+          `Outbound: ${it.selected_transport.outbound.details || it.selected_transport.outbound.mode || "—"} — ${it.selected_transport.outbound.cost || "—"}`,
+          { bold: true, color: C.primary }
+        );
       }
       if (it.selected_transport.return) {
-        b.addText(`✅ Return: ${it.selected_transport.return.details || it.selected_transport.return.mode || "—"} (${it.selected_transport.return.cost || "—"})`, { bold: true, color: COLORS.primary });
+        p.text(
+          `Return:   ${it.selected_transport.return.details || it.selected_transport.return.mode || "—"} — ${it.selected_transport.return.cost || "—"}`,
+          { bold: true, color: C.primary }
+        );
       }
     }
-    b.addSpace(4);
+
+    p.gap(3);
+    p.text("Book your transport:", { bold: true, size: 8 });
+    p.link("Train — IRCTC",            "https://www.irctc.co.in", 4);
+    p.link("Bus — RedBus",             "https://www.redbus.in", 4);
+    p.link("Flight — MakeMyTrip",      "https://www.makemytrip.com/flights", 4);
+    p.gap(4);
   }
 
-  // Affiliate links
-  b.addText("Book your transport:", { bold: true, size: 8 });
-  b.addLink("Book Train (IRCTC) →", "https://www.irctc.co.in", { indent: 2 });
-  b.addLink("Book Bus (RedBus) →", "https://www.redbus.in", { indent: 2 });
-  b.addLink("Book Flight (MakeMyTrip) →", "https://www.makemytrip.com/flights", { indent: 2 });
-  b.addSpace(4);
-
-  // ── Hotels ──
+  // ══ HOTELS ═════════════════════════════════════════════════════════════════
   if (it.hotels?.length > 0) {
-    b.addSectionTitle("Hotel Options", "🏨");
+    p.sectionTitle("Hotel Options");
     for (const hotel of it.hotels) {
-      b.addSubTitle(`${hotel.tier} — ${hotel.name}`);
-      b.addText(`${hotel.description || ""}`, { indent: 2 });
-      b.addText(`💰 ${hotel.price_per_night}/night · Total: ${hotel.total_cost}`, { indent: 2, bold: true });
-      b.addText(`📍 Station: ${hotel.distance_station || "—"} · Tourist hub: ${hotel.distance_hub || "—"}`, { indent: 2 });
-      if (hotel.breakfast_included) b.addText(`✅ Breakfast included`, { indent: 2, color: COLORS.primary });
-      b.addText(`💡 ${hotel.why_choose || ""}`, { indent: 2, color: COLORS.muted });
-      if (hotel.maps_url) b.addLink("View on Google Maps →", hotel.maps_url, { indent: 2 });
-      b.addSpace(3);
+      p.hotelCard(hotel);
+      if (hotel.maps_url) p.link("View on Google Maps", hotel.maps_url, 4);
     }
-    b.addLink("Book Hotel (Booking.com) →", "https://www.booking.com");
-    b.addSpace(4);
+    p.link("Book Hotel — Booking.com", "https://www.booking.com");
+    p.gap(4);
   }
 
-  // ── Day-wise Itinerary ──
+  // ══ DAY-BY-DAY ITINERARY ═══════════════════════════════════════════════════
   if (it.days?.length > 0) {
-    b.addSectionTitle("Day-by-Day Itinerary", "📋");
+    p.sectionTitle("Day-by-Day Itinerary");
 
     for (const day of it.days) {
-      b.checkPage(20);
-      // Day header bar
-      b.pdf.setFillColor(...COLORS.primary);
-      b.pdf.roundedRect(MARGIN, b.y, CONTENT_W, 9, 2, 2, "F");
-      b.pdf.setFontSize(10);
-      b.pdf.setFont("helvetica", "bold");
-      b.pdf.setTextColor(...COLORS.white);
-      b.pdf.text(`${day.emoji || "📍"}  ${day.day_label}`, MARGIN + 4, b.y + 6.5);
-
-      // Calculate day cost
-      const dayCost = day.activities?.reduce((sum: number, act: any) => {
-        return sum + (parseInt(String(act.cost || "0").replace(/[^\d]/g, "")) || 0);
+      const dayCost = day.activities?.reduce((s: number, a: any) => {
+        const n = parseInt(String(a.cost || "0").replace(/[^\d]/g, "")) || 0;
+        return s + n;
       }, 0) || 0;
-      if (dayCost > 0) {
-        b.pdf.text(`₹${dayCost.toLocaleString("en-IN")}`, PAGE_W - MARGIN - 4, b.y + 6.5, { align: "right" });
-      }
-      b.y += 13;
 
-      // Activities table
+      p.dayHeader(day.day_label || "Day", dayCost);
+
       if (day.activities?.length > 0) {
-        b.addTableRow([
-          { text: "TIME", width: 22, bold: true, color: COLORS.muted },
-          { text: "ACTIVITY", width: 90, bold: true, color: COLORS.muted },
-          { text: "DURATION", width: 28, bold: true, color: COLORS.muted },
-          { text: "COST", width: 24, bold: true, color: COLORS.muted, align: "right" },
-        ], true);
+        // Column header
+        p.tableHeader([
+          { label: "TIME",     w: 22 },
+          { label: "ACTIVITY", w: 90 },
+          { label: "DURATION", w: 30 },
+          { label: "COST",     w: 32, align: "right" },
+        ]);
 
-        for (let i = 0; i < day.activities.length; i++) {
-          const act = day.activities[i];
-          const activityText = (act.activity || "—").substring(0, 55);
+        day.activities.forEach((act: any, ai: number) => {
+          p.tableRow([
+            { text: act.time || "—", w: 22, bold: true, color: C.primary },
+            { text: (act.activity || "—").substring(0, 52), w: 90 },
+            { text: act.duration || "—", w: 30 },
+            { text: act.cost || "Free", w: 32, align: "right", bold: true, color: C.primary },
+          ], ai % 2 === 0);
 
-          b.addTableRow([
-            { text: act.time || "—", width: 22, bold: true, color: COLORS.primary },
-            { text: activityText, width: 90 },
-            { text: act.duration || "—", width: 28 },
-            { text: act.cost || "Free", width: 24, align: "right", color: COLORS.primary },
-          ], i % 2 === 1);
-
-          // Note on next line
+          // Note on its own line
           if (act.note) {
-            b.addText(`↳ ${act.note}`, { indent: 22, color: COLORS.muted, size: 7 });
+            p.need(5);
+            p.doc.setFont("helvetica", "italic");
+            p.doc.setFontSize(7);
+            p.doc.setTextColor(...C.muted);
+            const safeNote = act.note.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "").trim();
+            const noteLines = p.doc.splitTextToSize(`  Note: ${safeNote}`, CW - 24);
+            for (const nl of noteLines) {
+              p.need(4.5);
+              p.doc.text(nl, ML + 22, p.y + 3.5);
+              p.y += 4.5;
+            }
           }
 
-          // Maps link
-          if (act.maps_url) {
-            b.addLink("📍 View on Maps", act.maps_url, { indent: 22 });
-          }
+          if (act.maps_url) p.link("View on Map", act.maps_url, 22);
+        });
+
+        // Day total
+        if (dayCost > 0) {
+          p.need(8);
+          p.doc.setFillColor(...C.rowEven);
+          p.doc.rect(ML, p.y, CW, 7, "F");
+          p.doc.setFont("helvetica", "bold");
+          p.doc.setFontSize(8);
+          p.doc.setTextColor(...C.primary);
+          p.doc.text(
+            `Day Total:  Rs. ${dayCost.toLocaleString("en-IN")}`,
+            PW - MR - 3, p.y + 5, { align: "right" }
+          );
+          p.y += 7;
         }
       }
-
-      // Day total
-      if (dayCost > 0) {
-        b.addSpace(1);
-        b.pdf.setFillColor(...COLORS.light);
-        b.pdf.roundedRect(MARGIN, b.y, CONTENT_W, 7, 1, 1, "F");
-        b.pdf.setFontSize(8);
-        b.pdf.setFont("helvetica", "bold");
-        b.pdf.setTextColor(...COLORS.primary);
-        b.pdf.text(`Day Total: ₹${dayCost.toLocaleString("en-IN")}`, PAGE_W - MARGIN - 4, b.y + 5, { align: "right" });
-        b.y += 10;
-      }
-
-      b.addSpace(4);
+      p.gap(5);
     }
   }
 
-  // ── Restaurants ──
+  // ══ RESTAURANTS ════════════════════════════════════════════════════════════
   if (it.restaurants?.length > 0) {
-    b.addSectionTitle("Restaurant Suggestions", "🍽️");
-    for (const r of it.restaurants) {
-      b.addText(`${r.name} — ${r.type} (${r.meal})`, { bold: true });
-      b.addText(`${r.reason}`, { indent: 2, color: COLORS.muted });
-      b.addText(`📍 Near ${r.near_landmark} · Avg: ${r.avg_cost}/person`, { indent: 2 });
-      b.addSpace(2);
-    }
+    p.sectionTitle("Restaurant Suggestions");
+    p.tableHeader([
+      { label: "NAME",          w: 52 },
+      { label: "TYPE",          w: 28 },
+      { label: "MEAL",          w: 28 },
+      { label: "AVG COST",      w: 28, align: "right" },
+      { label: "NEAR",          w: 38 },
+    ]);
+    it.restaurants.forEach((r: any, i: number) => {
+      p.tableRow([
+        { text: r.name || "—",                         w: 52, bold: true },
+        { text: r.type || "—",                         w: 28 },
+        { text: r.meal || "—",                         w: 28 },
+        { text: r.avg_cost || "—",                     w: 28, align: "right", color: C.primary },
+        { text: (r.near_landmark || "—").substring(0, 20), w: 38, color: C.muted },
+      ], i % 2 === 0);
+    });
+    p.gap(4);
   }
 
-  // ── Budget Breakdown ──
+  // ══ BUDGET BREAKDOWN ═══════════════════════════════════════════════════════
   if (it.budget_breakdown) {
-    b.addSectionTitle("Budget Breakdown", "💰");
+    p.sectionTitle("Budget Breakdown");
     const bb = it.budget_breakdown;
 
-    b.addTableRow([
-      { text: "CATEGORY", width: 110, bold: true, color: COLORS.muted },
-      { text: "AMOUNT", width: 64, bold: true, color: COLORS.muted, align: "right" },
-    ], true);
+    p.tableHeader([
+      { label: "CATEGORY", w: 120 },
+      { label: "AMOUNT",   w: 54, align: "right" },
+    ]);
 
-    for (const item of bb.items || []) {
-      b.addTableRow([
-        { text: item.label, width: 110 },
-        { text: item.amount, width: 64, align: "right", bold: true },
-      ]);
-    }
+    (bb.items || []).forEach((item: any, i: number) => {
+      const cleanLabel = (item.label || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                                           .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+      const cleanAmt   = String(item.amount || "—").replace(/[\u{1F300}-\u{1FAFF}]/gu, "").trim();
+      p.tableRow([
+        { text: cleanLabel, w: 120 },
+        { text: cleanAmt,   w: 54, align: "right", bold: true },
+      ], i % 2 === 0);
+    });
 
     if (bb.emergency_buffer) {
-      b.addTableRow([
-        { text: "🛡️ Emergency Buffer (10%)", width: 110, color: COLORS.accent },
-        { text: bb.emergency_buffer, width: 64, align: "right", bold: true, color: COLORS.accent },
+      p.tableRow([
+        { text: "Emergency Buffer (10%)", w: 120, color: C.accent },
+        { text: String(bb.emergency_buffer).replace(/[\u{1F300}-\u{1FAFF}]/gu, "").trim(),
+          w: 54, align: "right", bold: true, color: C.accent },
       ]);
     }
 
-    b.addDivider();
-    b.addTableRow([
-      { text: "TOTAL ESTIMATED", width: 110, bold: true, color: COLORS.dark },
-      { text: bb.total_estimated || "—", width: 64, align: "right", bold: true, color: COLORS.primary },
-    ], true);
+    p.rule();
+    p.totalRow("TOTAL ESTIMATED", String(bb.total_estimated || "—").replace(/[^\d₹,\s]/g, "").trim());
 
     if (bb.savings_message) {
-      b.addSpace(3);
-      b.addText(`✅ ${bb.savings_message}`, { color: COLORS.primary, bold: true });
+      p.gap(3);
+      const cleanMsg = bb.savings_message.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                                         .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+      p.infoCard([cleanMsg], C.light);
     }
-    b.addSpace(4);
+    p.gap(4);
   }
 
-  // ── Travel Tips ──
+  // ══ TRAVEL TIPS ════════════════════════════════════════════════════════════
   if (it.travel_tips?.length > 0) {
-    b.addSectionTitle("Travel Tips", "💡");
-    for (const tip of it.travel_tips) {
-      b.addBullet(tip, "✅");
-    }
-    b.addSpace(3);
+    p.sectionTitle("Travel Tips");
+    for (const tip of it.travel_tips) p.bullet(tip, ">");
+    p.gap(3);
   }
 
-  // ── Packing Checklist ──
+  // ══ PACKING CHECKLIST ══════════════════════════════════════════════════════
   if (it.packing_checklist?.length > 0) {
-    b.addSectionTitle("Packing Checklist", "🎒");
-    for (const item of it.packing_checklist) {
-      b.addBullet(item, "☐");
+    p.sectionTitle("Packing Checklist");
+    const mid = Math.ceil(it.packing_checklist.length / 2);
+    const left  = it.packing_checklist.slice(0, mid);
+    const right = it.packing_checklist.slice(mid);
+
+    // Two-column layout
+    const colW = (CW - 8) / 2;
+    const startY = p.y;
+    let leftY  = startY;
+    let rightY = startY;
+
+    for (let i = 0; i < Math.max(left.length, right.length); i++) {
+      if (left[i]) {
+        p.need(6);
+        p.y = leftY;
+        const safe = left[i].replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                             .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+        p.doc.setFont("helvetica", "normal");
+        p.doc.setFontSize(8);
+        p.doc.setTextColor(...C.text);
+        p.doc.text(`[ ] ${safe}`, ML, leftY + 4);
+        leftY += 6;
+      }
+      if (right[i]) {
+        p.need(6);
+        const safe = right[i].replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                              .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+        p.doc.setFont("helvetica", "normal");
+        p.doc.setFontSize(8);
+        p.doc.setTextColor(...C.text);
+        p.doc.text(`[ ] ${safe}`, ML + colW + 8, rightY + 4);
+        rightY += 6;
+      }
     }
-    b.addSpace(3);
+    p.y = Math.max(leftY, rightY) + 4;
+    p.gap(3);
   }
 
-  // ── Local Insights ──
+  // ══ LOCAL INSIGHTS ═════════════════════════════════════════════════════════
   if (it.local_insights?.length > 0) {
-    b.addSectionTitle("Local Insights", "🏘️");
-    for (const insight of it.local_insights) {
-      b.addBullet(insight, "📌");
-    }
-    b.addSpace(3);
+    p.sectionTitle("Local Insights");
+    for (const insight of it.local_insights) p.bullet(insight, "*");
+    p.gap(3);
   }
 
-  // ── Closing ──
+  // ══ CLOSING ════════════════════════════════════════════════════════════════
   if (it.closing_note) {
-    b.checkPage(20);
-    b.addSpace(6);
-    b.pdf.setFillColor(...COLORS.primary);
-    b.pdf.roundedRect(MARGIN, b.y, CONTENT_W, 22, 3, 3, "F");
-    b.pdf.setFontSize(9);
-    b.pdf.setFont("helvetica", "italic");
-    b.pdf.setTextColor(...COLORS.white);
-    const closeLines = b.pdf.splitTextToSize(it.closing_note, CONTENT_W - 16);
-    b.pdf.text(closeLines, MARGIN + 8, b.y + 9);
-    b.y += 28;
+    p.need(24);
+    p.gap(5);
+    p.doc.setFillColor(...C.primary);
+    p.doc.roundedRect(ML, p.y, CW, 20, 3, 3, "F");
+    p.doc.setFont("helvetica", "italic");
+    p.doc.setFontSize(8.5);
+    p.doc.setTextColor(...C.white);
+    const safe = it.closing_note.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1FFFF}]/gu, "")
+                                 .replace(/[✅☐📍💰🏨🍽️🚆🎒💡🗺️📋🏘️✈️🛡️]/g, "").trim();
+    const clines = p.doc.splitTextToSize(safe, CW - 12);
+    p.doc.text(clines, PW / 2, p.y + 8, { align: "center" });
+    p.y += 24;
   }
 
-  // Contact & Links
-  b.addSpace(6);
-  b.addText("Need Help?", { bold: true, size: 10, color: COLORS.dark });
-  b.addLink("✉️ support@krotravel.com", "mailto:support@krotravel.com");
-  b.addSpace(2);
-  b.addText("Quick Booking Links:", { bold: true, size: 8 });
-  b.addLink("IRCTC (Trains)", "https://www.irctc.co.in", { indent: 2 });
-  b.addLink("RedBus (Buses)", "https://www.redbus.in", { indent: 2 });
-  b.addLink("MakeMyTrip (Flights)", "https://www.makemytrip.com/flights", { indent: 2 });
-  b.addLink("Booking.com (Hotels)", "https://www.booking.com", { indent: 2 });
-  b.addLink("Uber (Cabs)", "https://www.uber.com", { indent: 2 });
+  // ══ CONTACT & BOOKING LINKS ════════════════════════════════════════════════
+  p.gap(5);
+  p.sectionTitle("Booking Links & Support");
+  p.text("Quick access to all booking platforms:", { bold: true, size: 8.5 });
+  p.gap(2);
+  p.link("IRCTC — Book Trains",              "https://www.irctc.co.in", 4);
+  p.link("RedBus — Book Buses",              "https://www.redbus.in", 4);
+  p.link("MakeMyTrip — Book Flights",        "https://www.makemytrip.com/flights", 4);
+  p.link("Booking.com — Book Hotels",        "https://www.booking.com", 4);
+  p.link("Uber — Book Cabs",                 "https://www.uber.com/in/en/ride/", 4);
+  p.gap(3);
+  p.link("support@krotravel.com — Contact Us", "mailto:support@krotravel.com");
 
-  b.save(`KroTravel_${preferences?.arrival || "Itinerary"}.pdf`);
+  p.save(`KroTravel_${arr.replace(/\s+/g, "_")}.pdf`);
 }

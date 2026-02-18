@@ -344,13 +344,14 @@ const DayCarousel = ({
         })}
       </div>
 
-      {/* Active day card */}
+      {/* Active day card — wrapped in overflow-hidden to prevent horizontal page shift */}
+      <div className="overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={activeDay}
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -14 }}
+          exit={{ opacity: 0, y: -16 }}
           transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
           className="prism-card overflow-hidden"
         >
@@ -527,6 +528,7 @@ const DayCarousel = ({
           </div>
         </motion.div>
       </AnimatePresence>
+      </div>
     </motion.section>
   );
 };
@@ -833,9 +835,9 @@ const PaidItinerary = () => {
       </motion.div>
 
 
-      {/* Hero */}
-      <section className="relative pt-0">
-        <div className="relative overflow-hidden" style={{ height: "clamp(220px, 45vw, 420px)" }}>
+      {/* Hero — padded to clear fixed Navbar (64px) + action bar (~44px) = 108px */}
+      <section className="relative" style={{ paddingTop: "108px" }}>
+        <div className="relative overflow-hidden" style={{ height: "clamp(200px, 42vw, 400px)" }}>
           <motion.img
             initial={{ scale: 1.08 }}
             animate={{ scale: 1 }}

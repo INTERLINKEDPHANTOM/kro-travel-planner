@@ -279,23 +279,49 @@ Return JSON:
 
         // ── STEP 6: Full Itinerary Generation (AI Call #3) ──
         send("progress", { step: 6, label: "Building your day-by-day itinerary..." });
+
+        // Per-person per-day budgets for the AI to enforce strictly
+        const foodPerPersonPerDay = Math.round(foodBudget / context.totalDays / context.numPeople);
+        const actPerPersonPerDay = Math.round(activityBudget / context.totalDays / context.numPeople);
+        const localPerPersonPerDay = Math.round(localTravelBudget / context.totalDays / context.numPeople);
+
         const itineraryData = await aiCall(
           LOVABLE_API_KEY,
           `You are KroTravel Planner GPT Pro — an India-aware, minute-accurate travel intelligence engine.
 Generate a customer-ready, day-wise, hour-wise itinerary.
 
-RULES:
-- Use realistic India-specific timings and costs (2024-2025 benchmarks)
+⚠️ CRITICAL BUDGET RULES — MUST FOLLOW STRICTLY:
+- TOTAL REMAINING BUDGET is ₹${remainingBudget} for ${context.numPeople} people across ${context.totalDays} days
+- Food budget per person per day: ₹${foodPerPersonPerDay} (NEVER exceed this)
+- Activity/entry budget per person per day: ₹${actPerPersonPerDay} (NEVER exceed this)
+- Local travel per person per day: ₹${localPerPersonPerDay} (NEVER exceed this)
+- ALL individual activity costs must be realistic and WITHIN these limits
+- NEVER invent high-cost activities that bust the budget
+- If budget is very low (< ₹300/person/day), suggest free/low-cost alternatives like parks, ghats, free monuments, walking tours
+
+REALISTIC INDIA COST BENCHMARKS (2024-2025):
+- Auto/rickshaw: ₹20-80 per ride
+- Metro: ₹10-60 per person
+- Cab (Ola/Uber 5km): ₹80-150
+- Street food/chai: ₹20-80
+- Budget restaurant meal: ₹80-200 per person  
+- Mid restaurant meal: ₹200-450 per person
+- Monument entry (Indian): ₹15-250 per person
+- Park entry: ₹10-50 per person
+- Museum entry: ₹20-150 per person
+- Boat ride (ghats etc): ₹50-200 per person
+
+ITINERARY RULES:
+- Use realistic India-specific timings
 - Rail arrival buffer: +1 hour delay assumption
-- Distance logic: <1 km → Walk, 1–3 km → Auto (₹30-120), >3 km → Metro/Cab
-- Monument fees: Indian adult rate (₹30-250)
-- Meals: Budget ₹120-250, Mid ₹250-500
+- Distance logic: <1 km → Walk (Free), 1–3 km → Auto (₹30-80), >3 km → Metro/Cab (₹60-150)
 - Include rest breaks and realistic pacing
 - Account for Indian traffic conditions
-- First day = travel + arrival activities only
-- Last day = checkout + departure activities only
-- Middle days = full sightseeing
-- For EVERY activity with a physical location, include a maps_url as a Google Maps search link
+- First day = travel + arrival + 1-2 nearby activities only
+- Last day = checkout + departure activities only (light schedule)
+- Middle days = full sightseeing with proper pacing
+- ONLY include destinations that actually exist in ${preferences.arrival}. Do NOT invent places.
+- For EVERY physical location include a maps_url as Google Maps search link
 
 Return ONLY valid JSON.`,
           `Generate itinerary for:
@@ -314,14 +340,15 @@ Return: ${JSON.stringify(transportData.selected_return || {}, null, 2)}
 HOTEL AREA: ${hotelData.hotel_cluster_area || preferences.arrival}
 RECOMMENDED HOTEL: ${hotelData.recommended_tier || "Mid"} tier
 
-REMAINING BUDGET:
-- Food: ₹${foodBudget}
-- Activities/Entry: ₹${activityBudget}
-- Local travel: ₹${localTravelBudget}
+⚠️ STRICT BUDGET CONSTRAINTS (DO NOT EXCEED):
+- Total remaining budget: ₹${remainingBudget} for ${context.numPeople} people
+- Food total: ₹${foodBudget} (₹${foodPerPersonPerDay}/person/day)
+- Activities total: ₹${activityBudget} (₹${actPerPersonPerDay}/person/day)  
+- Local travel total: ₹${localTravelBudget} (₹${localPerPersonPerDay}/person/day)
 
 Return JSON:
 {
-  "cover_title": "string - emoji + bold title",
+  "cover_title": "string - emoji + bold title (must mention ${preferences.arrival} specifically)",
   "intro": "string - 1-2 line destination intro",
   "user_preferences_summary": {
     "travel_dates": "${context.departureDate} – ${context.arrivalDate}",
@@ -337,11 +364,11 @@ Return JSON:
       "activities": [
         {
           "time": "string - e.g. 06:00 AM",
-          "activity": "string",
+          "activity": "string - only real places that exist in ${preferences.arrival}",
           "note": "string - 1 line note",
           "duration": "string",
-          "cost": "string - ₹ amount or Free",
-          "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/PlaceName+City (REQUIRED for physical locations)"
+          "cost": "string - ₹ amount or Free (must stay within ₹${actPerPersonPerDay}/person budget)",
+          "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/PlaceName+${encodeURIComponent(preferences.arrival)}"
         }
       ]
     }
