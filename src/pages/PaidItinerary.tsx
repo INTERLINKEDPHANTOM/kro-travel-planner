@@ -73,15 +73,19 @@ type ActivityPhoto = { id: string; storage_path: string; place_name: string };
 
 const PHOTO_LABELS = ["Landmark", "Nature", "Temple", "Street Food", "Market", "Landscape"];
 
-// ─── Destination Photo Gallery ─────────────────────────────────────────────
+// ─── Destination Photo Gallery (Swipeable on mobile) ──────────────────────
 const DestinationGallery = ({ destination }: { destination: string }) => {
   const [active, setActive] = useState<number | null>(null);
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
+  const [dragStart, setDragStart] = useState(0);
 
   const getImgSrc = (label: string, i: number, w: number, h: number) => {
     if (imgErrors[i]) return `https://picsum.photos/seed/${destination.toLowerCase()}${i}/${w}/${h}`;
-    return `https://source.unsplash.com/${w}x${h}/?${encodeURIComponent(destination + "," + label)}&sig=${i + 10}`;
+    return `https://picsum.photos/seed/${encodeURIComponent(destination.toLowerCase() + label.toLowerCase())}/${w}/${h}`;
   };
+
+  const goPrev = () => setActive(v => v !== null ? (v - 1 + PHOTO_LABELS.length) % PHOTO_LABELS.length : null);
+  const goNext = () => setActive(v => v !== null ? (v + 1) % PHOTO_LABELS.length : null);
 
   return (
     <motion.section {...fadeUp} className="mb-10 sm:mb-14">
@@ -101,7 +105,55 @@ const DestinationGallery = ({ destination }: { destination: string }) => {
         </a>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {/* Mobile: horizontal swipeable strip */}
+      <div className="sm:hidden overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+        <motion.div
+          className="flex gap-2.5"
+          style={{ width: `${PHOTO_LABELS.length * 72}vw` }}
+          drag="x"
+          dragConstraints={{ right: 0, left: -(PHOTO_LABELS.length - 1.4) * 72 * 3.6 }}
+          dragElastic={0.08}
+          dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
+          onDragStart={(_, info) => setDragStart(info.point.x)}
+          onDragEnd={(_, info) => {
+            const delta = info.point.x - dragStart;
+            if (Math.abs(delta) < 10) return; // it's a tap
+          }}
+        >
+          {PHOTO_LABELS.map((label, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0.93 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.07 }}
+              whileTap={{ scale: 0.97 }}
+              className="dest-photo-card flex-shrink-0 cursor-pointer"
+              style={{ width: "68vw", height: "clamp(180px, 50vw, 240px)" }}
+              onClick={() => setActive(i)}
+            >
+              <img
+                src={getImgSrc(label, i, 480, 320)}
+                alt={`${destination} ${label}`}
+                loading="lazy"
+                className="w-full h-full object-cover"
+                onError={() => setImgErrors(prev => ({ ...prev, [i]: true }))}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-3">
+                <span className="text-white text-xs font-bold">{label}</span>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+        <div className="flex justify-center gap-1.5 mt-3">
+          {PHOTO_LABELS.map((_, i) => (
+            <div key={i} className="w-1.5 h-1.5 rounded-full transition-all" style={{ background: i === 0 ? "hsl(158,42%,40%)" : "hsla(158,42%,40%,0.25)" }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: masonry grid */}
+      <div className="hidden sm:grid grid-cols-3 gap-2">
         {PHOTO_LABELS.map((label, i) => (
           <motion.div
             key={i}
@@ -110,7 +162,7 @@ const DestinationGallery = ({ destination }: { destination: string }) => {
             viewport={{ once: true }}
             transition={{ delay: i * 0.06 }}
             className="dest-photo-card cursor-pointer"
-            style={{ height: i === 0 ? "clamp(200px, 35vw, 280px)" : "clamp(110px, 18vw, 145px)" }}
+            style={{ height: i === 0 ? "clamp(200px, 28vw, 260px)" : "clamp(110px, 14vw, 140px)" }}
             onClick={() => setActive(i)}
           >
             <img
@@ -121,40 +173,51 @@ const DestinationGallery = ({ destination }: { destination: string }) => {
               onError={() => setImgErrors(prev => ({ ...prev, [i]: true }))}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent flex items-end p-2.5">
-              <span className="text-white text-[10px] sm:text-xs font-semibold">{label}</span>
+              <span className="text-white text-xs font-semibold">{label}</span>
             </div>
           </motion.div>
         ))}
       </div>
 
+      {/* Lightbox with swipe to navigate */}
       <AnimatePresence>
         {active !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md px-4 py-8"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg px-4 py-8"
             onClick={() => setActive(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="relative max-w-2xl w-full rounded-2xl overflow-hidden shadow-2xl"
+              key={active}
+              initial={{ scale: 0.88, opacity: 0, x: 40 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ scale: 0.92, opacity: 0, x: -40 }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -60) goNext();
+                else if (info.offset.x > 60) goPrev();
+              }}
+              className="relative max-w-2xl w-full rounded-2xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing"
               onClick={e => e.stopPropagation()}
             >
               <img
                 src={getImgSrc(PHOTO_LABELS[active], active, 1200, 700)}
                 alt={`${destination} ${PHOTO_LABELS[active]}`}
-                className="w-full object-cover max-h-[80vh]"
+                className="w-full object-cover max-h-[80vh] select-none"
+                draggable={false}
               />
+              {/* Navigation arrows */}
               <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
-                <button onClick={() => setActive((active - 1 + PHOTO_LABELS.length) % PHOTO_LABELS.length)}
+                <button onClick={(e) => { e.stopPropagation(); goPrev(); }}
                   className="pointer-events-auto w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors">
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <button onClick={() => setActive((active + 1) % PHOTO_LABELS.length)}
+                <button onClick={(e) => { e.stopPropagation(); goNext(); }}
                   className="pointer-events-auto w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors">
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -163,9 +226,10 @@ const DestinationGallery = ({ destination }: { destination: string }) => {
                 className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors">
                 <X className="w-4 h-4" />
               </button>
-              <div className="absolute bottom-0 left-0 right-0 px-4 py-3 bg-gradient-to-t from-black/60 to-transparent">
+              <div className="absolute bottom-0 left-0 right-0 px-4 py-3 bg-gradient-to-t from-black/70 to-transparent">
                 <span className="text-white/90 text-xs font-semibold">{PHOTO_LABELS[active]}</span>
                 <span className="text-white/50 text-xs ml-2">{active + 1} / {PHOTO_LABELS.length}</span>
+                <p className="text-white/40 text-[10px] mt-0.5">Swipe left/right to navigate</p>
               </div>
             </motion.div>
           </motion.div>
