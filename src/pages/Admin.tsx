@@ -29,7 +29,7 @@ interface PromoCode { id: string; code: string; discount_type: string; discount_
 interface SuperPremiumUser { id: string; user_id: string; access_type: string; expires_at: string | null; notes: string | null; is_active: boolean; granted_at: string; profiles?: { full_name: string | null; email: string | null } | null; }
 interface TeamMember { id: string; name: string; role: string; description: string | null; photo_url: string | null; display_order: number; is_active: boolean; }
 
-type Tab = "dashboard" | "users" | "itineraries" | "promos" | "super_premium" | "team" | "page_controls";
+type Tab = "dashboard" | "users" | "itineraries" | "promos" | "super_premium" | "team" | "page_controls" | "notifications";
 
 const TABS: { id: Tab; label: string; icon: React.ElementType; badge?: number }[] = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -38,6 +38,7 @@ const TABS: { id: Tab; label: string; icon: React.ElementType; badge?: number }[
   { id: "promos", label: "Promos", icon: Tag },
   { id: "super_premium", label: "Super Premium", icon: Crown },
   { id: "team", label: "Team", icon: Camera },
+  { id: "notifications", label: "Notifications", icon: Megaphone },
   { id: "page_controls", label: "Page Controls", icon: Settings },
 ];
 
@@ -121,6 +122,15 @@ const Admin = () => {
   const memberPhotoRef = useRef<HTMLInputElement>(null);
   const founderPhotoRef = useRef<HTMLInputElement>(null);
 
+  // broadcast notifications
+  type BroadcastNotif = { id: string; title: string; message: string; image_url: string | null; type: string; is_active: boolean; created_at: string; expires_at: string | null; };
+  const [broadcasts, setBroadcasts] = useState<BroadcastNotif[]>([]);
+  const [broadcastForm, setBroadcastForm] = useState({ title: "", message: "", image_url: "", type: "announcement", expires_at: "" });
+  const [broadcastImageFile, setBroadcastImageFile] = useState<File | null>(null);
+  const [broadcastImagePreview, setBroadcastImagePreview] = useState<string | null>(null);
+  const [broadcastSaving, setBroadcastSaving] = useState(false);
+  const broadcastImageRef = useRef<HTMLInputElement>(null);
+
   /* ── auth check ── */
   useEffect(() => { checkAdmin(); }, []);
 
@@ -139,7 +149,7 @@ const Admin = () => {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchDashboardStats(), fetchItineraries(), fetchUsers(), fetchPromos(), fetchSuperPremium(), fetchSiteSettings(), fetchTeamMembers()]);
+    await Promise.all([fetchDashboardStats(), fetchItineraries(), fetchUsers(), fetchPromos(), fetchSuperPremium(), fetchSiteSettings(), fetchTeamMembers(), fetchBroadcasts()]);
     setLoading(false);
   }, []);
 
@@ -372,6 +382,66 @@ const Admin = () => {
   };
 
   const handleLogout = async () => { await supabase.auth.signOut(); navigate("/"); };
+
+  /* ── broadcast notifications ── */
+  const fetchBroadcasts = async () => {
+    const { data } = await supabase.from("broadcast_notifications").select("*").order("created_at", { ascending: false });
+    setBroadcasts((data as any) || []);
+  };
+
+  const handleBroadcastImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBroadcastImageFile(file);
+    setBroadcastImagePreview(URL.createObjectURL(file));
+  };
+
+  const createBroadcast = async () => {
+    if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) {
+      toast({ title: "Title and message required", variant: "destructive" }); return;
+    }
+    setBroadcastSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      let imageUrl = broadcastForm.image_url || null;
+
+      if (broadcastImageFile) {
+        const ext = broadcastImageFile.name.split(".").pop();
+        const path = `broadcast-${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("team-photos").upload(path, broadcastImageFile, { upsert: true });
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabase.storage.from("team-photos").getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
+      }
+
+      const { error } = await supabase.from("broadcast_notifications").insert({
+        title: broadcastForm.title.trim(),
+        message: broadcastForm.message.trim(),
+        image_url: imageUrl,
+        type: broadcastForm.type,
+        expires_at: broadcastForm.expires_at || null,
+        created_by: user?.id,
+      });
+      if (error) throw error;
+      toast({ title: "📣 Notification sent to all users!" });
+      setBroadcastForm({ title: "", message: "", image_url: "", type: "announcement", expires_at: "" });
+      setBroadcastImageFile(null);
+      setBroadcastImagePreview(null);
+      fetchBroadcasts();
+    } catch (err: any) { toast({ title: "Error", description: err.message, variant: "destructive" }); }
+    setBroadcastSaving(false);
+  };
+
+  const toggleBroadcast = async (id: string, current: boolean) => {
+    await supabase.from("broadcast_notifications").update({ is_active: !current }).eq("id", id);
+    fetchBroadcasts();
+  };
+
+  const deleteBroadcast = async (id: string) => {
+    await supabase.from("broadcast_notifications").delete().eq("id", id);
+    fetchBroadcasts();
+    toast({ title: "Deleted" });
+  };
 
   /* ── team members ── */
   const fetchTeamMembers = async () => {
@@ -1137,6 +1207,116 @@ const Admin = () => {
                               </button>
                             </div>
                           </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ═══ NOTIFICATIONS (Broadcast) ═══ */}
+            {activeTab === "notifications" && (
+              <motion.div key="notifications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="grid lg:grid-cols-2 gap-6">
+                  {/* Create form */}
+                  <div className="glass-card rounded-2xl p-6">
+                    <h3 className="font-semibold text-foreground mb-5 flex items-center gap-2">
+                      <Megaphone className="w-4 h-4 text-primary" /> Send Notification to All Users
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">Type</Label>
+                        <div className="flex gap-2">
+                          {["announcement", "offer", "reminder", "alert"].map(t => (
+                            <button key={t} onClick={() => setBroadcastForm(f => ({ ...f, type: t }))}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
+                                broadcastForm.type === t ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                              }`}>
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">Title *</Label>
+                        <Input value={broadcastForm.title} onChange={e => setBroadcastForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. New feature launched!" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">Message *</Label>
+                        <Textarea value={broadcastForm.message} onChange={e => setBroadcastForm(f => ({ ...f, message: e.target.value }))} placeholder="Write your message to all users…" rows={3} />
+                      </div>
+                      {/* Image upload */}
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">Image (optional)</Label>
+                        <input ref={broadcastImageRef} type="file" accept="image/*" className="hidden" onChange={handleBroadcastImageChange} />
+                        {broadcastImagePreview ? (
+                          <div className="relative rounded-xl overflow-hidden h-32 mb-2">
+                            <img src={broadcastImagePreview} alt="" className="w-full h-full object-cover" />
+                            <button onClick={() => { setBroadcastImageFile(null); setBroadcastImagePreview(null); }}
+                              className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
+                              <X className="w-3 h-3 text-white" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => broadcastImageRef.current?.click()}
+                            className="w-full h-24 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors text-xs">
+                            <Image className="w-5 h-5" /> Upload image
+                          </button>
+                        )}
+                        <p className="text-[11px] text-muted-foreground mt-1">Or enter image URL:</p>
+                        <Input value={broadcastForm.image_url} onChange={e => setBroadcastForm(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..." className="mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">Expires At (optional)</Label>
+                        <Input type="datetime-local" value={broadcastForm.expires_at} onChange={e => setBroadcastForm(f => ({ ...f, expires_at: e.target.value }))} />
+                      </div>
+                      <Button onClick={createBroadcast} disabled={broadcastSaving} className="w-full">
+                        {broadcastSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Megaphone className="w-4 h-4 mr-2" />}
+                        Send to All Users
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Existing broadcasts */}
+                  <div className="glass-card rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-foreground flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-primary" /> Active Notifications
+                      </h3>
+                      <Button variant="outline" size="sm" onClick={fetchBroadcasts}><RefreshCw className="w-4 h-4" /></Button>
+                    </div>
+                    {broadcasts.length === 0 ? (
+                      <div className="text-center py-10 text-muted-foreground text-sm">
+                        <Megaphone className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                        No notifications sent yet
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+                        {broadcasts.map(b => (
+                          <div key={b.id} className={`rounded-xl border p-4 transition-all ${b.is_active ? "border-primary/20 bg-primary/3" : "border-border bg-muted/30 opacity-60"}`}>
+                            {b.image_url && (
+                              <img src={b.image_url} alt="" className="w-full h-20 object-cover rounded-lg mb-3"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                            )}
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">{b.title}</p>
+                                <p className="text-xs text-muted-foreground capitalize">{b.type} · {new Date(b.created_at).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex gap-1.5 flex-shrink-0">
+                                <button onClick={() => toggleBroadcast(b.id, b.is_active)}
+                                  className={`text-xs px-2 py-1 rounded-lg transition-colors ${b.is_active ? "bg-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive" : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}>
+                                  {b.is_active ? "Deactivate" : "Activate"}
+                                </button>
+                                <button onClick={() => deleteBroadcast(b.id)} className="w-7 h-7 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{b.message}</p>
+                            {b.expires_at && <p className="text-[10px] text-muted-foreground mt-1">Expires: {new Date(b.expires_at).toLocaleString()}</p>}
+                          </div>
                         ))}
                       </div>
                     )}

@@ -5,12 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
+import BroadcastNotificationPopup from "@/components/BroadcastNotificationPopup";
 import Index from "./pages/Index";
 import PlanTrip from "./pages/PlanTrip";
 import PlanSelection from "./pages/PlanSelection";
 import FreeItinerary from "./pages/FreeItinerary";
 import PaidItinerary from "./pages/PaidItinerary";
 import MyTrips from "./pages/MyTrips";
+import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Destinations from "./pages/Destinations";
@@ -36,6 +38,7 @@ const AnimatedRoutes = () => {
         <Route path="/itinerary/:destination" element={<PageTransition><FreeItinerary /></PageTransition>} />
         <Route path="/paid-itinerary" element={<PageTransition><PaidItinerary /></PageTransition>} />
         <Route path="/my-trips" element={<PageTransition><MyTrips /></PageTransition>} />
+        <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
         <Route path="/trip-gallery/:tripId" element={<PageTransition><TripGallery /></PageTransition>} />
         <Route path="/destinations" element={<PageTransition><Destinations /></PageTransition>} />
         <Route path="/about" element={<PageTransition><About /></PageTransition>} />
@@ -58,6 +61,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <BroadcastNotificationPopup />
         <AnimatedRoutes />
       </BrowserRouter>
     </TooltipProvider>
