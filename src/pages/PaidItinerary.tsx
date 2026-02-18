@@ -44,28 +44,38 @@ const getDestPhoto = (query: string, index: number, w = 800, h = 600) => {
   return `https://source.unsplash.com/${w}x${h}/?${encodeURIComponent(cleanQuery)}&sig=${index + 1}`;
 };
 
-// Safe INR formatter — handles raw numbers only, never re-parses formatted strings
+// Safe INR formatter — correctly handles AI-returned cost strings
 const formatINR = (val: any): string => {
   if (val === null || val === undefined || val === "") return "—";
   const str = String(val).trim();
-  // If it's already a well-formed rupee string, return as-is
-  if (/^₹[\d,]+(\s*[-–]\s*₹[\d,]+)?$/.test(str)) return str;
-  // If it contains percentage, label, or is "Free", return as-is
-  if (/free|%|included/i.test(str)) return str;
-  // Strip everything except digits
-  const digits = str.replace(/[^\d]/g, "");
-  if (!digits || digits === "0") return "—";
+
+  // 1. Handle "Free" / "Included" / percent strings — return as-is
+  if (/^free$/i.test(str) || /included/i.test(str) || /%/.test(str)) return str;
+
+  // 2. If already a clean ₹ range like "₹1,200 – ₹2,500", return as-is
+  if (/^₹[\d,]+\s*[-–]\s*₹[\d,]+$/.test(str)) return str;
+
+  // 3. Extract the FIRST continuous numeric run after an optional ₹ sign
+  //    This prevents "₹3000 (for 2 people)" → 30002 bug
+  //    Regex: optional ₹, then optional comma-formatted number
+  const match = str.match(/₹?\s*([\d,]+)/);
+  if (!match) return str; // no number found, return original
+
+  // Remove commas, parse
+  const digits = match[1].replace(/,/g, "");
   const num = parseInt(digits, 10);
   if (isNaN(num) || num === 0) return "—";
-  // Sanity check: if the raw number is suspiciously large (e.g. parsed "2,00,000" → 200000), keep it
   return "₹" + num.toLocaleString("en-IN");
 };
 
-// Parse a cost value to integer safely
+// Parse a cost value to integer safely — only takes the FIRST number
 const parseCostInt = (val: any): number => {
   if (!val) return 0;
-  const str = String(val).replace(/[^\d]/g, "");
-  const n = parseInt(str, 10);
+  const str = String(val).trim();
+  if (/^free$/i.test(str) || /included/i.test(str)) return 0;
+  const match = str.match(/[\d,]+/);
+  if (!match) return 0;
+  const n = parseInt(match[0].replace(/,/g, ""), 10);
   return isNaN(n) ? 0 : n;
 };
 
@@ -521,12 +531,14 @@ const DayCarousel = ({
 
 // ─── Budget Row ────────────────────────────────────────────────────────────
 const BudgetRow = ({ label, amount, isTotal = false }: { label: string; amount: any; isTotal?: boolean }) => {
+  // Strip leading emoji from AI-generated labels for clean display
+  const cleanLabel = label.replace(/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]+\s*/gu, "").trim();
   const display = formatINR(amount);
   return (
     <div className={`flex items-center justify-between py-3 gap-4 ${isTotal ? "border-t-2 border-primary/20 mt-2 pt-4" : "border-b border-border/25 last:border-0"}`}>
       <span className={`${isTotal ? "font-heading text-base" : "text-sm text-muted-foreground"} flex-1 min-w-0`}
         style={isTotal ? { color: "hsl(158, 45%, 12%)" } : {}}>
-        {label}
+        {cleanLabel}
       </span>
       <span className={`font-semibold tabular-nums flex-shrink-0 ${isTotal ? "font-heading text-lg text-primary" : "text-sm"}`}
         style={!isTotal ? { color: "hsl(158, 45%, 15%)" } : {}}>
