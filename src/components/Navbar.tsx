@@ -1,8 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Compass, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -17,42 +16,62 @@ const Navbar = () => {
 
   return (
     <motion.nav
-      initial={{ y: -20, opacity: 0 }}
+      initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       className="fixed top-0 left-0 right-0 z-50 nav-glass"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
+
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-              <Compass className="w-5 h-5 text-primary" />
-            </div>
-            <span className="text-xl font-heading text-foreground">
+            <motion.div
+              whileHover={{ rotate: 20, scale: 1.1 }}
+              transition={{ duration: 0.3 }}
+              className="w-9 h-9 rounded-2xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))", boxShadow: "0 4px 12px hsla(158, 42%, 36%, 0.35)" }}
+            >
+              <Compass className="w-5 h-5 text-white" />
+            </motion.div>
+            <span className="text-xl font-heading tracking-tight" style={{ color: "hsl(158, 45%, 12%)" }}>
               KroTravel
             </span>
           </Link>
 
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  location.pathname === item.path
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className="relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+                style={{
+                  color: location.pathname === item.path ? "hsl(158, 42%, 38%)" : "hsl(158, 18%, 48%)",
+                }}
               >
-                {item.label}
+                {location.pathname === item.path && (
+                  <motion.div
+                    layoutId="navPill"
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: "hsla(158, 42%, 38%, 0.10)" }}
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{item.label}</span>
               </Link>
             ))}
           </div>
 
+          {/* CTA buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Link to="/auth">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground rounded-full">
+              <button className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+                style={{ color: "hsl(158, 18%, 48%)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "hsl(158, 42%, 32%)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(158, 18%, 48%)")}>
                 Log in
-              </Button>
+              </button>
             </Link>
             <Link to="/plan">
               <button className="btn-primary text-sm px-6 py-2.5">
@@ -61,43 +80,70 @@ const Navbar = () => {
             </Link>
           </div>
 
+          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-full hover:bg-muted"
+            className="md:hidden w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200"
+            style={{ background: mobileOpen ? "hsla(158, 42%, 38%, 0.10)" : "transparent" }}
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <AnimatePresence mode="wait">
+              {mobileOpen
+                ? <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <X className="w-5 h-5" style={{ color: "hsl(158, 42%, 38%)" }} />
+                  </motion.div>
+                : <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <Menu className="w-5 h-5" style={{ color: "hsl(158, 25%, 40%)" }} />
+                  </motion.div>
+              }
+            </AnimatePresence>
           </button>
         </div>
       </div>
 
-      {mobileOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="md:hidden border-t nav-glass"
-        >
-          <div className="px-4 py-4 space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
-              >
-                {item.label}
-              </Link>
-            ))}
-            <div className="pt-2 space-y-2">
-              <Link to="/auth" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full rounded-full">Log in</Button>
-              </Link>
-              <Link to="/plan" onClick={() => setMobileOpen(false)}>
-                <button className="btn-primary w-full text-sm py-3">Plan My Trip</button>
-              </Link>
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            className="md:hidden border-t nav-glass overflow-hidden"
+            style={{ borderColor: "hsla(148, 35%, 78%, 0.40)" }}
+          >
+            <div className="px-4 py-5 space-y-1.5">
+              {navItems.map((item, i) => (
+                <motion.div
+                  key={item.path}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                >
+                  <Link
+                    to={item.path}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200"
+                    style={{
+                      background: location.pathname === item.path ? "hsla(158, 42%, 38%, 0.10)" : "transparent",
+                      color: location.pathname === item.path ? "hsl(158, 42%, 32%)" : "hsl(158, 18%, 42%)",
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                </motion.div>
+              ))}
+              <div className="pt-3 space-y-2.5 border-t border-border/30 mt-2">
+                <Link to="/auth" onClick={() => setMobileOpen(false)}>
+                  <button className="w-full btn-ghost-glass py-3 text-sm">Log in</button>
+                </Link>
+                <Link to="/plan" onClick={() => setMobileOpen(false)}>
+                  <button className="w-full btn-primary py-3 text-sm">Plan My Trip</button>
+                </Link>
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 };
