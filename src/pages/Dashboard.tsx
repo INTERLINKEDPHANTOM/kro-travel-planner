@@ -324,7 +324,10 @@ const Dashboard = () => {
             { icon: MapPin, label: "My Trips", link: "/my-trips" },
             { icon: Film, label: "Studio", link: "/creator-studio" },
             { icon: Globe, label: "Travel Map", link: "/travel-map" },
-            { icon: Image, label: "Gallery", link: trips[0] ? `/trip-gallery/${trips[0].id}` : "/my-trips" },
+            { icon: Trophy, label: "Leaderboard", link: "/leaderboard" },
+            { icon: Target, label: "Bingo", link: "/travel-bingo" },
+            { icon: BookOpen, label: "Yearbook", link: "/travel-yearbook" },
+            { icon: Mail, label: "Postcard", link: "/postcard" },
             { icon: Star, label: "Offers", link: "/offers" },
             ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", link: "/admin", primary: false, admin: true }] : []),
           ].map(({ icon: Icon, label, link, primary, ...rest }) => (
