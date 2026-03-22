@@ -5,12 +5,15 @@ import {
   MapPin, Calendar, Wallet, Eye, Trash2, RotateCcw, Bell, Loader2,
   LogOut, Settings, Star, Crown, Camera, Image, Compass, ArrowRight,
   TrendingUp, Clock, Shield, Zap, Users, ChevronRight, Download,
-  Globe, Film, MessageCircle, Heart, Sparkles, ExternalLink, Check, X
+  Globe, Film, MessageCircle, Heart, Sparkles, ExternalLink, Check, X,
+  Trophy, Target, Gift, BookOpen, Mail
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import TravelStreaks from "@/components/TravelStreaks";
+import ReferralRewards from "@/components/ReferralRewards";
 
 // ── Gamification title engine ──────────────────────────────────────────────
 const TITLES: { label: string; emoji: string; minTrips: number; persona?: string }[] = [
