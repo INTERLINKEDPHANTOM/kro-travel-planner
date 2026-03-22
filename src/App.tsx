@@ -67,6 +67,11 @@ const AnimatedRoutes = () => {
         <Route path="/travel-map" element={<PageTransition><TravelMap /></PageTransition>} />
         <Route path="/packing-checklist" element={<PageTransition><PackingChecklist /></PageTransition>} />
         <Route path="/packing-checklist/:tripId" element={<PageTransition><PackingChecklist /></PageTransition>} />
+        <Route path="/postcard" element={<PageTransition><PostcardGenerator /></PageTransition>} />
+        <Route path="/trip-montage/:tripId" element={<PageTransition><TripMontage /></PageTransition>} />
+        <Route path="/travel-yearbook" element={<PageTransition><TravelYearbook /></PageTransition>} />
+        <Route path="/leaderboard" element={<PageTransition><Leaderboard /></PageTransition>} />
+        <Route path="/travel-bingo" element={<PageTransition><TravelBingo /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
