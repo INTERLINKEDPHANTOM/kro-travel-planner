@@ -302,6 +302,65 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          user_id: string
+          uses_count: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+          uses_count?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+          uses_count?: number | null
+        }
+        Relationships: []
+      }
+      referral_uses: {
+        Row: {
+          created_at: string | null
+          id: string
+          referral_code_id: string | null
+          referred_user_id: string
+          reward_type: string | null
+          reward_value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referral_code_id?: string | null
+          referred_user_id: string
+          reward_type?: string | null
+          reward_value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referral_code_id?: string | null
+          referred_user_id?: string
+          reward_type?: string | null
+          reward_value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_uses_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_itineraries: {
         Row: {
           created_at: string
@@ -468,6 +527,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      travel_bingo_items: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          item_key: string
+          trip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          item_key: string
+          trip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          item_key?: string
+          trip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_bingo_items_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "saved_itineraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       travel_pages: {
         Row: {
