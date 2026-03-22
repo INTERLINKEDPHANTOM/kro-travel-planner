@@ -360,6 +360,15 @@ const Dashboard = () => {
           </Link>
         </motion.div>
 
+        {/* ── Streaks & Referrals ── */}
+        {user && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23 }}
+            className="grid sm:grid-cols-2 gap-4 mb-6">
+            <TravelStreaks userId={user.id} trips={trips} />
+            <ReferralRewards userId={user.id} />
+          </motion.div>
+        )}
+
         {/* ── Anniversary reminders ── */}
         {trips.some(t => t.preferences?.departureDate) && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}
