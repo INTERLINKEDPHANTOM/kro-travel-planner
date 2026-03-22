@@ -15,6 +15,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TripChatPanel from "@/components/TripChatPanel";
 import SpotifyPlaylistSuggestion from "@/components/SpotifyPlaylistSuggestion";
+import WeatherItineraryShift from "@/components/WeatherItineraryShift";
+import CrowdDensityHeatmap from "@/components/CrowdDensityHeatmap";
+import CurrencyConverterWidget from "@/components/CurrencyConverterWidget";
+import TravelCompatibilityScore from "@/components/TravelCompatibilityScore";
+import AutoTravelBlog from "@/components/AutoTravelBlog";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -909,6 +914,15 @@ const PaidItinerary = () => {
               </a>
             ))}
           </div>
+        </motion.section>
+
+        {/* ─── Smart Travel Widgets ──────────────────────────────────────── */}
+        <motion.section {...fadeUp} className="mb-6 space-y-3">
+          <WeatherItineraryShift destination={preferences?.arrival || "India"} days={it.days} />
+          <CrowdDensityHeatmap destination={preferences?.arrival || "India"} days={it.days} />
+          <CurrencyConverterWidget destination={preferences?.arrival || "India"} budget={preferences?.budget_max ? Number(preferences.budget_max) : undefined} />
+          <TravelCompatibilityScore userId={userId || undefined} />
+          <AutoTravelBlog destination={preferences?.arrival || "India"} days={it.days} preferences={preferences} tripSummary={it.trip_summary} />
         </motion.section>
 
         {/* Destination Gallery */}
