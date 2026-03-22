@@ -317,7 +317,7 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className={`grid gap-3 mb-6 ${isAdmin ? "grid-cols-4 sm:grid-cols-7" : "grid-cols-3 sm:grid-cols-6"}`}
+          className={`grid gap-3 mb-6 grid-cols-3 sm:grid-cols-5 lg:grid-cols-${isAdmin ? "10" : "9"}`}
         >
           {[
             { icon: Compass, label: "Plan Trip", link: "/plan", primary: true },
