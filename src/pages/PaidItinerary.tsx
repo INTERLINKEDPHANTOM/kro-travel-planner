@@ -916,6 +916,15 @@ const PaidItinerary = () => {
           </div>
         </motion.section>
 
+        {/* ─── Smart Travel Widgets ──────────────────────────────────────── */}
+        <motion.section {...fadeUp} className="mb-6 space-y-3">
+          <WeatherItineraryShift destination={preferences?.arrival || destination} days={it.days} />
+          <CrowdDensityHeatmap destination={preferences?.arrival || destination} days={it.days} />
+          <CurrencyConverterWidget destination={preferences?.arrival || destination} budget={preferences?.budget_max ? Number(preferences.budget_max) : undefined} />
+          <TravelCompatibilityScore userId={userId || undefined} />
+          <AutoTravelBlog destination={preferences?.arrival || destination} days={it.days} preferences={preferences} tripSummary={it.trip_summary} />
+        </motion.section>
+
         {/* Destination Gallery */}
         {preferences?.arrival && <DestinationGallery destination={preferences.arrival} />}
 
