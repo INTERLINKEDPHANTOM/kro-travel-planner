@@ -330,6 +330,9 @@ const Dashboard = () => {
             { icon: Target, label: "Bingo", link: "/travel-bingo" },
             { icon: BookOpen, label: "Yearbook", link: "/travel-yearbook" },
             { icon: Mail, label: "Postcard", link: "/postcard" },
+            { icon: Users, label: "Duo Travel", link: "/duo-travel" },
+            { icon: Compass, label: "Passport", link: "/passport" },
+            { icon: Wallet, label: "Expenses", link: "/spend-tracker" },
             { icon: Star, label: "Offers", link: "/offers" },
             ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", link: "/admin", primary: false, admin: true }] : []),
           ].map(({ icon: Icon, label, link, primary, ...rest }) => (
