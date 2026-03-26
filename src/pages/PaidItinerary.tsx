@@ -24,6 +24,9 @@ import TripRating from "@/components/TripRating";
 import TripCostComparison from "@/components/TripCostComparison";
 import PredictiveTripPlanner from "@/components/PredictiveTripPlanner";
 import AISafetyAlerts from "@/components/AISafetyAlerts";
+import AirportGuide from "@/components/AirportGuide";
+import DigitalTravelWallet from "@/components/DigitalTravelWallet";
+import TravelWardrobePlanner from "@/components/TravelWardrobePlanner";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -929,6 +932,9 @@ const PaidItinerary = () => {
           <AutoTravelBlog destination={preferences?.arrival || "India"} days={it.days} preferences={preferences} tripSummary={it.trip_summary} />
           <TripCostComparison destination={preferences?.arrival || "India"} totalCost={it.budget?.total ? parseInt(String(it.budget.total).replace(/[^\d]/g, "")) : 15000} />
           <AISafetyAlerts destination={preferences?.arrival || "India"} />
+          <AirportGuide destination={preferences?.arrival || "India"} />
+          <DigitalTravelWallet tripId={savedId || undefined} />
+          <TravelWardrobePlanner destination={preferences?.arrival || "India"} days={it.days || []} />
           <PredictiveTripPlanner />
           {savedId && <TripRating tripId={savedId} destination={preferences?.arrival || "India"} />}
         </motion.section>
