@@ -80,6 +80,45 @@ export type Database = {
         }
         Relationships: []
       }
+      duo_travel_matches: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          destination: string
+          id: string
+          is_active: boolean | null
+          matched_with: string | null
+          travel_dates_end: string
+          travel_dates_start: string
+          travel_style: string | null
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          destination: string
+          id?: string
+          is_active?: boolean | null
+          matched_with?: string | null
+          travel_dates_end: string
+          travel_dates_start: string
+          travel_style?: string | null
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          destination?: string
+          id?: string
+          is_active?: boolean | null
+          matched_with?: string | null
+          travel_dates_end?: string
+          travel_dates_start?: string
+          travel_style?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       itineraries: {
         Row: {
           content: Json
@@ -182,6 +221,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "notifications_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "saved_itineraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_stamps: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          destination: string
+          id: string
+          stamp_date: string
+          stamp_style: string | null
+          trip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          destination: string
+          id?: string
+          stamp_date?: string
+          stamp_style?: string | null
+          trip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          destination?: string
+          id?: string
+          stamp_date?: string
+          stamp_style?: string | null
+          trip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_stamps_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "saved_itineraries"
@@ -360,6 +440,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      safety_alerts: {
+        Row: {
+          alert_level: string
+          created_at: string | null
+          description: string
+          destination: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          source: string | null
+          title: string
+        }
+        Insert: {
+          alert_level?: string
+          created_at?: string | null
+          description: string
+          destination: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          source?: string | null
+          title: string
+        }
+        Update: {
+          alert_level?: string
+          created_at?: string | null
+          description?: string
+          destination?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          source?: string | null
+          title?: string
+        }
+        Relationships: []
       }
       saved_itineraries: {
         Row: {
@@ -658,6 +774,83 @@ export type Database = {
           },
         ]
       }
+      trip_challenges: {
+        Row: {
+          challenge_key: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          progress: number
+          target: number
+          user_id: string
+        }
+        Insert: {
+          challenge_key: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          progress?: number
+          target?: number
+          user_id: string
+        }
+        Update: {
+          challenge_key?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          progress?: number
+          target?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trip_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          expense_date: string
+          id: string
+          trip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          trip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          trip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_expenses_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "saved_itineraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_messages: {
         Row: {
           created_at: string
@@ -802,6 +995,53 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      trip_ratings: {
+        Row: {
+          created_at: string | null
+          experience_rating: number | null
+          food_rating: number | null
+          id: string
+          is_public: boolean | null
+          overall_rating: number
+          review_text: string | null
+          stay_rating: number | null
+          trip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          experience_rating?: number | null
+          food_rating?: number | null
+          id?: string
+          is_public?: boolean | null
+          overall_rating: number
+          review_text?: string | null
+          stay_rating?: number | null
+          trip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          experience_rating?: number | null
+          food_rating?: number | null
+          id?: string
+          is_public?: boolean | null
+          overall_rating?: number
+          review_text?: string | null
+          stay_rating?: number | null
+          trip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_ratings_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "saved_itineraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
