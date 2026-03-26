@@ -932,6 +932,9 @@ const PaidItinerary = () => {
           <AutoTravelBlog destination={preferences?.arrival || "India"} days={it.days} preferences={preferences} tripSummary={it.trip_summary} />
           <TripCostComparison destination={preferences?.arrival || "India"} totalCost={it.budget?.total ? parseInt(String(it.budget.total).replace(/[^\d]/g, "")) : 15000} />
           <AISafetyAlerts destination={preferences?.arrival || "India"} />
+          <AirportGuide destination={preferences?.arrival || "India"} />
+          <DigitalTravelWallet tripId={savedId || undefined} />
+          <TravelWardrobePlanner destination={preferences?.arrival || "India"} days={it.days || []} />
           <PredictiveTripPlanner />
           {savedId && <TripRating tripId={savedId} destination={preferences?.arrival || "India"} />}
         </motion.section>
