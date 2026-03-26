@@ -20,6 +20,10 @@ import CrowdDensityHeatmap from "@/components/CrowdDensityHeatmap";
 import CurrencyConverterWidget from "@/components/CurrencyConverterWidget";
 import TravelCompatibilityScore from "@/components/TravelCompatibilityScore";
 import AutoTravelBlog from "@/components/AutoTravelBlog";
+import TripRating from "@/components/TripRating";
+import TripCostComparison from "@/components/TripCostComparison";
+import PredictiveTripPlanner from "@/components/PredictiveTripPlanner";
+import AISafetyAlerts from "@/components/AISafetyAlerts";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
