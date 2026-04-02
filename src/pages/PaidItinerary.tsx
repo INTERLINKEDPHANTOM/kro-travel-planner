@@ -1098,6 +1098,16 @@ const PaidItinerary = () => {
           </motion.section>
         )}
 
+        {/* 🎪 Events Happening Nearby */}
+        <motion.section {...fadeUp}>
+          <EventsNearby
+            destination={preferences?.arrival || "India"}
+            departureDate={preferences?.departure_datetime}
+            arrivalDate={preferences?.arrival_datetime}
+            travelStyle={preferences?.travel_persona || "explorer"}
+          />
+        </motion.section>
+
         {/* Travel Tips */}
         {it.travel_tips?.length > 0 && (
           <motion.section {...fadeUp} className="mb-10 sm:mb-12">
