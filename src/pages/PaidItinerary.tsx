@@ -27,6 +27,7 @@ import AISafetyAlerts from "@/components/AISafetyAlerts";
 import AirportGuide from "@/components/AirportGuide";
 import DigitalTravelWallet from "@/components/DigitalTravelWallet";
 import TravelWardrobePlanner from "@/components/TravelWardrobePlanner";
+import EventsNearby from "@/components/EventsNearby";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -1096,6 +1097,16 @@ const PaidItinerary = () => {
             </div>
           </motion.section>
         )}
+
+        {/* 🎪 Events Happening Nearby */}
+        <motion.section {...fadeUp}>
+          <EventsNearby
+            destination={preferences?.arrival || "India"}
+            departureDate={preferences?.departure_datetime}
+            arrivalDate={preferences?.arrival_datetime}
+            travelStyle={preferences?.travel_persona || "explorer"}
+          />
+        </motion.section>
 
         {/* Travel Tips */}
         {it.travel_tips?.length > 0 && (
