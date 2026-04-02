@@ -1105,6 +1105,7 @@ const PaidItinerary = () => {
             departureDate={preferences?.departure_datetime}
             arrivalDate={preferences?.arrival_datetime}
             travelStyle={preferences?.travel_persona || "explorer"}
+            events={it.nearby_events || []}
           />
         </motion.section>
 
