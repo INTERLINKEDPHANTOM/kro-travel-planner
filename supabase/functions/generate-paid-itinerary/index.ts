@@ -405,6 +405,47 @@ Return JSON:
 }`
         );
 
+        // ── STEP 7.5: Events Discovery (AI Call #5) ──
+        send("progress", { step: 7.5, label: "Discovering local events & festivals..." });
+        
+        const startDate = new Date(preferences.departureDate || Date.now());
+        const endDate = new Date(preferences.arrivalDate || startDate.getTime() + context.totalDays * 86400000);
+        const searchStart = new Date(startDate.getTime() - 2 * 86400000);
+        const searchEnd = new Date(endDate.getTime() + 2 * 86400000);
+        const formatEvtDate = (d: Date) => d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+        
+        let eventsData = [];
+        try {
+          const eventsResult = await aiCall(
+            LOVABLE_API_KEY,
+            `You are an event discovery engine for Indian cities. Return ONLY a valid JSON array, no markdown, no explanation.`,
+            `Find real, plausible events happening in or near "${preferences.arrival}" between ${formatEvtDate(searchStart)} and ${formatEvtDate(searchEnd)}.
+
+Include a mix of: concerts, festivals, cultural events, food fairs, exhibitions, sports, nightlife, workshops, markets, religious events, local celebrations.
+
+The traveler's style is "${preferences.travelPersona || "explorer"}". Mark 2-3 events as "isBestForYou" that match this style.
+
+Return a JSON array of 8-10 events:
+[{
+  "name": "Event Name",
+  "date": "12 Apr 2026",
+  "time": "6:00 PM",
+  "venue": "Venue Name, ${preferences.arrival}",
+  "category": "Festival|Concert|Exhibition|Sports|Cultural|Food|Nightlife|Workshop|Market|Religious",
+  "description": "One line description",
+  "isBestForYou": true/false,
+  "bookingQuery": "search query for Google"
+}]`
+          );
+          if (Array.isArray(eventsResult)) {
+            eventsData = eventsResult;
+          } else if (eventsResult?.events) {
+            eventsData = eventsResult.events;
+          }
+        } catch (evtErr) {
+          console.error("Events discovery failed (non-fatal):", evtErr);
+        }
+
         // ── STEP 8: Final Assembly ──
         send("progress", { step: 8, label: "Assembling your complete itinerary..." });
 
