@@ -400,7 +400,9 @@ Return JSON:
       "reason": "string - 1 line why",
       "near_landmark": "string",
       "avg_cost": "string - ₹ per person",
-      "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/RestaurantName+City"
+      "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/RestaurantName+City",
+      "why_this": [{"icon": "💰", "text": "string - fits ₹${foodPerPersonPerDay}/meal budget"}, {"icon": "📍", "text": "string - on Day X route, no extra travel"}, {"icon": "⏱️", "text": "string - time/service benefit"}, {"icon": "🍽️", "text": "string - matches ${preferences.food || 'mixed'} food preference"}],
+      "alternative_hint": "string - cheaper option nearby or null"
     }
   ],
   "travel_tips": ["array of 6-8 practical tips specific to ${preferences.arrival}"],
