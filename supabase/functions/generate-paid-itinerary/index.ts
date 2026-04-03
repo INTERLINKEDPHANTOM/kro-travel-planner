@@ -258,11 +258,9 @@ Return JSON:
       "distance_hub": "string",
       "maps_url": "string - Google Maps search URL",
       "why_choose": "string",
-      "area": "string"
-    },
-    {
-      "name": "string",
-      "tier": "Premium",
+      "area": "string",
+      "why_this": [{"icon": "💰", "text": "budget reason"}, {"icon": "📍", "text": "location reason"}, {"icon": "⭐", "text": "value reason"}],
+      "alternative_hint": "string or null"
       "description": "string",
       "price_per_night": "string",
       "total_cost": "string",
