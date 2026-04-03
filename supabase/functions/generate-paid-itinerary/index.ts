@@ -179,7 +179,8 @@ Return JSON:
       "comfort": "string - basic/moderate/premium",
       "feasibility": "string - recommended/possible/expensive/unavailable",
       "availability_note": "string - likely available / waitlist / sold out etc",
-      "tips": "string - 1 line practical tip"
+      "tips": "string - 1 line practical tip",
+      "why_this": [{"icon": "💰", "text": "string - cost advantage"}, {"icon": "⏱️", "text": "string - time/comfort reason"}, {"icon": "🎯", "text": "string - best fit for ${userPersona} style"}]
     }
   ],
   "selected_outbound": {
@@ -243,7 +244,9 @@ Return JSON:
       "distance_hub": "string",
       "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/HotelName+City",
       "why_choose": "string - 1 line reason",
-      "area": "string - locality name"
+      "area": "string - locality name",
+      "why_this": [{"icon": "💰", "text": "how it fits budget"}, {"icon": "📍", "text": "proximity benefit"}, {"icon": "⭐", "text": "value for ${userPersona} traveler"}],
+      "alternative_hint": "string - cheaper option nearby or null"
     },
     {
       "name": "string",
@@ -256,11 +259,9 @@ Return JSON:
       "distance_hub": "string",
       "maps_url": "string - Google Maps search URL",
       "why_choose": "string",
-      "area": "string"
-    },
-    {
-      "name": "string",
-      "tier": "Premium",
+      "area": "string",
+      "why_this": [{"icon": "💰", "text": "budget reason"}, {"icon": "📍", "text": "location reason"}, {"icon": "⭐", "text": "value reason"}],
+      "alternative_hint": "string or null"
       "description": "string",
       "price_per_night": "string",
       "total_cost": "string",
@@ -269,7 +270,9 @@ Return JSON:
       "distance_hub": "string",
       "maps_url": "string - Google Maps search URL",
       "why_choose": "string",
-      "area": "string"
+      "area": "string",
+      "why_this": [{"icon": "💰", "text": "budget reason"}, {"icon": "📍", "text": "location reason"}, {"icon": "⭐", "text": "value reason"}],
+      "alternative_hint": "string or null"
     }
   ],
   "hotel_cluster_area": "string - the area/locality where all 3 are located",
@@ -368,7 +371,9 @@ Return JSON:
           "note": "string - 1 line note",
           "duration": "string",
           "cost": "string - ₹ amount or Free (must stay within ₹${actPerPersonPerDay}/person budget)",
-          "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/PlaceName+${encodeURIComponent(preferences.arrival)}"
+          "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/PlaceName+${encodeURIComponent(preferences.arrival)}",
+          "why_this": [{"icon": "📍", "text": "string - why this place fits the route/timing"}, {"icon": "💰", "text": "string - budget fit"}, {"icon": "🎯", "text": "string - relevance to ${userPersona} style"}],
+          "alternative_hint": "string - nearby cheaper/faster alternative or null"
         }
       ]
     }
@@ -396,7 +401,9 @@ Return JSON:
       "reason": "string - 1 line why",
       "near_landmark": "string",
       "avg_cost": "string - ₹ per person",
-      "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/RestaurantName+City"
+      "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/RestaurantName+City",
+      "why_this": [{"icon": "💰", "text": "string - fits ₹${foodPerPersonPerDay}/meal budget"}, {"icon": "📍", "text": "string - on Day X route, no extra travel"}, {"icon": "⏱️", "text": "string - time/service benefit"}, {"icon": "🍽️", "text": "string - matches ${preferences.food || 'mixed'} food preference"}],
+      "alternative_hint": "string - cheaper option nearby or null"
     }
   ],
   "travel_tips": ["array of 6-8 practical tips specific to ${preferences.arrival}"],
@@ -434,7 +441,8 @@ Return a JSON array of 8-10 events:
   "category": "Festival|Concert|Exhibition|Sports|Cultural|Food|Nightlife|Workshop|Market|Religious",
   "description": "One line description",
   "isBestForYou": true/false,
-  "bookingQuery": "search query for Google"
+  "bookingQuery": "search query for Google",
+  "why_this": [{"icon": "🎯", "text": "string - why it matches their travel style"}, {"icon": "📅", "text": "string - timing fit with trip dates"}, {"icon": "📍", "text": "string - location convenience"}]
 }]`
           );
           if (Array.isArray(eventsResult)) {

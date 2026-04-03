@@ -28,6 +28,7 @@ import AirportGuide from "@/components/AirportGuide";
 import DigitalTravelWallet from "@/components/DigitalTravelWallet";
 import TravelWardrobePlanner from "@/components/TravelWardrobePlanner";
 import EventsNearby from "@/components/EventsNearby";
+import WhyThisTooltip from "@/components/WhyThisTooltip";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -485,6 +486,11 @@ const DayCarousel = ({
                           </span>
                         )}
                       </div>
+                      {act.why_this && act.why_this.length > 0 && (
+                        <div className="mt-1.5">
+                          <WhyThisTooltip reasons={act.why_this} alternative={act.alternative_hint} />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1005,6 +1011,11 @@ const PaidItinerary = () => {
                       </p>
                     )}
                   </div>
+                  {hotel.why_this && hotel.why_this.length > 0 && (
+                    <div className="mt-2">
+                      <WhyThisTooltip reasons={hotel.why_this} alternative={hotel.alternative_hint} />
+                    </div>
+                  )}
                   <div className="flex gap-3 mt-auto pt-3 border-t border-border/30">
                     {hotel.maps_url && (
                       <a href={hotel.maps_url} target="_blank" rel="noopener noreferrer"
@@ -1057,6 +1068,11 @@ const PaidItinerary = () => {
                       </span>
                     )}
                   </div>
+                  {r.why_this && r.why_this.length > 0 && (
+                    <div className="mt-2">
+                      <WhyThisTooltip reasons={r.why_this} alternative={r.alternative_hint} />
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>
