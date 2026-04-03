@@ -243,7 +243,9 @@ Return JSON:
       "distance_hub": "string",
       "maps_url": "string - Google Maps search URL like https://www.google.com/maps/search/HotelName+City",
       "why_choose": "string - 1 line reason",
-      "area": "string - locality name"
+      "area": "string - locality name",
+      "why_this": [{"icon": "💰", "text": "how it fits budget"}, {"icon": "📍", "text": "proximity benefit"}, {"icon": "⭐", "text": "value for ${userPersona} traveler"}],
+      "alternative_hint": "string - cheaper option nearby or null"
     },
     {
       "name": "string",
