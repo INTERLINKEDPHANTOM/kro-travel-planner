@@ -179,7 +179,8 @@ Return JSON:
       "comfort": "string - basic/moderate/premium",
       "feasibility": "string - recommended/possible/expensive/unavailable",
       "availability_note": "string - likely available / waitlist / sold out etc",
-      "tips": "string - 1 line practical tip"
+      "tips": "string - 1 line practical tip",
+      "why_this": [{"icon": "💰", "text": "string - cost advantage"}, {"icon": "⏱️", "text": "string - time/comfort reason"}, {"icon": "🎯", "text": "string - best fit for ${userPersona} style"}]
     }
   ],
   "selected_outbound": {
