@@ -1,20 +1,19 @@
-import json
 from fpdf import FPDF
 
 class TrackerPDF(FPDF):
     def header(self):
-        self.set_font('Arial', 'B', 16)
+        self.set_font('helvetica', 'B', 16)
         self.cell(0, 10, 'OS for Travel - Revamp Tracker', 0, 1, 'C')
         self.ln(5)
 
     def chapter_title(self, title):
-        self.set_font('Arial', 'B', 14)
+        self.set_font('helvetica', 'B', 14)
         self.set_fill_color(240, 240, 240)
-        self.cell(0, 10, title, 0, 1, 'L', 1)
+        self.cell(0, 10, title, 0, 1, 'L', True)
         self.ln(2)
 
     def item(self, text, status):
-        self.set_font('Arial', '', 12)
+        self.set_font('helvetica', '', 12)
         mark = "[X]" if status else "[ ]"
         self.multi_cell(0, 8, f"{mark} {text}")
         self.ln(1)
@@ -46,14 +45,15 @@ pages = [
     ("CreatorStudio", "Pending"), ("MyTrips", "Pending"), ("Admin", "Pending"),
     ("Auth", "Pending"), ("TravelMap", "Pending")
 ]
-pdf.set_font('Arial', 'B', 10)
-pdf.cell(80, 8, "Page", 1)
-pdf.cell(80, 8, "Status", 1)
+
+pdf.set_font('helvetica', 'B', 10)
+pdf.cell(90, 8, "Page", 1)
+pdf.cell(90, 8, "Status", 1)
 pdf.ln()
-pdf.set_font('Arial', '', 10)
+pdf.set_font('helvetica', '', 10)
 for p, s in pages:
-    pdf.cell(80, 8, p, 1)
-    pdf.cell(80, 8, s, 1)
+    pdf.cell(90, 8, p, 1)
+    pdf.cell(90, 8, s, 1)
     pdf.ln()
 
 pdf.output("/mnt/documents/revamp-tracker.pdf")
