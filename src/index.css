@@ -139,6 +139,11 @@
     background: hsl(var(--primary));
     color: hsl(var(--primary-foreground));
     box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
   }
 
   .btn-primary:hover {
@@ -151,365 +156,46 @@
     @apply px-6 py-2.5 rounded-full font-medium border border-border transition-all duration-300;
     background: transparent;
     color: hsl(var(--foreground));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
   }
 
   .btn-secondary:hover {
     background: rgba(0, 0, 0, 0.02);
     border-color: rgba(0, 0, 0, 0.15);
   }
-}
-
-  /* ── Intense Glass ── (for hero cards) */
-  .glass-intense {
-    background: linear-gradient(
-      135deg,
-      hsla(148, 50%, 98%, 0.60) 0%,
-      hsla(155, 45%, 95%, 0.42) 100%
-    );
-    backdrop-filter: blur(32px) saturate(2);
-    -webkit-backdrop-filter: blur(32px) saturate(2);
-    border: 1px solid hsla(148, 60%, 80%, 0.50);
-    border-radius: 2rem;
-    box-shadow:
-      0 0 0 1px hsla(148, 50%, 82%, 0.28),
-      0 20px 60px hsla(158, 45%, 18%, 0.12),
-      0 0 80px hsla(152, 60%, 60%, 0.16),
-      inset 0 1px 0 hsla(0, 0%, 100%, 0.5);
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* ── Buttons ── */
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    border-radius: 9999px;
-    padding: 0.9rem 2.5rem;
-    font-size: 0.9375rem;
-    font-weight: 700;
-    font-family: 'Inter', sans-serif;
-    color: hsl(0 0% 100%);
-    background: linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%));
-    box-shadow: 0 4px 24px hsla(158, 42%, 36%, 0.40), inset 0 1px 0 hsla(0,0%,100%,0.18);
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    border: none;
-    cursor: pointer;
-    letter-spacing: -0.015em;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, hsla(0,0%,100%,0.15) 0%, transparent 60%);
-    border-radius: inherit;
-    pointer-events: none;
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 36px hsla(158, 42%, 36%, 0.50), inset 0 1px 0 hsla(0,0%,100%,0.22);
-  }
 
   .btn-ghost-glass {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    border-radius: 9999px;
-    padding: 0.9rem 2.5rem;
-    font-size: 0.9375rem;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    color: hsl(158, 38%, 22%);
-    background: hsla(148, 45%, 98%, 0.35);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsla(148, 40%, 68%, 0.55);
-    box-shadow: 0 2px 16px hsla(148, 35%, 40%, 0.10);
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    cursor: pointer;
-    letter-spacing: -0.01em;
+    @apply btn-secondary;
   }
 
-  .btn-ghost-glass:hover {
-    background: hsla(148, 45%, 96%, 0.55);
-    border-color: hsla(148, 45%, 58%, 0.65);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 24px hsla(148, 35%, 40%, 0.14);
+  .glass-intense {
+    @apply glass-panel;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 
-  /* Legacy aliases */
-  .btn-outline { @apply btn-ghost-glass; }
-  .btn-outline-glass { @apply btn-ghost-glass; }
-
-  /* ── Cards ── */
-  .warm-card { @apply glass-panel; }
-  .warm-card-hover {
-    @apply glass-panel transition-all duration-300;
-  }
-  .warm-card-hover:hover {
-    transform: translateY(-5px);
-    box-shadow:
-      0 20px 56px hsla(158, 45%, 18%, 0.14),
-      0 0 0 1px hsla(148, 45%, 70%, 0.38),
-      0 0 60px hsla(152, 60%, 58%, 0.12);
-  }
-  .glass-card { @apply glass-panel; }
-  .glass-card-hover { @apply warm-card-hover; }
-
-  /* ── Spacing ── */
   .section-padding {
     @apply px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36;
   }
 
-  /* ── Glows ── */
-  .glow-primary {
-    box-shadow: 0 0 70px hsla(152, 60%, 58%, 0.18), 0 10px 36px hsla(158, 45%, 18%, 0.09);
-  }
-  .glow-accent {
-    box-shadow: 0 0 48px hsla(152, 60%, 58%, 0.15);
-  }
-
-  /* ── Gradient text ── */
-  .gradient-text {
-    background: linear-gradient(135deg, hsl(162, 38%, 32%), hsl(152, 50%, 48%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .gradient-text-warm { @apply gradient-text; }
-
-  /* ── Ambient orbs ── */
-  .ambient-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    pointer-events: none;
-  }
-  .ambient-orb-1 {
-    @apply ambient-orb;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, hsla(152, 65%, 68%, 0.20) 0%, transparent 70%);
-  }
-  .ambient-orb-2 {
-    @apply ambient-orb;
-    width: 400px; height: 400px;
-    background: radial-gradient(circle, hsla(148, 55%, 63%, 0.16) 0%, transparent 70%);
-  }
-
-  /* ── Nav glass ── */
-  .nav-glass {
-    background: hsla(148, 38%, 97%, 0.78);
-    backdrop-filter: blur(28px) saturate(1.6);
-    -webkit-backdrop-filter: blur(28px) saturate(1.6);
-    border-bottom: 1px solid hsla(148, 35%, 78%, 0.42);
-    box-shadow: 0 4px 24px hsla(158, 45%, 18%, 0.06);
-  }
-
-  /* ── Glass input ── */
-  .glass-input {
-    background: hsla(148, 40%, 98%, 0.55);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1.5px solid hsla(148, 40%, 72%, 0.45);
-    border-radius: 1rem;
-    transition: all 0.25s ease;
-    color: hsl(158, 45%, 10%);
-  }
-  .glass-input:focus {
-    border-color: hsl(158, 40%, 38%);
-    box-shadow: 0 0 0 3px hsla(158, 40%, 38%, 0.12), 0 4px 16px hsla(148, 40%, 40%, 0.10);
-    background: hsla(148, 40%, 99%, 0.75);
-    outline: none;
-  }
-  .glass-input::placeholder {
-    color: hsl(158, 18%, 55%);
-  }
-
-  /* ── Progress bar ── */
-  .progress-bar-track {
-    height: 6px;
-    background: hsla(148, 35%, 80%, 0.5);
-    border-radius: 999px;
-    overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, hsl(158, 42%, 40%), hsl(152, 55%, 52%));
-    transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-    box-shadow: 0 0 12px hsla(152, 55%, 52%, 0.4);
-  }
-
-  /* ── Pill select button ── */
-  .pill-select {
-    border: 1.5px solid hsla(148, 40%, 72%, 0.45);
-    background: hsla(148, 40%, 98%, 0.40);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-radius: 9999px;
-    padding: 0.55rem 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.22s ease;
-    color: hsl(158, 30%, 30%);
-  }
-  .pill-select:hover {
-    border-color: hsl(158, 40%, 50%);
-    background: hsla(148, 45%, 96%, 0.65);
-  }
-  .pill-select.active {
-    background: linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 30%));
-    border-color: transparent;
-    color: white;
-    box-shadow: 0 4px 16px hsla(158, 42%, 36%, 0.35);
-  }
-
-  /* ── Persona card ── */
-  .persona-card {
-    border: 1.5px solid hsla(148, 40%, 72%, 0.40);
-    background: hsla(148, 40%, 98%, 0.35);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 1.25rem;
-    padding: 1rem;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
-    text-align: left;
-  }
-  .persona-card:hover {
-    transform: translateY(-3px);
-    border-color: hsl(158, 40%, 50%);
-    box-shadow: 0 8px 24px hsla(158, 42%, 36%, 0.14);
-  }
-  .persona-card.active {
-    background: linear-gradient(135deg, hsla(158, 45%, 38%, 0.92), hsla(162, 48%, 26%, 0.90));
-    border-color: transparent;
-    box-shadow: 0 8px 28px hsla(158, 42%, 36%, 0.35), inset 0 1px 0 hsla(0,0%,100%,0.15);
-    color: white;
-  }
-
-  /* ── Budget slider track ── */
-  .budget-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 8px;
-    border-radius: 999px;
-    outline: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: linear-gradient(
-      to right,
-      hsl(158, 42%, 40%) 0%,
-      hsl(152, 55%, 52%) var(--val, 50%),
-      hsla(148, 35%, 80%, 0.5) var(--val, 50%),
-      hsla(148, 35%, 80%, 0.5) 100%
-    );
-  }
-  .budget-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: white;
-    border: 3px solid hsl(158, 42%, 40%);
-    box-shadow: 0 2px 12px hsla(158, 42%, 36%, 0.35);
-    cursor: grab;
-    transition: all 0.2s;
-  }
-  .budget-slider::-webkit-slider-thumb:active {
-    cursor: grabbing;
-    transform: scale(1.2);
-    box-shadow: 0 4px 20px hsla(158, 42%, 36%, 0.50);
-  }
-  .budget-slider::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: white;
-    border: 3px solid hsl(158, 42%, 40%);
-    box-shadow: 0 2px 12px hsla(158, 42%, 36%, 0.35);
-    cursor: grab;
-  }
-
-  /* ── Day swipe carousel ── */
-  .day-carousel-item {
-    scroll-snap-align: start;
-    flex-shrink: 0;
-  }
-
-  /* ── Section label ── */
   .section-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: hsl(152, 48%, 44%);
+    @apply text-xs font-bold uppercase tracking-widest text-primary mb-3;
   }
-
-  .text-balance { text-wrap: balance; }
 
   .hover-lift {
-    @apply transition-all duration-300;
+    @apply transition-transform duration-300 hover:-translate-y-1;
   }
-  .hover-lift:hover { transform: translateY(-4px); }
-  .noise-overlay { position: relative; }
 
-  /* ── Destination image card ── */
   .dest-photo-card {
-    position: relative;
-    border-radius: 1.5rem;
-    overflow: hidden;
-    border: 1px solid hsla(148, 45%, 72%, 0.38);
-    box-shadow: 0 8px 32px hsla(158, 45%, 18%, 0.10);
-    aspect-ratio: 4/3;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-  .dest-photo-card:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 20px 48px hsla(158, 45%, 18%, 0.16), 0 0 0 1px hsla(148, 50%, 68%, 0.45);
-  }
-  .dest-photo-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s ease;
-  }
-  .dest-photo-card:hover img {
-    transform: scale(1.08);
+    @apply relative overflow-hidden rounded-2xl border border-border transition-all duration-500 hover:scale-[1.02] hover:shadow-xl;
   }
 
-  /* ── Booking link chip ── */
   .booking-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1.2rem;
-    border-radius: 9999px;
-    background: hsla(148, 45%, 98%, 0.50);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1.5px solid hsla(148, 40%, 70%, 0.45);
-    font-size: 0.825rem;
-    font-weight: 600;
-    color: hsl(158, 38%, 22%);
-    cursor: pointer;
-    transition: all 0.25s ease;
-    text-decoration: none;
-  }
-  .booking-chip:hover {
-    background: linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%));
-    color: white;
-    border-color: transparent;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px hsla(158, 42%, 36%, 0.32);
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-sm font-medium transition-all hover:bg-primary hover:text-primary-foreground hover:border-transparent;
   }
 }
 
