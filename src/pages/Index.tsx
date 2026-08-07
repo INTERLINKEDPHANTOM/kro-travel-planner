@@ -156,51 +156,63 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
+          transition={{ duration: 1, delay: 0.5, ease: [0.23, 1, 0.32, 1] }}
           className="mt-20 w-full max-w-5xl mx-auto px-4"
         >
-          <div className="bento-grid grid-cols-1 md:grid-cols-3">
-            <div className="bento-card md:col-span-2 flex flex-col justify-between">
+          <div className="bento-grid md:grid-cols-3">
+            <div className="bento-card md:col-span-2 flex flex-col justify-between group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                <Sparkles className="w-24 h-24 text-primary" />
+              </div>
               <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Map className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Terminal className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold">Personalized Route</h3>
-                    <p className="text-xs text-muted-foreground">Optimized for your pace</p>
+                    <h3 className="font-bold font-mono text-sm uppercase tracking-wider">Neural Routing Engine</h3>
+                    <p className="text-[10px] text-muted-foreground font-mono">Process-ID: RT-8829-X</p>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
-                      <div className="text-xs font-bold text-primary">0{i}</div>
-                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                <div className="space-y-4">
+                  {[
+                    { label: "Temporal Alignment", val: 94 },
+                    { label: "Spatial Optimization", val: 82 },
+                    { label: "Human Variance", val: 67 }
+                  ].map((stat, i) => (
+                    <div key={stat.label} className="space-y-1">
+                      <div className="flex justify-between text-[10px] font-mono uppercase tracking-tighter text-muted-foreground">
+                        <span>{stat.label}</span>
+                        <span>{stat.val}%</span>
+                      </div>
+                      <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
-                          animate={{ width: `${40 + i * 20}%` }}
-                          transition={{ duration: 1, delay: 0.8 + i * 0.1 }}
-                          className="h-full bg-primary/40"
+                          animate={{ width: `${stat.val}%` }}
+                          transition={{ duration: 1.5, delay: 1 + i * 0.2, ease: "circOut" }}
+                          className="h-full bg-primary/60"
                         />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="mt-8 flex items-center justify-between text-xs text-muted-foreground border-t border-border/50 pt-4">
-                <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Verified Data</span>
-                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Updated 2m ago</span>
+              <div className="mt-12 flex items-center justify-between text-[10px] font-mono text-muted-foreground border-t border-border/20 pt-4">
+                <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" /> Encrypted Payload</span>
+                <span className="flex items-center gap-1.5"><Cpu className="w-3 h-3" /> Hardware Accel</span>
               </div>
             </div>
             
-            <div className="bento-card bg-primary text-primary-foreground">
-              <div className="h-full flex flex-col justify-between">
-                <div>
-                  <Zap className="w-8 h-8 mb-4 opacity-80" />
-                  <h3 className="text-xl font-bold mb-2">Instant Gen</h3>
-                  <p className="text-sm opacity-80">Generate full trips in under 30 seconds with our neural engine.</p>
-                </div>
-                <div className="text-3xl font-mono font-bold">99.8%</div>
+            <div className="bento-card bg-foreground text-background border-none flex flex-col justify-between overflow-hidden">
+              <div className="absolute -right-4 -top-4 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+              <div>
+                <Zap className="w-8 h-8 mb-6 text-primary" />
+                <h3 className="text-2xl font-bold mb-4 tracking-tighter">Instant Deployment.</h3>
+                <p className="text-xs opacity-60 leading-relaxed font-medium">Full global itinerary synchronization in under 400ms. Zero-latency planning.</p>
+              </div>
+              <div className="mt-8">
+                <div className="text-4xl font-mono font-bold tracking-tighter text-primary">0.4s</div>
+                <div className="text-[10px] font-mono opacity-40 uppercase tracking-widest mt-1">Response Time</div>
               </div>
             </div>
           </div>
