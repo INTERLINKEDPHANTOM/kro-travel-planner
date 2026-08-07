@@ -54,17 +54,37 @@ This tracker monitors the status of the frontend overhaul to align with the high
 ---
 
 ## 📄 Full Page Inventory & Status
-| Page | Category | Status |
-| :--- | :--- | :--- |
-| Index | Landing | 🟢 Completed (V1) |
-| PlanTrip | Engine | 🟡 In Progress |
-| PlanSelection | Engine | 🔴 Pending |
-| FreeItinerary | Engine | 🔴 Pending |
-| PaidItinerary | Engine | 🔴 Pending |
-| Dashboard | Private | 🔴 Pending |
-| CreatorStudio | Private | 🔴 Pending |
-| MyTrips | Private | 🔴 Pending |
-| Admin | Management | 🔴 Pending |
-| Auth | Public | 🔴 Pending |
-| TravelMap | Social | 🔴 Pending |
-| ... (and 20+ more) | Utilities | 🔴 Pending |
+| Page | Route | Category | Status |
+| :--- | :--- | :--- | :--- |
+| Index | `/` | Landing | 🟢 Completed (V1) |
+| PlanTrip | `/plan` | Engine | 🟡 In Progress |
+| PlanSelection | `/plans` | Engine | 🔴 Pending |
+| FreeItinerary | `/itinerary/:destination` | Engine | 🔴 Pending |
+| PaidItinerary | `/paid-itinerary` | Engine | 🔴 Pending |
+| Dashboard | `/dashboard` | Private | 🔴 Pending |
+| MyTrips | `/my-trips` | Private | 🔴 Pending |
+| CreatorStudio | `/creator-studio` | Private | 🔴 Pending |
+| TripGallery | `/trip-gallery/:tripId` | Social | 🔴 Pending |
+| Destinations | `/destinations` | Public | 🔴 Pending |
+| About | `/about` | Public | 🔴 Pending |
+| Founder | `/founder` | Public | 🔴 Pending |
+| Contact | `/contact` | Public | 🔴 Pending |
+| Legal | `/legal` | Public | 🔴 Pending |
+| Offers | `/offers` | Public | 🔴 Pending |
+| Checkout | `/checkout` | Engine | 🔴 Pending |
+| Auth | `/auth` | Public | 🔴 Pending |
+| Admin | `/admin` | Management | 🔴 Pending |
+| TripChat | `/trip-chat/:tripId` | Social | 🔴 Pending |
+| TravelPage | `/travel/:slug` | Public | 🔴 Pending |
+| TripWrapped | `/trip-wrapped/:tripId` | Multimedia | 🔴 Pending |
+| TravelMap | `/travel-map` | Intelligence | 🔴 Pending |
+| PackingChecklist | `/packing-checklist` | Intelligence | 🔴 Pending |
+| PostcardGenerator | `/postcard` | Multimedia | 🔴 Pending |
+| TripMontage | `/trip-montage/:tripId` | Multimedia | 🔴 Pending |
+| TravelYearbook | `/travel-yearbook` | Multimedia | 🔴 Pending |
+| Leaderboard | `/leaderboard` | Gamification | 🔴 Pending |
+| TravelBingo | `/travel-bingo` | Gamification | 🔴 Pending |
+| DuoTravel | `/duo-travel` | Social | 🔴 Pending |
+| PassportStamps | `/passport` | Gamification | 🔴 Pending |
+| SpendTracker | `/spend-tracker` | Financial | 🔴 Pending |
+| NotFound | `*` | Management | 🔴 Pending |

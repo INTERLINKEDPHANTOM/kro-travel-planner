@@ -1,59 +1,85 @@
 from fpdf import FPDF
+import os
 
-class TrackerPDF(FPDF):
+class PDF(FPDF):
     def header(self):
-        self.set_font('helvetica', 'B', 16)
-        self.cell(0, 10, 'OS for Travel - Revamp Tracker', 0, 1, 'C')
+        self.set_font('Helvetica', 'B', 16)
+        self.cell(0, 10, 'OS for Travel Revamp - Implementation Tracker', 0, 1, 'C')
         self.ln(5)
 
-    def chapter_title(self, title):
-        self.set_font('helvetica', 'B', 14)
-        self.set_fill_color(240, 240, 240)
-        self.cell(0, 10, title, 0, 1, 'L', True)
-        self.ln(2)
+    def chapter_title(self, label):
+        self.set_font('Helvetica', 'B', 12)
+        self.set_fill_color(200, 220, 255)
+        self.cell(0, 10, label, 0, 1, 'L', True)
+        self.ln(4)
 
-    def item(self, text, status):
-        self.set_font('helvetica', '', 12)
-        mark = "[X]" if status else "[ ]"
-        self.multi_cell(0, 8, f"{mark} {text}")
-        self.ln(1)
+    def chapter_body(self, body):
+        self.set_font('Helvetica', '', 10)
+        self.multi_cell(0, 6, body)
+        self.ln()
 
-pdf = TrackerPDF()
-pdf.add_page()
+def generate_tracker_pdf():
+    pdf = PDF()
+    pdf.add_page()
+    
+    # Inventory Table
+    pdf.set_font('Helvetica', 'B', 12)
+    pdf.cell(0, 10, 'Complete Page Inventory', 0, 1, 'L')
+    pdf.ln(2)
+    
+    pdf.set_font('Helvetica', 'B', 9)
+    # Header
+    pdf.set_fill_color(240, 240, 240)
+    pdf.cell(50, 8, 'Page', 1, 0, 'L', True)
+    pdf.cell(70, 8, 'Route', 1, 0, 'L', True)
+    pdf.cell(40, 8, 'Category', 1, 0, 'L', True)
+    pdf.cell(30, 8, 'Status', 1, 1, 'L', True)
+    
+    pdf.set_font('Helvetica', '', 8)
+    pages = [
+        ("Index", "/", "Landing", "Completed (V1)"),
+        ("PlanTrip", "/plan", "Engine", "In Progress"),
+        ("PlanSelection", "/plans", "Engine", "Pending"),
+        ("FreeItinerary", "/itinerary/:destination", "Engine", "Pending"),
+        ("PaidItinerary", "/paid-itinerary", "Engine", "Pending"),
+        ("Dashboard", "/dashboard", "Private", "Pending"),
+        ("MyTrips", "/my-trips", "Private", "Pending"),
+        ("CreatorStudio", "/creator-studio", "Private", "Pending"),
+        ("TripGallery", "/trip-gallery/:tripId", "Social", "Pending"),
+        ("Destinations", "/destinations", "Public", "Pending"),
+        ("About", "/about", "Public", "Pending"),
+        ("Founder", "/founder", "Public", "Pending"),
+        ("Contact", "/contact", "Public", "Pending"),
+        ("Legal", "/legal", "Public", "Pending"),
+        ("Offers", "/offers", "Public", "Pending"),
+        ("Checkout", "/checkout", "Engine", "Pending"),
+        ("Auth", "/auth", "Public", "Pending"),
+        ("Admin", "/admin", "Management", "Pending"),
+        ("TripChat", "/trip-chat/:tripId", "Social", "Pending"),
+        ("TravelPage", "/travel/:slug", "Public", "Pending"),
+        ("TripWrapped", "/trip-wrapped/:tripId", "Multimedia", "Pending"),
+        ("TravelMap", "/travel-map", "Intelligence", "Pending"),
+        ("PackingChecklist", "/packing-checklist", "Intelligence", "Pending"),
+        ("PostcardGenerator", "/postcard", "Multimedia", "Pending"),
+        ("TripMontage", "/trip-montage/:tripId", "Multimedia", "Pending"),
+        ("TravelYearbook", "/travel-yearbook", "Multimedia", "Pending"),
+        ("Leaderboard", "/leaderboard", "Gamification", "Pending"),
+        ("TravelBingo", "/travel-bingo", "Gamification", "Pending"),
+        ("DuoTravel", "/duo-travel", "Social", "Pending"),
+        ("PassportStamps", "/passport", "Gamification", "Pending"),
+        ("SpendTracker", "/spend-tracker", "Financial", "Pending"),
+        ("NotFound", "*", "Management", "Pending")
+    ]
+    
+    for name, route, cat, status in pages:
+        pdf.cell(50, 7, name, 1)
+        pdf.cell(70, 7, route, 1)
+        pdf.cell(40, 7, cat, 1)
+        pdf.cell(30, 7, status, 1, 1)
 
-# Phase 1
-pdf.chapter_title("Phase 1: Foundation (Design System)")
-pdf.item("Core Palette: Deep Emerald & Monochrome", True)
-pdf.item("Typography Scale: Inter & Geist", True)
-pdf.item("UI Components: Glass & Bento", True)
-pdf.item("Global Command Menu (CMD+K)", False)
-pdf.item("High-fidelity toast notifications", False)
+    output_path = "/mnt/documents/revamp-tracker.pdf"
+    pdf.output(output_path)
+    print(f"PDF generated at {output_path}")
 
-# Phase 2
-pdf.chapter_title("Phase 2: Landing Page")
-pdf.item("Hero Section: Bento-grid AI Preview", True)
-pdf.item("Navigation: Precision-blur Navbar", True)
-pdf.item("How It Works & Discovery Grids", True)
-pdf.item("Announcement Banner", True)
-pdf.item("Scroll-linked animations", False)
-
-# Full Inventory
-pdf.chapter_title("Page Inventory Status")
-pages = [
-    ("Index", "Completed"), ("PlanTrip", "In Progress"), ("PlanSelection", "Pending"),
-    ("FreeItinerary", "Pending"), ("PaidItinerary", "Pending"), ("Dashboard", "Pending"),
-    ("CreatorStudio", "Pending"), ("MyTrips", "Pending"), ("Admin", "Pending"),
-    ("Auth", "Pending"), ("TravelMap", "Pending")
-]
-
-pdf.set_font('helvetica', 'B', 10)
-pdf.cell(90, 8, "Page", 1)
-pdf.cell(90, 8, "Status", 1)
-pdf.ln()
-pdf.set_font('helvetica', '', 10)
-for p, s in pages:
-    pdf.cell(90, 8, p, 1)
-    pdf.cell(90, 8, s, 1)
-    pdf.ln()
-
-pdf.output("/mnt/documents/revamp-tracker.pdf")
+if __name__ == "__main__":
+    generate_tracker_pdf()
