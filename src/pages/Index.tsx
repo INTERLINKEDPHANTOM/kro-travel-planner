@@ -95,46 +95,36 @@ const Index = () => {
       </AnimatePresence>
 
       {/* ── Hero ── */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 pt-24 pb-16 z-10">
-        <div className="max-w-4xl mx-auto text-center w-full">
-
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 pt-32 pb-16 z-10 overflow-hidden">
+        <div className="max-w-6xl mx-auto text-center w-full">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel mb-8 text-xs sm:text-sm font-medium"
-            style={{ color: "hsl(158, 38%, 28%)" }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-8 text-xs font-medium text-primary"
           >
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
-            AI + Human Verified Itineraries
-            <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            AI-Engine v2.0 Live
           </motion.div>
 
           {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl sm:text-6xl lg:text-8xl font-heading leading-[1.05] mb-6 tracking-tight"
-            style={{ color: "hsl(158, 45%, 10%)" }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight mb-8 text-foreground"
           >
-            <motion.span
-              className="text-mint-gradient italic inline-block"
-              animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            >
-              {heroHeadline}
-            </motion.span>
+            Travel planning, <br />
+            <span className="text-primary italic">redefined by AI.</span>
           </motion.h1>
 
           {/* Subhead */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-xl max-w-xl mx-auto mb-10 leading-relaxed font-light px-4"
-            style={{ color: "hsl(158, 20%, 44%)" }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
             {heroSubheadline}
           </motion.p>
@@ -144,94 +134,75 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link to="/plan" className="w-full sm:w-auto">
-              <button className="btn-primary text-sm sm:text-base w-full sm:w-auto px-8 py-4 flex items-center justify-center gap-2 group animate-glow-ring">
+              <button className="btn-primary w-full sm:w-auto text-base px-10 py-4">
                 {ctaPrimary}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
             <Link to="/destinations" className="w-full sm:w-auto">
-              <button className="btn-ghost-glass text-sm sm:text-base w-full sm:w-auto px-8 py-4 flex items-center justify-center gap-2">
+              <button className="btn-secondary w-full sm:w-auto text-base px-10 py-4 flex items-center justify-center gap-2">
                 <Globe className="w-4 h-4" />
                 {ctaSecondary}
               </button>
             </Link>
           </motion.div>
-
-          {/* Stats row */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="grid grid-cols-4 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-12 mb-14"
-          >
-            {stats.map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="text-xl sm:text-3xl font-bold text-mint-gradient">{s.value}</div>
-                <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* Hero glass preview card */}
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1, delay: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="glass-intense p-5 sm:p-8 max-w-2xl mx-auto animate-float"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "hsla(158, 42%, 38%, 0.15)" }}>
-                  <Map className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-xs sm:text-sm font-bold text-left" style={{ color: "hsl(158, 45%, 18%)" }}>
-                  AI Trip Preview — Manali 3 Days
-                </span>
-              </div>
-              <span className="text-xs px-2.5 py-1.5 rounded-full font-semibold flex-shrink-0"
-                style={{ background: "hsla(158, 42%, 38%, 0.12)", color: "hsl(158, 42%, 32%)" }}>
-                ₹12,500
-              </span>
-            </div>
-
-            <div className="space-y-2 text-left">
-              {[
-                { time: "Day 1", act: "Arrive Manali → Hadimba Temple → Mall Road dinner", Icon: Mountain },
-                { time: "Day 2", act: "Solang Valley → Snow activities → Café BoomBox", Icon: Compass },
-                { time: "Day 3", act: "Rohtang Pass drive → Departure by Volvo overnight", Icon: Globe },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8 + i * 0.12 }}
-                  className="flex items-center gap-3 p-3 rounded-2xl hover-lift cursor-default"
-                  style={{ background: "hsla(148, 40%, 97%, 0.55)", border: "1px solid hsla(148, 35%, 80%, 0.40)" }}
-                >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-                    <item.Icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-bold block mb-0.5" style={{ color: "hsl(158, 42%, 38%)" }}>{item.time}</span>
-                    <span className="text-xs sm:text-sm truncate block" style={{ color: "hsl(158, 30%, 28%)" }}>{item.act}</span>
-                  </div>
-                  <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 opacity-70" />
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-border/30 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> AI-verified</span>
-              <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" /> Real-time data</span>
-              <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary" /> 45 sec to generate</span>
-            </div>
-          </motion.div>
         </div>
+
+        {/* Floating AI Preview Card - Bento Style */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="mt-20 w-full max-w-5xl mx-auto px-4"
+        >
+          <div className="bento-grid grid-cols-1 md:grid-cols-3">
+            <div className="bento-card md:col-span-2 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Map className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">Personalized Route</h3>
+                    <p className="text-xs text-muted-foreground">Optimized for your pace</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+                      <div className="text-xs font-bold text-primary">0{i}</div>
+                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${40 + i * 20}%` }}
+                          transition={{ duration: 1, delay: 0.8 + i * 0.1 }}
+                          className="h-full bg-primary/40"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-8 flex items-center justify-between text-xs text-muted-foreground border-t border-border/50 pt-4">
+                <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Verified Data</span>
+                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Updated 2m ago</span>
+              </div>
+            </div>
+            
+            <div className="bento-card bg-primary text-primary-foreground">
+              <div className="h-full flex flex-col justify-between">
+                <div>
+                  <Zap className="w-8 h-8 mb-4 opacity-80" />
+                  <h3 className="text-xl font-bold mb-2">Instant Gen</h3>
+                  <p className="text-sm opacity-80">Generate full trips in under 30 seconds with our neural engine.</p>
+                </div>
+                <div className="text-3xl font-mono font-bold">99.8%</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       {/* ── How It Works ── */}
