@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&family=Geist+Mono:wght@100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -46,28 +46,28 @@
   }
 
   .dark {
-    --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 4%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 4%;
-    --popover-foreground: 210 40% 98%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
     --primary: 162 76% 45%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
     --ring: 162 76% 45%;
 
-    --glass-bg: rgba(0, 0, 0, 0.5);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(0, 0, 0, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.05);
   }
 }
 
@@ -80,11 +80,13 @@
   * { @apply border-border; }
 
   body {
-    @apply text-foreground font-body antialiased;
+    @apply text-foreground font-body antialiased selection:bg-primary/20;
     background:
-      radial-gradient(ellipse at 20% 10%, hsla(152, 55%, 70%, 0.18) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 80%, hsla(162, 50%, 65%, 0.14) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 50%, hsla(148, 45%, 93%, 1) 0%, hsla(155, 38%, 90%, 1) 100%);
+      radial-gradient(circle at 0% 0%, hsla(162, 70%, 50%, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 100% 0%, hsla(162, 70%, 50%, 0.03) 0%, transparent 40%),
+      radial-gradient(circle at 100% 100%, hsla(162, 70%, 50%, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 0% 100%, hsla(162, 70%, 50%, 0.03) 0%, transparent 40%),
+      var(--background);
     background-attachment: fixed;
     min-height: 100vh;
     position: relative;
@@ -103,7 +105,15 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', system-ui, sans-serif;
     font-weight: 700;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
+  }
+
+  .font-serif {
+    font-family: 'DM Serif Display', serif;
+  }
+
+  .font-mono {
+    font-family: 'Geist Mono', monospace;
   }
 }
 
@@ -119,19 +129,32 @@
   .bento-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    gap: 1rem;
+    @apply p-1;
   }
 
   .bento-card {
-    @apply glass-panel p-6 transition-all duration-300;
-    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    @apply glass-panel p-6 transition-all duration-500 relative overflow-hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .bento-card::after {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none;
+    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(162, 76, 25, 0.06), transparent 80%);
+  }
+
+  .bento-card:hover::after {
+    @apply opacity-100;
   }
 
   .bento-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(162, 76, 25, 0.2);
-    box-shadow: var(--shadow-xl), 0 0 20px rgba(162, 76, 25, 0.05);
+    @apply border-primary/30;
+    transform: scale(1.01);
+    box-shadow: 
+      0 0 0 1px hsla(162, 76%, 25%, 0.1),
+      var(--shadow-xl);
   }
 
   .btn-primary {

@@ -4,11 +4,13 @@
 Transform KroTravel from a standard travel planner into a high-end, AI-first platform inspired by the visual language of Stripe, Vercel, and modern AI startups (Linear, OpenAI). The interface should feel like an "operating system for travel"—precise, powerful, and aesthetically superior.
 
 ## 2. Core Design Principles
-*   **Bento-Grid Layouts**: Move away from standard lists to structured, modular grids for itineraries and dashboards.
-*   **Depth & Layering**: Use sophisticated glassmorphism with dynamic light sources and realistic shadows (z-indexing depth).
-*   **Precision Typography**: Shift to a combination of high-precision sans-serif (Inter/Geist) and elegant, modern serif for contrast.
-*   **Micro-Interactions**: Implement physics-based animations (Framer Motion) for state transitions and feedback.
-*   **AI-First Aesthetics**: Use monochromatic dark/light modes with surgical pops of color (like the current emerald, but more refined).
+*   **Bento-Grid Architecture**: The core layout engine. Everything from the landing page to the itinerary view is a modular, adaptive grid.
+*   **Dynamic Depth & Layering**: Moving beyond 2D. Use sophisticated glassmorphism with dynamic light sources, varying blur radii, and high-fidelity shadow stacks to create a multi-layered interface.
+*   **Hyper-Precision Typography**: A technical, readable, yet elegant scale. Primary UI in Inter, technical/data elements in Geist Mono, and editorial emphasis in DM Serif Display.
+*   **Physics-Based Micro-Interactions**: Interface elements should react naturally. Use spring physics for all transitions, hover states, and state changes to ensure the UI feels alive and responsive.
+*   **Ultra-Minimal Monochrome + Emerald**: A surgical color palette. Deep monochrome foundations (sophisticated grays/blacks) with "Deep Emerald" as the primary functional accent and premium gold for rare emphasis.
+*   **Visual Noise & Texture**: Subtle grain overlays and radial light leaks to give the digital surface a physical, high-end feel.
+
 
 ## 3. Visual Roadmap
 ### Phase 1: Foundation (Design System Update)
