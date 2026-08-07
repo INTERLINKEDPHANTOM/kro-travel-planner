@@ -205,7 +205,7 @@ const Index = () => {
             </div>
           </div>
         </motion.div>
-      </section>
+      </motion.section>
 
       {/* ── How It Works ── */}
       <section className="section-padding relative z-10 bg-background/50">
