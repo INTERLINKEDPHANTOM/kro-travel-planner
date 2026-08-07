@@ -233,59 +233,57 @@ const Index = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
                 className="prism-card p-6 sm:p-8 text-center relative"
+      {/* ── How It Works ── */}
+      <section className="section-padding relative z-10 bg-background/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="section-label">The Process</p>
+            <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter">
+              Complexity simplified <br />
+              <span className="text-muted-foreground font-normal italic">through intelligence.</span>
+            </h2>
+          </div>
+
+          <div className="bento-grid">
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bento-card group"
               >
-                <div className="absolute top-4 right-4 text-xs font-bold opacity-30 text-primary">{step.num}</div>
-                <div className="w-14 h-14 rounded-3xl flex items-center justify-center mb-5 mx-auto"
-                  style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-                  <step.icon className="w-7 h-7 text-primary" />
+                <div className="text-xs font-mono text-primary mb-4">Step {step.num}</div>
+                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-500">
+                  <step.icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold mb-3" style={{ color: "hsl(158, 38%, 15%)" }}>{step.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "hsl(158, 18%, 48%)" }}>{step.desc}</p>
+                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ── Feature Bento ── */}
       <section className="section-padding relative z-10">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div style={{ width: "700px", height: "450px", background: "radial-gradient(ellipse, hsla(152, 60%, 65%, 0.10) 0%, transparent 70%)", filter: "blur(80px)" }} />
-        </div>
-
-        <div className="max-w-6xl mx-auto relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
-          >
-            <p className="section-label mb-3">Why KroTravel</p>
-            <h2 className="text-3xl sm:text-5xl font-heading tracking-tight mb-4" style={{ color: "hsl(158, 45%, 10%)" }}>
-              Built <span className="text-mint-gradient">differently</span>
-            </h2>
-            <p className="max-w-md mx-auto text-sm sm:text-base font-light px-4" style={{ color: "hsl(158, 18%, 48%)" }}>
-              No promotional fluff. No generic lists. Just real, human-friendly travel plans.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="max-w-6xl mx-auto">
+          <div className="bento-grid">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="prism-card p-6 sm:p-8 cursor-default"
+                transition={{ delay: i * 0.1 }}
+                className={`bento-card ${i === 0 ? 'md:col-span-2' : ''}`}
               >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-5"
-                  style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
-                  <f.icon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+                <div className="flex flex-col h-full">
+                  <f.icon className="w-8 h-8 text-primary mb-6" />
+                  <h3 className="text-xl font-bold mb-3">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold mb-3" style={{ color: "hsl(158, 38%, 15%)" }}>{f.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "hsl(158, 18%, 48%)" }}>{f.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -293,99 +291,33 @@ const Index = () => {
       </section>
 
       {/* ── Destinations ── */}
-      <section className="section-padding relative z-10">
+      <section className="section-padding relative z-10 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10 sm:mb-14"
-          >
-            <p className="section-label mb-3">Popular Destinations</p>
-            <h2 className="text-3xl sm:text-5xl font-heading tracking-tight" style={{ color: "hsl(158, 45%, 10%)" }}>
-              Where will you <span className="text-mint-gradient italic">go next?</span>
-            </h2>
-          </motion.div>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+            <div>
+              <p className="section-label">Discovery</p>
+              <h2 className="text-4xl font-bold tracking-tight">Popular nodes</h2>
+            </div>
+            <Link to="/destinations" className="text-sm font-medium text-primary flex items-center gap-1 hover:underline">
+              View all coordinates <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {destinations.map((d, i) => (
               <motion.div
                 key={d.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+                className="dest-photo-card aspect-[3/4]"
               >
-                <Link to="/destinations">
-                  <div className="dest-photo-card group cursor-pointer" style={{ height: "clamp(160px, 22vw, 220px)" }}>
-                    <img
-                      src={`https://picsum.photos/seed/${d.seed}/${600 + i * 10}/${500 + i * 10}`}
-                      alt={d.name}
-                      loading="lazy"
-                      onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${d.name.toLowerCase()}${i}/600/500`; }}
-                    />
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-1.5"
-                        style={{ background: "hsla(255,255%,255%,0.18)", backdropFilter: "blur(8px)" }}>
-                        <d.Icon className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <div className="text-white font-bold text-sm sm:text-base">{d.name}</div>
-                      <div className="text-white/70 text-[10px] sm:text-xs">{d.tag}</div>
-                    </div>
-                    <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-                      <ChevronRight className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section className="section-padding relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10 sm:mb-14"
-          >
-            <h2 className="text-3xl sm:text-5xl font-heading tracking-tight" style={{ color: "hsl(158, 45%, 10%)" }}>
-              Travelers <span className="text-mint-gradient">love us</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12 }}
-                className="glass-panel p-6 sm:p-8"
-              >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-3.5 h-3.5 fill-current text-primary" />
-                  ))}
-                </div>
-                <p className="text-sm leading-relaxed mb-6 font-light italic" style={{ color: "hsl(158, 25%, 30%)" }}>
-                  "{t.text}"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))", color: "white" }}>
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <span className="font-bold text-sm block" style={{ color: "hsl(158, 38%, 18%)" }}>{t.name}</span>
-                    <span className="text-xs text-muted-foreground">{t.place}</span>
-                  </div>
+                <img
+                  src={`https://picsum.photos/seed/${d.seed}/600/800`}
+                  alt={d.name}
+                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent p-4 flex flex-col justify-end">
+                  <span className="text-xs font-mono text-primary uppercase tracking-tighter mb-1">{d.tag}</span>
+                  <h4 className="font-bold text-lg">{d.name}</h4>
                 </div>
               </motion.div>
             ))}
@@ -395,45 +327,22 @@ const Index = () => {
 
       {/* ── CTA ── */}
       <section className="section-padding relative z-10">
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="glass-intense p-8 sm:p-16 text-center relative overflow-hidden"
-          >
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-[-40px] right-[-60px] w-[300px] h-[300px] rounded-full"
-                style={{ background: "radial-gradient(circle, hsla(152, 65%, 65%, 0.18) 0%, transparent 70%)", filter: "blur(60px)" }} />
-              <div className="absolute bottom-[-40px] left-[-60px] w-[250px] h-[250px] rounded-full"
-                style={{ background: "radial-gradient(circle, hsla(162, 55%, 60%, 0.14) 0%, transparent 70%)", filter: "blur(50px)" }} />
-            </div>
-
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="glass-panel p-12 md:p-20 relative overflow-hidden bg-primary text-primary-foreground border-none">
             <div className="relative z-10">
-              <div className="w-14 h-14 rounded-3xl flex items-center justify-center mx-auto mb-6"
-                style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))", boxShadow: "0 6px 24px hsla(158, 42%, 36%, 0.35)" }}>
-                <Compass className="w-7 h-7 text-white" />
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-heading mb-4 tracking-tight" style={{ color: "hsl(158, 45%, 10%)" }}>
-                Your next adventure<br />
-                <span className="text-mint-gradient">starts in 60 seconds</span>
+              <h2 className="text-4xl sm:text-6xl font-bold tracking-tighter mb-8">
+                Ready to deploy your next journey?
               </h2>
-              <p className="text-sm sm:text-base mb-8 font-light max-w-sm mx-auto" style={{ color: "hsl(158, 18%, 44%)" }}>
-                Free to start. No credit card needed. AI does the heavy lifting.
-              </p>
               <Link to="/plan">
-                <button className="btn-primary text-sm sm:text-base px-10 py-4 flex items-center gap-2 group mx-auto">
-                  Plan My Trip for Free
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <button className="bg-primary-foreground text-primary px-10 py-4 rounded-full font-bold hover:bg-primary-foreground/90 transition-colors">
+                  Start Planning
                 </button>
               </Link>
-              <div className="flex items-center justify-center gap-4 sm:gap-6 mt-6 text-xs text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Private & secure</span>
-                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-primary" /> No spam ever</span>
-                <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" /> AI-crafted</span>
-              </div>
             </div>
-          </motion.div>
+            {/* Abstract Background Elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+          </div>
         </div>
       </section>
 
