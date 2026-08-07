@@ -27,22 +27,17 @@ const Navbar = () => {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 nav-glass"
+      className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <motion.div
-              whileHover={{ rotate: 20, scale: 1.1 }}
-              transition={{ duration: 0.3 }}
-              className="w-9 h-9 rounded-2xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))", boxShadow: "0 4px 12px hsla(158, 42%, 36%, 0.35)" }}
-            >
-              <Compass className="w-5 h-5 text-white" />
-            </motion.div>
-            <span className="text-xl font-heading tracking-tight" style={{ color: "hsl(158, 45%, 12%)" }}>
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <Compass className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <span className="text-lg font-bold tracking-tighter text-foreground">
               KroTravel
             </span>
           </Link>

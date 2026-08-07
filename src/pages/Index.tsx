@@ -21,12 +21,6 @@ const steps = [
   { icon: Globe, num: "03", title: "Travel Freely", desc: "Download, share, and explore with full confidence." },
 ];
 
-const testimonials = [
-  { name: "Priya S.", place: "Manali Trip", text: "The itinerary felt like my best friend who lives there wrote it. Every tip was gold." },
-  { name: "Rahul M.", place: "Goa Weekend", text: "Saved me hours of research. The budget breakdown was spot on — I actually spent less than planned." },
-  { name: "Ananya K.", place: "Kerala Tour", text: "We traveled with elderly parents. The pacing suggestions were incredibly thoughtful." },
-];
-
 const destinations = [
   { name: "Manali", tag: "Mountain Escape", Icon: Mountain, seed: "manali-mountains-snow" },
   { name: "Goa", tag: "Beach Bliss", Icon: Waves, seed: "goa-beach-ocean" },
@@ -39,33 +33,14 @@ const Index = () => {
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // DB-driven values with fallbacks
-  const heroHeadline = hs.hero_headline || "Plan trips that feel real.";
   const heroSubheadline = hs.hero_subheadline || "Within budget, without stress. AI-powered itineraries written like a local planned your trip.";
   const ctaPrimary = hs.cta_primary_text || "Plan My Trip";
   const ctaSecondary = hs.cta_secondary_text || "Explore Destinations";
   const announcementBannerActive = hs.announcement_banner_active === true || hs.announcement_banner_active === "true";
   const announcementBannerText = hs.announcement_banner || "";
 
-  const stats = [
-    { value: hs.stats_trips || "50K+", label: "Trips Planned" },
-    { value: hs.stats_rating || "4.9", label: "User Rating" },
-    { value: hs.stats_generation_time || "60s", label: "Avg. Generation" },
-    { value: "Free", label: "To Start" },
-  ];
-
   return (
     <div className="min-h-screen relative overflow-x-hidden">
-      {/* Global ambient orbs */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="ambient-orb-1" style={{ top: "8%", left: "12%" }} />
-        <div className="ambient-orb-2" style={{ bottom: "18%", right: "8%" }} />
-        <div className="ambient-orb" style={{
-          width: "350px", height: "350px", top: "55%", left: "58%",
-          background: "radial-gradient(circle, hsla(162, 55%, 68%, 0.11) 0%, transparent 70%)",
-          filter: "blur(70px)",
-        }} />
-      </div>
-
       <Navbar />
 
       {/* ── Announcement Banner ── */}
@@ -76,10 +51,9 @@ const Index = () => {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative z-20 overflow-hidden"
-            style={{ background: "linear-gradient(90deg, hsl(158, 42%, 36%), hsl(162, 45%, 28%))" }}
+            className="relative z-20 overflow-hidden bg-primary"
           >
-            <div className="flex items-center justify-center gap-3 px-4 py-2.5 text-white text-sm font-medium">
+            <div className="flex items-center justify-center gap-3 px-4 py-2.5 text-primary-foreground text-sm font-medium">
               <Megaphone className="w-4 h-4 flex-shrink-0 opacity-80" />
               <span>{announcementBannerText}</span>
               <button
@@ -95,46 +69,36 @@ const Index = () => {
       </AnimatePresence>
 
       {/* ── Hero ── */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 pt-24 pb-16 z-10">
-        <div className="max-w-4xl mx-auto text-center w-full">
-
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 pt-32 pb-16 z-10 overflow-hidden">
+        <div className="max-w-6xl mx-auto text-center w-full">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel mb-8 text-xs sm:text-sm font-medium"
-            style={{ color: "hsl(158, 38%, 28%)" }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-8 text-xs font-medium text-primary"
           >
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
-            AI + Human Verified Itineraries
-            <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            AI-Engine v2.0 Live
           </motion.div>
 
           {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl sm:text-6xl lg:text-8xl font-heading leading-[1.05] mb-6 tracking-tight"
-            style={{ color: "hsl(158, 45%, 10%)" }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight mb-8 text-foreground"
           >
-            <motion.span
-              className="text-mint-gradient italic inline-block"
-              animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            >
-              {heroHeadline}
-            </motion.span>
+            Travel planning, <br />
+            <span className="text-primary italic">redefined by AI.</span>
           </motion.h1>
 
           {/* Subhead */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-xl max-w-xl mx-auto mb-10 leading-relaxed font-light px-4"
-            style={{ color: "hsl(158, 20%, 44%)" }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
             {heroSubheadline}
           </motion.p>
@@ -144,177 +108,128 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link to="/plan" className="w-full sm:w-auto">
-              <button className="btn-primary text-sm sm:text-base w-full sm:w-auto px-8 py-4 flex items-center justify-center gap-2 group animate-glow-ring">
+              <button className="btn-primary w-full sm:w-auto text-base px-10 py-4">
                 {ctaPrimary}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
             <Link to="/destinations" className="w-full sm:w-auto">
-              <button className="btn-ghost-glass text-sm sm:text-base w-full sm:w-auto px-8 py-4 flex items-center justify-center gap-2">
+              <button className="btn-secondary w-full sm:w-auto text-base px-10 py-4 flex items-center justify-center gap-2">
                 <Globe className="w-4 h-4" />
                 {ctaSecondary}
               </button>
             </Link>
           </motion.div>
-
-          {/* Stats row */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="grid grid-cols-4 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-12 mb-14"
-          >
-            {stats.map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="text-xl sm:text-3xl font-bold text-mint-gradient">{s.value}</div>
-                <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* Hero glass preview card */}
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1, delay: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="glass-intense p-5 sm:p-8 max-w-2xl mx-auto animate-float"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "hsla(158, 42%, 38%, 0.15)" }}>
-                  <Map className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-xs sm:text-sm font-bold text-left" style={{ color: "hsl(158, 45%, 18%)" }}>
-                  AI Trip Preview — Manali 3 Days
-                </span>
-              </div>
-              <span className="text-xs px-2.5 py-1.5 rounded-full font-semibold flex-shrink-0"
-                style={{ background: "hsla(158, 42%, 38%, 0.12)", color: "hsl(158, 42%, 32%)" }}>
-                ₹12,500
-              </span>
-            </div>
-
-            <div className="space-y-2 text-left">
-              {[
-                { time: "Day 1", act: "Arrive Manali → Hadimba Temple → Mall Road dinner", Icon: Mountain },
-                { time: "Day 2", act: "Solang Valley → Snow activities → Café BoomBox", Icon: Compass },
-                { time: "Day 3", act: "Rohtang Pass drive → Departure by Volvo overnight", Icon: Globe },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8 + i * 0.12 }}
-                  className="flex items-center gap-3 p-3 rounded-2xl hover-lift cursor-default"
-                  style={{ background: "hsla(148, 40%, 97%, 0.55)", border: "1px solid hsla(148, 35%, 80%, 0.40)" }}
-                >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-                    <item.Icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-bold block mb-0.5" style={{ color: "hsl(158, 42%, 38%)" }}>{item.time}</span>
-                    <span className="text-xs sm:text-sm truncate block" style={{ color: "hsl(158, 30%, 28%)" }}>{item.act}</span>
-                  </div>
-                  <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 opacity-70" />
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-border/30 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> AI-verified</span>
-              <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" /> Real-time data</span>
-              <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary" /> 45 sec to generate</span>
-            </div>
-          </motion.div>
         </div>
+
+        {/* Floating AI Preview Card - Bento Style */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="mt-20 w-full max-w-5xl mx-auto px-4"
+        >
+          <div className="bento-grid grid-cols-1 md:grid-cols-3">
+            <div className="bento-card md:col-span-2 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Map className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">Personalized Route</h3>
+                    <p className="text-xs text-muted-foreground">Optimized for your pace</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+                      <div className="text-xs font-bold text-primary">0{i}</div>
+                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${40 + i * 20}%` }}
+                          transition={{ duration: 1, delay: 0.8 + i * 0.1 }}
+                          className="h-full bg-primary/40"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-8 flex items-center justify-between text-xs text-muted-foreground border-t border-border/50 pt-4">
+                <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Verified Data</span>
+                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Updated 2m ago</span>
+              </div>
+            </div>
+            
+            <div className="bento-card bg-primary text-primary-foreground">
+              <div className="h-full flex flex-col justify-between">
+                <div>
+                  <Zap className="w-8 h-8 mb-4 opacity-80" />
+                  <h3 className="text-xl font-bold mb-2">Instant Gen</h3>
+                  <p className="text-sm opacity-80">Generate full trips in under 30 seconds with our neural engine.</p>
+                </div>
+                <div className="text-3xl font-mono font-bold">99.8%</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       {/* ── How It Works ── */}
-      <section className="section-padding relative z-10">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
-          >
-            <p className="section-label mb-3">How It Works</p>
-            <h2 className="text-3xl sm:text-5xl font-heading tracking-tight mb-4" style={{ color: "hsl(158, 45%, 10%)" }}>
-              Three steps to your <span className="text-mint-gradient">perfect trip</span>
+      <section className="section-padding relative z-10 bg-background/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="section-label">The Process</p>
+            <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter">
+              Complexity simplified <br />
+              <span className="text-muted-foreground font-normal italic">through intelligence.</span>
             </h2>
-          </motion.div>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 relative">
-            {/* Connector line – desktop only */}
-            <div className="hidden sm:block absolute top-12 left-[calc(16.6%+1rem)] right-[calc(16.6%+1rem)] h-px"
-              style={{ background: "linear-gradient(90deg, transparent, hsl(158, 42%, 50%), transparent)" }} />
-
+          <div className="bento-grid">
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="prism-card p-6 sm:p-8 text-center relative"
+                transition={{ delay: i * 0.1 }}
+                className="bento-card group"
               >
-                <div className="absolute top-4 right-4 text-xs font-bold opacity-30 text-primary">{step.num}</div>
-                <div className="w-14 h-14 rounded-3xl flex items-center justify-center mb-5 mx-auto"
-                  style={{ background: "hsla(158, 42%, 38%, 0.10)" }}>
-                  <step.icon className="w-7 h-7 text-primary" />
+                <div className="text-xs font-mono text-primary mb-4">Step {step.num}</div>
+                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-500">
+                  <step.icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold mb-3" style={{ color: "hsl(158, 38%, 15%)" }}>{step.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "hsl(158, 18%, 48%)" }}>{step.desc}</p>
+                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ── Feature Bento ── */}
       <section className="section-padding relative z-10">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div style={{ width: "700px", height: "450px", background: "radial-gradient(ellipse, hsla(152, 60%, 65%, 0.10) 0%, transparent 70%)", filter: "blur(80px)" }} />
-        </div>
-
-        <div className="max-w-6xl mx-auto relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
-          >
-            <p className="section-label mb-3">Why KroTravel</p>
-            <h2 className="text-3xl sm:text-5xl font-heading tracking-tight mb-4" style={{ color: "hsl(158, 45%, 10%)" }}>
-              Built <span className="text-mint-gradient">differently</span>
-            </h2>
-            <p className="max-w-md mx-auto text-sm sm:text-base font-light px-4" style={{ color: "hsl(158, 18%, 48%)" }}>
-              No promotional fluff. No generic lists. Just real, human-friendly travel plans.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="max-w-6xl mx-auto">
+          <div className="bento-grid">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="prism-card p-6 sm:p-8 cursor-default"
+                transition={{ delay: i * 0.1 }}
+                className={`bento-card ${i === 0 ? 'md:col-span-2' : ''}`}
               >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-5"
-                  style={{ background: "hsla(158, 42%, 38%, 0.12)" }}>
-                  <f.icon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+                <div className="flex flex-col h-full">
+                  <f.icon className="w-8 h-8 text-primary mb-6" />
+                  <h3 className="text-xl font-bold mb-3">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold mb-3" style={{ color: "hsl(158, 38%, 15%)" }}>{f.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "hsl(158, 18%, 48%)" }}>{f.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -322,99 +237,33 @@ const Index = () => {
       </section>
 
       {/* ── Destinations ── */}
-      <section className="section-padding relative z-10">
+      <section className="section-padding relative z-10 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10 sm:mb-14"
-          >
-            <p className="section-label mb-3">Popular Destinations</p>
-            <h2 className="text-3xl sm:text-5xl font-heading tracking-tight" style={{ color: "hsl(158, 45%, 10%)" }}>
-              Where will you <span className="text-mint-gradient italic">go next?</span>
-            </h2>
-          </motion.div>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+            <div>
+              <p className="section-label">Discovery</p>
+              <h2 className="text-4xl font-bold tracking-tight">Popular nodes</h2>
+            </div>
+            <Link to="/destinations" className="text-sm font-medium text-primary flex items-center gap-1 hover:underline">
+              View all coordinates <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {destinations.map((d, i) => (
               <motion.div
                 key={d.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+                className="dest-photo-card aspect-[3/4]"
               >
-                <Link to="/destinations">
-                  <div className="dest-photo-card group cursor-pointer" style={{ height: "clamp(160px, 22vw, 220px)" }}>
-                    <img
-                      src={`https://picsum.photos/seed/${d.seed}/${600 + i * 10}/${500 + i * 10}`}
-                      alt={d.name}
-                      loading="lazy"
-                      onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${d.name.toLowerCase()}${i}/600/500`; }}
-                    />
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-1.5"
-                        style={{ background: "hsla(255,255%,255%,0.18)", backdropFilter: "blur(8px)" }}>
-                        <d.Icon className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <div className="text-white font-bold text-sm sm:text-base">{d.name}</div>
-                      <div className="text-white/70 text-[10px] sm:text-xs">{d.tag}</div>
-                    </div>
-                    <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-                      <ChevronRight className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section className="section-padding relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10 sm:mb-14"
-          >
-            <h2 className="text-3xl sm:text-5xl font-heading tracking-tight" style={{ color: "hsl(158, 45%, 10%)" }}>
-              Travelers <span className="text-mint-gradient">love us</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12 }}
-                className="glass-panel p-6 sm:p-8"
-              >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-3.5 h-3.5 fill-current text-primary" />
-                  ))}
-                </div>
-                <p className="text-sm leading-relaxed mb-6 font-light italic" style={{ color: "hsl(158, 25%, 30%)" }}>
-                  "{t.text}"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))", color: "white" }}>
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <span className="font-bold text-sm block" style={{ color: "hsl(158, 38%, 18%)" }}>{t.name}</span>
-                    <span className="text-xs text-muted-foreground">{t.place}</span>
-                  </div>
+                <img
+                  src={`https://picsum.photos/seed/${d.seed}/600/800`}
+                  alt={d.name}
+                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent p-4 flex flex-col justify-end">
+                  <span className="text-xs font-mono text-primary uppercase tracking-tighter mb-1">{d.tag}</span>
+                  <h4 className="font-bold text-lg">{d.name}</h4>
                 </div>
               </motion.div>
             ))}
@@ -424,45 +273,22 @@ const Index = () => {
 
       {/* ── CTA ── */}
       <section className="section-padding relative z-10">
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="glass-intense p-8 sm:p-16 text-center relative overflow-hidden"
-          >
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-[-40px] right-[-60px] w-[300px] h-[300px] rounded-full"
-                style={{ background: "radial-gradient(circle, hsla(152, 65%, 65%, 0.18) 0%, transparent 70%)", filter: "blur(60px)" }} />
-              <div className="absolute bottom-[-40px] left-[-60px] w-[250px] h-[250px] rounded-full"
-                style={{ background: "radial-gradient(circle, hsla(162, 55%, 60%, 0.14) 0%, transparent 70%)", filter: "blur(50px)" }} />
-            </div>
-
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="glass-panel p-12 md:p-20 relative overflow-hidden bg-primary text-primary-foreground border-none">
             <div className="relative z-10">
-              <div className="w-14 h-14 rounded-3xl flex items-center justify-center mx-auto mb-6"
-                style={{ background: "linear-gradient(135deg, hsl(158, 42%, 40%), hsl(162, 45%, 28%))", boxShadow: "0 6px 24px hsla(158, 42%, 36%, 0.35)" }}>
-                <Compass className="w-7 h-7 text-white" />
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-heading mb-4 tracking-tight" style={{ color: "hsl(158, 45%, 10%)" }}>
-                Your next adventure<br />
-                <span className="text-mint-gradient">starts in 60 seconds</span>
+              <h2 className="text-4xl sm:text-6xl font-bold tracking-tighter mb-8">
+                Ready to deploy your next journey?
               </h2>
-              <p className="text-sm sm:text-base mb-8 font-light max-w-sm mx-auto" style={{ color: "hsl(158, 18%, 44%)" }}>
-                Free to start. No credit card needed. AI does the heavy lifting.
-              </p>
               <Link to="/plan">
-                <button className="btn-primary text-sm sm:text-base px-10 py-4 flex items-center gap-2 group mx-auto">
-                  Plan My Trip for Free
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <button className="bg-primary-foreground text-primary px-10 py-4 rounded-full font-bold hover:bg-primary-foreground/90 transition-colors">
+                  Start Planning
                 </button>
               </Link>
-              <div className="flex items-center justify-center gap-4 sm:gap-6 mt-6 text-xs text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Private & secure</span>
-                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-primary" /> No spam ever</span>
-                <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" /> AI-crafted</span>
-              </div>
             </div>
-          </motion.div>
+            {/* Abstract Background Elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+          </div>
         </div>
       </section>
 
