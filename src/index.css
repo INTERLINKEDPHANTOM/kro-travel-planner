@@ -6,42 +6,68 @@
 
 @layer base {
   :root {
-    --background: 142 35% 96%;
-    --foreground: 158 45% 10%;
-    --card: 148 28% 98%;
-    --card-foreground: 158 45% 10%;
-    --popover: 148 28% 98%;
-    --popover-foreground: 158 45% 10%;
-    --primary: 158 40% 38%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 162 38% 22%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 148 22% 90%;
-    --muted-foreground: 158 18% 48%;
-    --accent: 152 60% 55%;
-    --accent-foreground: 158 45% 10%;
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 148 25% 82%;
-    --input: 148 22% 88%;
-    --ring: 158 40% 38%;
-    --radius: 1.25rem;
-    --sidebar-background: 148 28% 98%;
-    --sidebar-foreground: 158 45% 10%;
-    --sidebar-primary: 158 40% 38%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 148 22% 90%;
-    --sidebar-accent-foreground: 158 45% 10%;
-    --sidebar-border: 148 25% 82%;
-    --sidebar-ring: 158 40% 38%;
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 162 76% 25%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 162 76% 25%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Glass tokens */
-    --glass-bg: hsla(148, 40%, 97%, 0.38);
-    --glass-border: hsla(148, 35%, 78%, 0.50);
-    --glass-blur: 24px;
-    --glass-shadow: 0 8px 40px hsla(158, 45%, 18%, 0.09), 0 2px 8px hsla(148, 38%, 50%, 0.07);
-    --glass-glow: 0 0 70px hsla(152, 60%, 58%, 0.13);
-    --prism-shadow: 0 0 0 1px hsla(148, 45%, 70%, 0.32), 0 16px 56px hsla(158, 45%, 18%, 0.11);
+    /* Enhanced Glass & Shadow Tokens for Vercel/Stripe feel */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-blur: 12px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 4%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 162 76% 45%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 162 76% 45%;
+
+    --glass-bg: rgba(0, 0, 0, 0.5);
+    --glass-border: rgba(255, 255, 255, 0.1);
   }
 }
 
