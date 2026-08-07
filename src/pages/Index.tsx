@@ -21,12 +21,6 @@ const steps = [
   { icon: Globe, num: "03", title: "Travel Freely", desc: "Download, share, and explore with full confidence." },
 ];
 
-const testimonials = [
-  { name: "Priya S.", place: "Manali Trip", text: "The itinerary felt like my best friend who lives there wrote it. Every tip was gold." },
-  { name: "Rahul M.", place: "Goa Weekend", text: "Saved me hours of research. The budget breakdown was spot on — I actually spent less than planned." },
-  { name: "Ananya K.", place: "Kerala Tour", text: "We traveled with elderly parents. The pacing suggestions were incredibly thoughtful." },
-];
-
 const destinations = [
   { name: "Manali", tag: "Mountain Escape", Icon: Mountain, seed: "manali-mountains-snow" },
   { name: "Goa", tag: "Beach Bliss", Icon: Waves, seed: "goa-beach-ocean" },
@@ -39,33 +33,14 @@ const Index = () => {
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // DB-driven values with fallbacks
-  const heroHeadline = hs.hero_headline || "Plan trips that feel real.";
   const heroSubheadline = hs.hero_subheadline || "Within budget, without stress. AI-powered itineraries written like a local planned your trip.";
   const ctaPrimary = hs.cta_primary_text || "Plan My Trip";
   const ctaSecondary = hs.cta_secondary_text || "Explore Destinations";
   const announcementBannerActive = hs.announcement_banner_active === true || hs.announcement_banner_active === "true";
   const announcementBannerText = hs.announcement_banner || "";
 
-  const stats = [
-    { value: hs.stats_trips || "50K+", label: "Trips Planned" },
-    { value: hs.stats_rating || "4.9", label: "User Rating" },
-    { value: hs.stats_generation_time || "60s", label: "Avg. Generation" },
-    { value: "Free", label: "To Start" },
-  ];
-
   return (
     <div className="min-h-screen relative overflow-x-hidden">
-      {/* Global ambient orbs */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="ambient-orb-1" style={{ top: "8%", left: "12%" }} />
-        <div className="ambient-orb-2" style={{ bottom: "18%", right: "8%" }} />
-        <div className="ambient-orb" style={{
-          width: "350px", height: "350px", top: "55%", left: "58%",
-          background: "radial-gradient(circle, hsla(162, 55%, 68%, 0.11) 0%, transparent 70%)",
-          filter: "blur(70px)",
-        }} />
-      </div>
-
       <Navbar />
 
       {/* ── Announcement Banner ── */}
@@ -76,10 +51,9 @@ const Index = () => {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative z-20 overflow-hidden"
-            style={{ background: "linear-gradient(90deg, hsl(158, 42%, 36%), hsl(162, 45%, 28%))" }}
+            className="relative z-20 overflow-hidden bg-primary"
           >
-            <div className="flex items-center justify-center gap-3 px-4 py-2.5 text-white text-sm font-medium">
+            <div className="flex items-center justify-center gap-3 px-4 py-2.5 text-primary-foreground text-sm font-medium">
               <Megaphone className="w-4 h-4 flex-shrink-0 opacity-80" />
               <span>{announcementBannerText}</span>
               <button
@@ -205,34 +179,6 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section className="section-padding relative z-10">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
-          >
-            <p className="section-label mb-3">How It Works</p>
-            <h2 className="text-3xl sm:text-5xl font-heading tracking-tight mb-4" style={{ color: "hsl(158, 45%, 10%)" }}>
-              Three steps to your <span className="text-mint-gradient">perfect trip</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 relative">
-            {/* Connector line – desktop only */}
-            <div className="hidden sm:block absolute top-12 left-[calc(16.6%+1rem)] right-[calc(16.6%+1rem)] h-px"
-              style={{ background: "linear-gradient(90deg, transparent, hsl(158, 42%, 50%), transparent)" }} />
-
-            {steps.map((step, i) => (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="prism-card p-6 sm:p-8 text-center relative"
       {/* ── How It Works ── */}
       <section className="section-padding relative z-10 bg-background/50">
         <div className="max-w-6xl mx-auto">
