@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://twfvlbianbqkrmyjyxnp.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "kro-travel-planner",
+      "version": "0.1.0",
+      "title": "Kro Travel Planner"
+    },
+    "tools": [
+      {
+        "name": "list_my_trips",
+        "title": "List my trips",
+        "description": "List the signed-in user's saved trip itineraries (destination, status, created date).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "description": "Maximum number of trips to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_trip",
+        "title": "Get trip details",
+        "description": "Get the full itinerary data and preferences for one of the signed-in user's saved trips.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The id of the saved trip, from list_my_trips."
+            }
+          },
+          "required": [
+            "trip_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_destinations",
+        "title": "Search destinations",
+        "description": "Search published destination guides available in the app by destination or title.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Destination or keyword to search for, e.g. 'Goa'."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25,
+              "default": 10,
+              "description": "Maximum number of results."
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_trip_expenses",
+        "title": "List trip expenses",
+        "description": "List the signed-in user's recorded travel expenses, optionally filtered to a single trip.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "trip_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Optional trip id to filter expenses by."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "description": "Maximum number of expenses to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_trip_expense",
+        "title": "Add trip expense",
+        "description": "Record a new travel expense for the signed-in user, optionally linked to a saved trip.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Expense amount."
+            },
+            "category": {
+              "type": "string",
+              "minLength": 1,
+              "default": "general",
+              "description": "Expense category, e.g. food, transport, stay."
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Optional note about the expense."
+            },
+            "currency": {
+              "type": "string",
+              "default": "INR",
+              "description": "Currency code, defaults to INR."
+            },
+            "expense_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "description": "Date in YYYY-MM-DD; defaults to today."
+            },
+            "trip_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Optional saved trip id to attach the expense to."
+            }
+          },
+          "required": [
+            "amount"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
