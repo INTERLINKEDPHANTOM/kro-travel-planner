@@ -79,7 +79,9 @@ const AnimatedRoutes = () => {
         <Route path="/duo-travel" element={<PageTransition><DuoTravel /></PageTransition>} />
         <Route path="/passport" element={<PageTransition><PassportStamps /></PageTransition>} />
         <Route path="/spend-tracker" element={<PageTransition><SpendTracker /></PageTransition>} />
+        <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+
       </Routes>
     </AnimatePresence>
   );
