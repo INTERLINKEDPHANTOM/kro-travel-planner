@@ -26,13 +26,17 @@ const Auth = () => {
         const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast({ title: "Welcome back! 🎉" });
-        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id).eq("role", "admin");
-        if (roles && roles.length > 0) navigate("/admin");
-        else navigate(redirectTo);
+        if (searchParams.get("redirect")) {
+          navigate(redirectTo);
+        } else {
+          const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id).eq("role", "admin");
+          if (roles && roles.length > 0) navigate("/admin");
+          else navigate(redirectTo);
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+          options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}${redirectTo.startsWith("/") ? redirectTo : "/"}` },
         });
         if (error) throw error;
         toast({ title: "Check your email 📬", description: "We sent you a verification link." });
